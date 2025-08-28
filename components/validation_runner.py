@@ -214,8 +214,16 @@ class ValidationRunnerComponent:
             if hasattr(expectation_suite, 'expectations'):
                 st.write(f"🔍 Debug: Suite has {len(expectation_suite.expectations)} expectations")
                 for i, exp in enumerate(expectation_suite.expectations[:3]):  # Show first 3
-                    exp_type = exp.get('expectation_type', 'Unknown') if isinstance(exp, dict) else getattr(exp, 'expectation_type', 'Unknown')
-                    st.write(f"  {i+1}. {exp_type}")
+                    if isinstance(exp, dict):
+                        exp_type = exp.get('expectation_type', exp.get('type', 'Unknown'))
+                        exp_kwargs = exp.get('kwargs', {})
+                        column = exp_kwargs.get('column', 'N/A')
+                        st.write(f"  {i+1}. {exp_type} (Column: {column})")
+                    else:
+                        exp_type = getattr(exp, 'expectation_type', 'Unknown')
+                        exp_kwargs = getattr(exp, 'kwargs', {}) or {}
+                        column = exp_kwargs.get('column', 'N/A')
+                        st.write(f"  {i+1}. {exp_type} (Column: {column})")
             else:
                 st.write("🔍 Debug: Suite has no expectations attribute")
             
@@ -315,6 +323,11 @@ class ValidationRunnerComponent:
                             'expectation_type': getattr(expectation, 'expectation_type', ''),
                             'kwargs': getattr(expectation, 'kwargs', {}) or {}
                         }
+                
+                # Ensure the config has the proper structure
+                if 'expectation_type' not in exp_config:
+                    exp_config['expectation_type'] = exp_config.get('type', 'Unknown')
+                
                 self.ge_helpers.add_expectation_to_suite(temp_suite, exp_config)
                 
                 # Run validation for this expectation
@@ -322,6 +335,11 @@ class ValidationRunnerComponent:
                 
                 if result and result.get('results'):
                     expectation_result = result['results'][0]
+                    
+                    # Ensure the result has the proper expectation_config structure
+                    if 'expectation_config' not in expectation_result:
+                        expectation_result['expectation_config'] = exp_config
+                    
                     results_list.append(expectation_result)
                     
                     if expectation_result.get('success', False):
@@ -331,11 +349,21 @@ class ValidationRunnerComponent:
                     
                     # Show individual result
                     with results_container:
-                        exp_type_label = expectation.get('expectation_type', 'Unknown') if isinstance(expectation, dict) else getattr(expectation, 'expectation_type', 'Unknown')
-                        if expectation_result.get('success', False):
-                            st.success(f"✅ Step {current_step}: {exp_type_label}")
+                        if isinstance(expectation, dict):
+                            exp_type_label = expectation.get('expectation_type', expectation.get('type', 'Unknown'))
+                            exp_column = expectation.get('kwargs', {}).get('column', 'N/A')
                         else:
-                            st.error(f"❌ Step {current_step}: {exp_type_label}")
+                            exp_type_label = getattr(expectation, 'expectation_type', 'Unknown')
+                            exp_column = getattr(expectation, 'kwargs', {}).get('column', 'N/A')
+                        
+                        display_label = f"{exp_type_label}"
+                        if exp_column != 'N/A':
+                            display_label += f" ({exp_column})"
+                        
+                        if expectation_result.get('success', False):
+                            st.success(f"✅ Step {current_step}: {display_label}")
+                        else:
+                            st.error(f"❌ Step {current_step}: {display_label}")
                             st.write(f"   Details: {expectation_result.get('result', {}).get('details', 'No details available')}")
                 
                 # Small delay to make progress visible

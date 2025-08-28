@@ -181,11 +181,21 @@ class GEHelpers:
                         }
                         
                         # Process each expectation manually
-                        for expectation in suite.expectations:
+                        st.write(f"🔍 Debug: Processing {len(suite.expectations)} expectations manually")
+                        for i, expectation in enumerate(suite.expectations):
                             try:
-                                # Basic validation logic - this is a simplified approach
+                                # Extract expectation information properly
                                 exp_type = getattr(expectation, 'expectation_type', None)
                                 exp_kwargs = getattr(expectation, 'kwargs', {})
+                                
+                                st.write(f"🔍 Debug: Expectation {i+1}: type={exp_type}, kwargs={exp_kwargs}")
+                                
+                                # Create expectation_config structure for proper display
+                                exp_config = {
+                                    'type': exp_type,
+                                    'expectation_type': exp_type,
+                                    'kwargs': exp_kwargs
+                                }
                                 
                                 if exp_type == 'expect_column_values_to_not_be_null':
                                     column = exp_kwargs.get('column')
@@ -194,9 +204,12 @@ class GEHelpers:
                                         success = null_count == 0
                                         validation_result["results"].append({
                                             "success": success,
-                                            "expectation_type": exp_type,
-                                            "kwargs": exp_kwargs,
-                                            "result": {"observed_value": null_count}
+                                            "expectation_config": exp_config,
+                                            "result": {
+                                                "element_count": len(data),
+                                                "unexpected_count": null_count,
+                                                "unexpected_percent": (null_count / len(data) * 100) if len(data) > 0 else 0
+                                            }
                                         })
                                         if success:
                                             validation_result["statistics"]["successful_expectations"] += 1
@@ -209,26 +222,90 @@ class GEHelpers:
                                         unique_count = data[column].nunique()
                                         total_count = len(data[column])
                                         success = unique_count == total_count
+                                        unexpected_count = total_count - unique_count
                                         validation_result["results"].append({
                                             "success": success,
-                                            "expectation_type": exp_type,
-                                            "kwargs": exp_kwargs,
-                                            "result": {"observed_value": unique_count}
+                                            "expectation_config": exp_config,
+                                            "result": {
+                                                "element_count": total_count,
+                                                "unexpected_count": unexpected_count,
+                                                "unexpected_percent": (unexpected_count / total_count * 100) if total_count > 0 else 0
+                                            }
                                         })
                                         if success:
                                             validation_result["statistics"]["successful_expectations"] += 1
                                         else:
                                             validation_result["statistics"]["unsuccessful_expectations"] += 1
                                 
-                                # Add more expectation types as needed
+                                elif exp_type == 'expect_column_values_to_be_between':
+                                    column = exp_kwargs.get('column')
+                                    min_value = exp_kwargs.get('min_value')
+                                    max_value = exp_kwargs.get('max_value')
+                                    if column in data.columns:
+                                        if min_value is not None and max_value is not None:
+                                            out_of_range = data[(data[column] < min_value) | (data[column] > max_value)]
+                                            unexpected_count = len(out_of_range)
+                                            success = unexpected_count == 0
+                                            validation_result["results"].append({
+                                                "success": success,
+                                                "expectation_config": exp_config,
+                                                "result": {
+                                                    "element_count": len(data),
+                                                    "unexpected_count": unexpected_count,
+                                                    "unexpected_percent": (unexpected_count / len(data) * 100) if len(data) > 0 else 0
+                                                }
+                                            })
+                                            if success:
+                                                validation_result["statistics"]["successful_expectations"] += 1
+                                            else:
+                                                validation_result["statistics"]["unsuccessful_expectations"] += 1
+                                
+                                elif exp_type == 'expect_column_values_to_be_in_set':
+                                    column = exp_kwargs.get('column')
+                                    value_set = exp_kwargs.get('value_set', [])
+                                    if column in data.columns and value_set:
+                                        out_of_set = data[~data[column].isin(value_set)]
+                                        unexpected_count = len(out_of_set)
+                                        success = unexpected_count == 0
+                                        validation_result["results"].append({
+                                            "success": success,
+                                            "expectation_config": exp_config,
+                                            "result": {
+                                                "element_count": len(data),
+                                                "unexpected_count": unexpected_count,
+                                                "unexpected_percent": (unexpected_count / len(data) * 100) if len(data) > 0 else 0
+                                            }
+                                        })
+                                        if success:
+                                            validation_result["statistics"]["successful_expectations"] += 1
+                                        else:
+                                            validation_result["statistics"]["unsuccessful_expectations"] += 1
+                                
+                                else:
+                                    # Generic handling for other expectation types
+                                    validation_result["results"].append({
+                                        "success": False,
+                                        "expectation_config": exp_config,
+                                        "result": {
+                                            "element_count": len(data),
+                                            "unexpected_count": 0,
+                                            "unexpected_percent": 0.0
+                                        }
+                                    })
+                                    validation_result["statistics"]["unsuccessful_expectations"] += 1
                                 
                             except Exception as exp_e:
                                 st.write(f"🔍 Debug: Failed to process expectation {exp_type}: {str(exp_e)}")
+                                # Create proper structure even for failed expectations
+                                exp_config = {
+                                    'type': exp_type,
+                                    'expectation_type': exp_type,
+                                    'kwargs': exp_kwargs
+                                }
                                 validation_result["results"].append({
                                     "success": False,
-                                    "expectation_type": exp_type,
-                                    "kwargs": exp_kwargs,
-                                    "exception_info": str(exp_e)
+                                    "expectation_config": exp_config,
+                                    "exception_info": {"exception_message": str(exp_e)}
                                 })
                                 validation_result["statistics"]["unsuccessful_expectations"] += 1
                         
@@ -240,6 +317,13 @@ class GEHelpers:
                             )
                         
                         st.write(f"✅ Validation completed using manual approach")
+                        st.write(f"🔍 Debug: Final validation result structure:")
+                        st.write(f"  - Results count: {len(validation_result['results'])}")
+                        for i, result in enumerate(validation_result['results']):
+                            exp_config = result.get('expectation_config', {})
+                            exp_type = exp_config.get('type', exp_config.get('expectation_type', 'Unknown'))
+                            column = exp_config.get('kwargs', {}).get('column', 'N/A')
+                            st.write(f"    Result {i+1}: type={exp_type}, column={column}")
                         return validation_result
                         
                     except Exception as e3:
@@ -292,6 +376,7 @@ class GEHelpers:
                             'kwargs': getattr(exp, 'kwargs', {}) or {}
                         }
                 if cfg and cfg.get('expectation_type'):
+                    st.write(f"🔍 Debug: Adding expectation {cfg.get('expectation_type')} to normalized suite")
                     self.add_expectation_to_suite(rebuilt_suite, cfg)
 
             st.info("🔧 Normalized expectation suite to GE-native objects for validation")

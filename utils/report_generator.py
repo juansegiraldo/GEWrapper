@@ -256,8 +256,10 @@ class ReportGenerator:
             
             # Standard results processing
             table_data = []
+            st.write(f"🔍 Debug: Processing {len(results)} results in report generator")
             for i, result in enumerate(results, 1):
                 exp_config = result.get('expectation_config', {})
+                st.write(f"🔍 Debug: Result {i}: exp_config keys={list(exp_config.keys()) if exp_config else 'None'}")
                 
                 # Handle different result structures
                 observed_value = 'N/A'
@@ -303,6 +305,13 @@ class ReportGenerator:
                     if 'partial_unexpected_list' in result_data and result_data['partial_unexpected_list']:
                         detail_parts.append(f"Sample unexpected: {result_data['partial_unexpected_list'][:3]}")
                     
+                    # Add more context for better understanding
+                    if 'element_count' in result_data:
+                        total_records = result_data['element_count']
+                        if 'unexpected_count' in result_data:
+                            unexpected_count = result_data['unexpected_count']
+                            detail_parts.append(f"Total records: {total_records}, Failed: {unexpected_count}")
+                    
                     if detail_parts:
                         details = ' | '.join(detail_parts)
                 elif 'exception_info' in result:
@@ -310,7 +319,14 @@ class ReportGenerator:
                 
                 # Extract expectation type and column from the correct structure
                 expectation_type = exp_config.get('type', exp_config.get('expectation_type', 'Unknown'))
+                if expectation_type == 'Unknown':
+                    # Try to get from the result structure if available
+                    if 'expectation_type' in result:
+                        expectation_type = result.get('expectation_type', 'Unknown')
+                
                 column = exp_config.get('kwargs', {}).get('column', 'N/A')
+                
+                st.write(f"🔍 Debug: Extracted expectation_type='{expectation_type}', column='{column}'")
                 
                 table_data.append({
                     'ID': i,
