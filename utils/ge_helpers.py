@@ -63,41 +63,61 @@ class GEHelpers:
 
             kwargs: Dict[str, Any] = expectation_config.get('kwargs', {})
 
-            # Build an ExpectationConfiguration and add it via the public API (GE 1.5+)
+            # Try different approaches for GE 0.18+
             try:
+                # Method 1: Try using the new GE 0.18+ API
                 exp_config_obj = ExpectationConfiguration(
-                    type=expectation_type,
+                    expectation_type=expectation_type,
                     kwargs=kwargs,
                 )
                 suite.add_expectation_configuration(exp_config_obj)
+                st.write(f"✅ Added expectation '{expectation_type}' using add_expectation_configuration")
+                return True
             except Exception as e1:
-                # Fallback 1: build Expectation and add via add_expectation()
+                st.write(f"🔍 Debug: Method 1 failed: {str(e1)}")
+                
                 try:
-                    # Create a new ExpectationConfiguration for the fallback
-                    fallback_config = ExpectationConfiguration(
-                        type=expectation_type,
+                    # Method 2: Try using the new GE 0.18+ API with different parameter names
+                    exp_config_obj = ExpectationConfiguration(
+                        expectation_type=expectation_type,
                         kwargs=kwargs,
                     )
-                    built = suite._build_expectation(expectation_configuration=fallback_config)
-                    suite.add_expectation(built)
+                    # Try to add directly to expectations list
+                    if not hasattr(suite, 'expectations'):
+                        suite.expectations = []
+                    suite.expectations.append(exp_config_obj)
+                    st.write(f"✅ Added expectation '{expectation_type}' directly to expectations list")
+                    return True
                 except Exception as e2:
-                    # Fallback 2: let GE process the dict config
+                    st.write(f"🔍 Debug: Method 2 failed: {str(e2)}")
+                    
                     try:
-                        processed = suite._process_expectation({'expectation_type': expectation_type, 'kwargs': kwargs})
-                        suite.add_expectation(processed)
+                        # Method 3: Try using the new GE 0.18+ API with different constructor
+                        exp_config_obj = ExpectationConfiguration(
+                            expectation_type=expectation_type,
+                            kwargs=kwargs,
+                        )
+                        # Try to use the new add_expectation method if it exists
+                        if hasattr(suite, 'add_expectation'):
+                            suite.add_expectation(exp_config_obj)
+                            st.write(f"✅ Added expectation '{expectation_type}' using add_expectation")
+                            return True
+                        else:
+                            # Last resort: add to expectations list
+                            if not hasattr(suite, 'expectations'):
+                                suite.expectations = []
+                            suite.expectations.append(exp_config_obj)
+                            st.write(f"✅ Added expectation '{expectation_type}' to expectations list (fallback)")
+                            return True
                     except Exception as e3:
-                        st.error("Failed to add expectation using Great Expectations API")
-                        st.write("🔍 Debug: add errors:")
-                        st.write(f"  add_expectation_configuration -> {str(e1)}")
-                        st.write(f"  add_expectation(built) -> {str(e2)}")
-                        st.write(f"  add_expectation(processed) -> {str(e3)}")
+                        st.error("Failed to add expectation using any Great Expectations API method")
+                        st.write("🔍 Debug: All methods failed:")
+                        st.write(f"  Method 1 (add_expectation_configuration) -> {str(e1)}")
+                        st.write(f"  Method 2 (direct list append) -> {str(e2)}")
+                        st.write(f"  Method 3 (add_expectation/fallback) -> {str(e3)}")
                         st.write(f"🔍 Debug: Config attempted: {{'expectation_type': '{expectation_type}', 'kwargs': {kwargs}}}")
                         return False
 
-            # Confirm addition
-            current_count = len(suite.expectations) if hasattr(suite, 'expectations') and suite.expectations else 0
-            st.write(f"🔍 Debug: Added '{expectation_type}'. Suite expectation count: {current_count}")
-            return True
         except Exception as e:
             st.error(f"Error adding expectation to suite: {str(e)}")
             st.write(f"🔍 Debug: Failed expectation config: {expectation_config}")
