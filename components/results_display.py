@@ -12,6 +12,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from utils.report_generator import ReportGenerator
 from config.app_config import AppConfig
+from components.failed_records_generator import FailedRecordsGenerator
 
 class ResultsDisplayComponent:
     """Component for displaying validation results"""
@@ -19,6 +20,7 @@ class ResultsDisplayComponent:
     def __init__(self):
         self.report_generator = ReportGenerator()
         self.config = AppConfig()
+        self.failed_records_generator = FailedRecordsGenerator()
     
     def render(self, validation_results: Dict):
         """Render the validation results interface"""
@@ -27,6 +29,18 @@ class ResultsDisplayComponent:
         if not validation_results:
             st.error("No validation results available!")
             return
+        
+        # Debug: Show validation results structure
+        with st.expander("🔍 Debug: Validation Results Structure"):
+            st.write("**Keys in validation_results:**", list(validation_results.keys()))
+            if 'results' in validation_results:
+                st.write("**Results count:**", len(validation_results['results']))
+                if validation_results['results']:
+                    st.write("**First result structure:**", validation_results['results'][0])
+            if 'statistics' in validation_results:
+                st.write("**Statistics:**", validation_results['statistics'])
+            if 'meta' in validation_results:
+                st.write("**Meta:**", validation_results['meta'])
         
         # Results overview
         self._render_results_overview(validation_results)
@@ -39,6 +53,9 @@ class ResultsDisplayComponent:
         
         # Export options
         self._render_export_options(validation_results)
+        
+        # Failed Records Generator
+        self._render_failed_records_generator(validation_results)
         
         # Navigation
         self._render_navigation_buttons()
@@ -111,6 +128,69 @@ class ResultsDisplayComponent:
             info_text += f" | Sample size: {sample_size:,} rows"
         
         st.info(info_text)
+        
+        # Failure rate summary
+        if 'results' in validation_results and validation_results['results']:
+            st.markdown("#### 📉 Data Quality Failure Rates")
+            
+            # Create a summary of failure rates by expectation
+            failure_summary = []
+            for result in validation_results['results']:
+                if 'result' in result and 'element_count' in result['result']:
+                    exp_config = result.get('expectation_config', {})
+                    exp_type = exp_config.get('type', exp_config.get('expectation_type', 'Unknown'))
+                    column = exp_config.get('kwargs', {}).get('column', 'N/A')
+                    
+                    element_count = result['result']['element_count']
+                    unexpected_count = result['result'].get('unexpected_count', 0)
+                    missing_count = result['result'].get('missing_count', 0)
+                    
+                    if element_count > 0:
+                        failure_rate = (unexpected_count + missing_count) / element_count * 100
+                        failure_summary.append({
+                            'Expectation': exp_type.replace('expect_', '').replace('_', ' ').title(),
+                            'Column': column,
+                            'Total Records': element_count,
+                            'Failed Records': unexpected_count + missing_count,
+                            'Failure Rate': f"{failure_rate:.1f}%"
+                        })
+            
+            if failure_summary:
+                # Display as a table with color coding
+                import pandas as pd
+                failure_df = pd.DataFrame(failure_summary)
+                
+                def color_failure_rate(val):
+                    try:
+                        rate = float(val.rstrip('%'))
+                        if rate == 0:
+                            return 'background-color: #d4edda; color: #155724'
+                        elif rate <= 5:
+                            return 'background-color: #fff3cd; color: #856404'
+                        elif rate <= 20:
+                            return 'background-color: #f8d7da; color: #721c24'
+                        else:
+                            return 'background-color: #721c24; color: #ffffff'
+                    except:
+                        return ''
+                
+                styled_failure_df = failure_df.style.map(
+                    color_failure_rate, subset=['Failure Rate']
+                )
+                
+                st.dataframe(
+                    styled_failure_df,
+                    width='stretch',
+                    column_config={
+                        "Expectation": st.column_config.TextColumn("Expectation Type", width="medium"),
+                        "Column": st.column_config.TextColumn("Column", width="small"),
+                        "Total Records": st.column_config.NumberColumn("Total Records", width="small"),
+                        "Failed Records": st.column_config.NumberColumn("Failed Records", width="small"),
+                        "Failure Rate": st.column_config.TextColumn("Failure Rate", width="small")
+                    }
+                )
+            else:
+                st.info("No failure rate data available")
     
     def _render_visualizations(self, validation_results: Dict):
         """Render interactive visualizations"""
@@ -127,13 +207,13 @@ class ResultsDisplayComponent:
         with tab1:
             # Success rate donut chart
             fig_success = self.report_generator.create_success_rate_chart(summary_metrics)
-            st.plotly_chart(fig_success, use_container_width=True, config=self.config.CHART_CONFIG)
+            st.plotly_chart(fig_success, width='stretch', config=self.config.CHART_CONFIG)
         
         with tab2:
             # Results by expectation type
             if summary_metrics['expectation_types']:
                 fig_types = self.report_generator.create_expectation_type_chart(summary_metrics)
-                st.plotly_chart(fig_types, use_container_width=True, config=self.config.CHART_CONFIG)
+                st.plotly_chart(fig_types, width='stretch', config=self.config.CHART_CONFIG)
             else:
                 st.info("No expectation type data available")
         
@@ -144,7 +224,7 @@ class ResultsDisplayComponent:
                     validation_results, st.session_state.uploaded_data
                 )
                 if fig_columns.data:
-                    st.plotly_chart(fig_columns, use_container_width=True, config=self.config.CHART_CONFIG)
+                    st.plotly_chart(fig_columns, width='stretch', config=self.config.CHART_CONFIG)
                 else:
                     st.info("No column-specific expectations found")
             else:
@@ -163,7 +243,7 @@ class ResultsDisplayComponent:
                     cols = st.columns(2)
                     for i, fig in enumerate(distribution_figs):
                         with cols[i % 2]:
-                            st.plotly_chart(fig, use_container_width=True, config=self.config.CHART_CONFIG)
+                            st.plotly_chart(fig, width='stretch', config=self.config.CHART_CONFIG)
                 else:
                     st.info("No numeric columns available for distribution analysis")
             else:
@@ -181,7 +261,7 @@ class ResultsDisplayComponent:
             return
         
         # Filter options
-        col1, col2, col3 = st.columns(3)
+        col1, col2, col3, col4 = st.columns(4)
         
         with col1:
             status_filter = st.selectbox(
@@ -212,6 +292,24 @@ class ResultsDisplayComponent:
             else:
                 column_filter = "All"
         
+        with col4:
+            if 'Failure Rate' in detailed_table.columns:
+                # Extract numeric values for failure rate filtering
+                failure_rates = detailed_table['Failure Rate'].replace('N/A', '0.0%').str.rstrip('%').astype(float)
+                max_rate = failure_rates.max() if not failure_rates.empty else 100
+                min_rate = failure_rates.min() if not failure_rates.empty else 0
+                
+                failure_rate_filter = st.slider(
+                    "Max Failure Rate (%):",
+                    min_value=float(min_rate),
+                    max_value=float(max_rate),
+                    value=float(max_rate),
+                    step=0.1,
+                    help="Filter expectations by maximum failure rate"
+                )
+            else:
+                failure_rate_filter = 100
+        
         # Apply filters
         filtered_table = detailed_table.copy()
         
@@ -226,6 +324,12 @@ class ResultsDisplayComponent:
         if column_filter != "All":
             filtered_table = filtered_table[filtered_table['Column'] == column_filter]
         
+        # Apply failure rate filter
+        if 'Failure Rate' in filtered_table.columns and failure_rate_filter < 100:
+            # Convert failure rates to numeric for comparison
+            failure_rates = filtered_table['Failure Rate'].replace('N/A', '0.0%').str.rstrip('%').astype(float)
+            filtered_table = filtered_table[failure_rates <= failure_rate_filter]
+        
         # Display results count
         total_results = len(detailed_table)
         filtered_results = len(filtered_table)
@@ -239,25 +343,44 @@ class ResultsDisplayComponent:
                 return 'background-color: #f8d7da; color: #721c24'
             return ''
         
+        def highlight_failure_rate(val):
+            if val == 'N/A':
+                return ''
+            try:
+                rate = float(val.rstrip('%'))
+                if rate == 0:
+                    return 'background-color: #d4edda; color: #155724'  # Green for 0%
+                elif rate <= 5:
+                    return 'background-color: #fff3cd; color: #856404'  # Yellow for low rates
+                elif rate <= 20:
+                    return 'background-color: #f8d7da; color: #721c24'  # Red for high rates
+                else:
+                    return 'background-color: #721c24; color: #ffffff'  # Dark red for very high rates
+            except:
+                return ''
+        
         # Display the table
         if not filtered_table.empty:
-            styled_table = filtered_table.style.applymap(
+            styled_table = filtered_table.style.map(
                 highlight_status, subset=['Status']
+            ).map(
+                highlight_failure_rate, subset=['Failure Rate']
             ).format({
                 'Observed Value': lambda x: str(x)[:50] + '...' if len(str(x)) > 50 else str(x),
                 'Expected': lambda x: str(x)[:50] + '...' if len(str(x)) > 50 else str(x)
             })
             
             st.dataframe(
-                styled_table,
-                use_container_width=True,
-                height=400,
-                column_config={
-                    "ID": st.column_config.NumberColumn("ID", width="small"),
-                    "Status": st.column_config.TextColumn("Status", width="small"),
-                    "Details": st.column_config.TextColumn("Details", width="large")
-                }
-            )
+                    styled_table,
+                    width='stretch',
+                    height=400,
+                    column_config={
+                        "ID": st.column_config.NumberColumn("ID", width="small"),
+                        "Status": st.column_config.TextColumn("Status", width="small"),
+                        "Failure Rate": st.column_config.TextColumn("Failure Rate", width="small"),
+                        "Details": st.column_config.TextColumn("Details", width="large")
+                    }
+                )
         else:
             st.warning("No results match the selected filters")
         
@@ -287,18 +410,19 @@ class ResultsDisplayComponent:
         
         with col1:
             # Export as JSON
-            if st.button("📄 Export JSON", use_container_width=True):
+            if st.button("📄 Export JSON", width='stretch', key="export_json_btn"):
                 json_data = json.dumps(validation_results, indent=2, default=str)
                 st.download_button(
                     "Download JSON Report",
                     data=json_data,
                     file_name=f"validation_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
-                    mime="application/json"
+                    mime="application/json",
+                    key="download_json_report_btn"
                 )
         
         with col2:
             # Export as HTML
-            if st.button("🌐 Export HTML", use_container_width=True):
+            if st.button("🌐 Export HTML", width='stretch', key="export_html_btn"):
                 if st.session_state.uploaded_data is not None:
                     suite_name = st.session_state.get('current_suite_name', 'validation_suite')
                     html_report = self.report_generator.generate_html_report(
@@ -310,14 +434,15 @@ class ResultsDisplayComponent:
                         "Download HTML Report",
                         data=html_report,
                         file_name=f"validation_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html",
-                        mime="text/html"
+                        mime="text/html",
+                        key="download_html_report_btn"
                     )
                 else:
                     st.warning("Original data not available for HTML report")
         
         with col3:
             # Export detailed table as CSV
-            if st.button("📊 Export CSV", use_container_width=True):
+            if st.button("📊 Export CSV", width='stretch', key="export_csv_btn"):
                 detailed_table = self.report_generator.create_detailed_results_table(validation_results)
                 if not detailed_table.empty:
                     csv_data = detailed_table.to_csv(index=False)
@@ -325,10 +450,171 @@ class ResultsDisplayComponent:
                         "Download CSV Report",
                         data=csv_data,
                         file_name=f"validation_details_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-                        mime="text/csv"
+                        mime="text/csv",
+                        key="download_csv_report_btn"
                     )
                 else:
                     st.warning("No detailed results available")
+        
+        # Failed Records Dataset Export
+        st.markdown("#### ❌ Failed Records Dataset")
+        st.markdown("*Original data rows that failed validation tests*")
+        
+        if st.session_state.uploaded_data is not None:
+            failed_records_df = self.report_generator.create_failed_records_dataset(
+                validation_results, st.session_state.uploaded_data
+            )
+            
+            if not failed_records_df.empty:
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    st.metric("Total Failed Rows", len(failed_records_df))
+                
+                with col2:
+                    total_original_rows = len(st.session_state.uploaded_data)
+                    failure_percentage = (len(failed_records_df) / total_original_rows) * 100
+                    st.metric("Failure Rate", f"{failure_percentage:.1f}%")
+                
+                with col3:
+                    if 'Failed_Tests_Count' in failed_records_df.columns:
+                        avg_failures_per_row = failed_records_df['Failed_Tests_Count'].mean()
+                        st.metric("Avg Tests Failed/Row", f"{avg_failures_per_row:.1f}")
+                
+                # Column selection for preview
+                st.markdown("##### Preview Options")
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    # Get all original columns (excluding our added failure columns)
+                    original_cols = [col for col in failed_records_df.columns 
+                                   if not col.startswith('Failed_Test_') and col not in ['All_Failed_Tests', 'Failed_Tests_Count']]
+                    
+                    show_original_only = st.checkbox(
+                        "Show original columns only", 
+                        value=True,
+                        help="Hide the individual test failure columns and show only original data with summary"
+                    )
+                
+                with col2:
+                    # Ensure min_value is always less than max_value and handle edge cases
+                    max_available = min(500, len(failed_records_df))
+                    
+                    # Handle very small datasets
+                    if max_available <= 1:
+                        # For 1 or fewer rows, just show a simple text display
+                        st.info(f"Showing all {max_available} failed record(s)")
+                        max_rows_to_show = max_available
+                    else:
+                        # Ensure min_value is always strictly less than max_value
+                        min_value = min(9, max_available - 1)  # Use max_available - 1 to ensure min < max
+                        
+                        # Adjust step size for small datasets
+                        if max_available <= 10:
+                            step = 1
+                        elif max_available <= 50:
+                            step = 5
+                        else:
+                            step = 10
+                        
+                        max_rows_to_show = st.slider(
+                            "Rows to preview:",
+                            min_value=min_value,
+                            max_value=max_available,
+                            value=min(100, max_available),
+                            step=step
+                        )
+                
+                # Preview of failed records
+                with st.expander("🔍 Preview Failed Records", expanded=True):
+                    if show_original_only:
+                        # Show original columns plus summary columns
+                        display_cols = original_cols + ['Failed_Tests_Count', 'All_Failed_Tests']
+                        preview_df = failed_records_df[display_cols].head(max_rows_to_show)
+                    else:
+                        # Show all columns
+                        preview_df = failed_records_df.head(max_rows_to_show)
+                    
+                    st.dataframe(
+                        preview_df,
+                        width='stretch',
+                        column_config={
+                            "Failed_Tests_Count": st.column_config.NumberColumn("# Tests Failed", width="small"),
+                            "All_Failed_Tests": st.column_config.TextColumn("Failed Tests Summary", width="large")
+                        }
+                    )
+                
+                # Download options
+                st.markdown("##### Download Options")
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    # Original data + summary columns only
+                    summary_cols = original_cols + ['Failed_Tests_Count', 'All_Failed_Tests']
+                    summary_df = failed_records_df[summary_cols]
+                    summary_csv = summary_df.to_csv(index=False)
+                    st.download_button(
+                        "📥 Download Summary CSV",
+                        data=summary_csv,
+                        file_name=f"failed_records_summary_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                        mime="text/csv",
+                        key="download_failed_records_summary_csv",
+                        width='stretch',
+                        help="Download original data with failed rows and test summary"
+                    )
+                
+                with col2:
+                    # Full dataset with all failure details
+                    full_csv = failed_records_df.to_csv(index=False)
+                    st.download_button(
+                        "📥 Download Detailed CSV",
+                        data=full_csv,
+                        file_name=f"failed_records_detailed_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                        mime="text/csv",
+                        key="download_failed_records_detailed_csv",
+                        width='stretch',
+                        help="Download complete dataset with individual test failure columns"
+                    )
+                
+                with col3:
+                    # JSON format for programmatic use
+                    failed_json = failed_records_df.to_json(orient='records', indent=2)
+                    st.download_button(
+                        "📥 Download JSON",
+                        data=failed_json,
+                        file_name=f"failed_records_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+                        mime="application/json",
+                        key="download_failed_records_json",
+                        width='stretch',
+                        help="Download failed records in JSON format"
+                    )
+                
+                # Additional insights
+                if 'Failed_Tests_Count' in failed_records_df.columns:
+                    st.markdown("##### Failure Pattern Analysis")
+                    
+                    # Distribution of failures per row
+                    failure_counts = failed_records_df['Failed_Tests_Count'].value_counts().sort_index()
+                    
+                    col1, col2 = st.columns(2)
+                    
+                    with col1:
+                        st.markdown("**Failures per Row Distribution:**")
+                        for count, freq in failure_counts.items():
+                            percentage = (freq / len(failed_records_df)) * 100
+                            st.write(f"• {count} test(s) failed: {freq} rows ({percentage:.1f}%)")
+                    
+                    with col2:
+                        # Show most common failure combinations
+                        if 'All_Failed_Tests' in failed_records_df.columns:
+                            st.markdown("**Most Common Failure Patterns:**")
+                            top_patterns = failed_records_df['All_Failed_Tests'].value_counts().head(5)
+                            for i, (pattern, count) in enumerate(top_patterns.items(), 1):
+                                st.write(f"{i}. {count} rows: {pattern[:100]}...")
+            else:
+                st.success("🎉 No failed records found! All data rows passed validation successfully.")
+        else:
+            st.warning("⚠️ Original dataset not available. Cannot create failed records dataset.")
         
         # Data quality score
         st.markdown("#### 📊 Data Quality Assessment")
@@ -385,6 +671,21 @@ class ResultsDisplayComponent:
                 st.write("3. Consider updating data collection or cleaning processes")
                 st.write("4. Re-run validation after implementing fixes")
     
+    def _render_failed_records_generator(self, validation_results: Dict):
+        """Render the failed records generator section"""
+        st.markdown("---")
+        st.markdown("## 📊 Failed Records Report Generator")
+        st.markdown("Generate a comprehensive, downloadable report of all records that failed validation expectations.")
+        
+        # Check if we have failed expectations
+        summary_metrics = self.report_generator.create_summary_metrics(validation_results)
+        if summary_metrics and summary_metrics.get('failed', 0) > 0:
+            # Render the failed records generator
+            self.failed_records_generator.render(validation_results, st.session_state.uploaded_data)
+        else:
+            st.info("🎉 No failed expectations found! All validations passed successfully.")
+            st.markdown("The failed records report generator is only available when there are validation failures to analyze.")
+    
     def _render_navigation_buttons(self):
         """Render navigation buttons"""
         st.markdown("---")
@@ -392,12 +693,12 @@ class ResultsDisplayComponent:
         col1, col2, col3 = st.columns(3)
         
         with col1:
-            if st.button("← Back to Validation", type="secondary"):
+            if st.button("← Back to Validation", type="secondary", key="back_to_validation_btn"):
                 st.session_state.current_step = 'validate'
                 st.rerun()
         
         with col2:
-            if st.button("🔄 Run New Validation", type="secondary"):
+            if st.button("🔄 Run New Validation", type="secondary", key="run_new_validation_btn"):
                 # Reset validation state
                 st.session_state.validation_completed = False
                 st.session_state.validation_results = None
@@ -405,7 +706,7 @@ class ResultsDisplayComponent:
                 st.rerun()
         
         with col3:
-            if st.button("📁 Upload New Data", type="primary"):
+            if st.button("📁 Upload New Data", type="primary", key="upload_new_data_btn"):
                 # Reset all state
                 for key in ['uploaded_data', 'expectation_configs', 'expectation_suite', 
                            'validation_results', 'validation_completed']:

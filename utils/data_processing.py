@@ -21,18 +21,24 @@ class DataProcessor:
                 # Try UTF-8 first
                 try:
                     df = pd.read_csv(StringIO(content.decode('utf-8')))
+                    # Convert string booleans to actual booleans
+                    df = DataProcessor._convert_string_booleans(df)
                     return df
                 except UnicodeDecodeError:
                     # Try other encodings
                     for encoding in ['latin-1', 'iso-8859-1', 'cp1252']:
                         try:
                             df = pd.read_csv(StringIO(content.decode(encoding)))
+                            # Convert string booleans to actual booleans
+                            df = DataProcessor._convert_string_booleans(df)
                             return df
                         except:
                             continue
                     
                     # If all encodings fail, try with errors='ignore'
                     df = pd.read_csv(StringIO(content.decode('utf-8', errors='ignore')))
+                    # Convert string booleans to actual booleans
+                    df = DataProcessor._convert_string_booleans(df)
                     return df
                     
             elif file_extension in ['xlsx', 'xls']:
@@ -96,45 +102,82 @@ class DataProcessor:
             
             # Column-specific information
             for col in df.columns:
-                col_info = {
-                    'dtype': str(df[col].dtype),
-                    'non_null_count': df[col].count(),
-                    'null_count': df[col].isnull().sum(),
-                    'null_percentage': (df[col].isnull().sum() / len(df)) * 100,
-                    'unique_count': df[col].nunique(),
-                    'unique_percentage': (df[col].nunique() / len(df)) * 100
-                }
-                
-                # Numeric columns
-                if pd.api.types.is_numeric_dtype(df[col]):
-                    col_info.update({
-                        'mean': df[col].mean(),
-                        'median': df[col].median(),
-                        'std': df[col].std(),
-                        'min': df[col].min(),
-                        'max': df[col].max(),
-                        'q25': df[col].quantile(0.25),
-                        'q75': df[col].quantile(0.75)
-                    })
-                
-                # Text columns
-                elif pd.api.types.is_object_dtype(df[col]):
-                    col_info.update({
-                        'max_length': df[col].astype(str).str.len().max(),
-                        'min_length': df[col].astype(str).str.len().min(),
-                        'avg_length': df[col].astype(str).str.len().mean(),
-                        'most_common': df[col].value_counts().head().to_dict()
-                    })
-                
-                # Datetime columns
-                elif pd.api.types.is_datetime64_any_dtype(df[col]):
-                    col_info.update({
-                        'earliest': df[col].min(),
-                        'latest': df[col].max(),
-                        'date_range_days': (df[col].max() - df[col].min()).days
-                    })
-                
-                profile['column_info'][col] = col_info
+                try:
+                    col_info = {
+                        'dtype': str(df[col].dtype),
+                        'non_null_count': df[col].count(),
+                        'null_count': df[col].isnull().sum(),
+                        'null_percentage': (df[col].isnull().sum() / len(df)) * 100,
+                        'unique_count': df[col].nunique(),
+                        'unique_percentage': (df[col].nunique() / len(df)) * 100
+                    }
+                    
+                    # Numeric columns - handle potential boolean string columns
+                    if pd.api.types.is_numeric_dtype(df[col]):
+                        # Check if it's actually numeric and not boolean strings
+                        try:
+                            col_info.update({
+                                'mean': df[col].mean(),
+                                'median': df[col].median(),
+                                'std': df[col].std(),
+                                'min': df[col].min(),
+                                'max': df[col].max(),
+                                'q25': df[col].quantile(0.25),
+                                'q75': df[col].quantile(0.75)
+                            })
+                        except (TypeError, ValueError) as e:
+                            # Handle cases where numeric operations fail (e.g., boolean strings)
+                            col_info['numeric_stats_error'] = str(e)
+                    
+                    # Text columns
+                    elif pd.api.types.is_object_dtype(df[col]):
+                        try:
+                            col_info.update({
+                                'max_length': df[col].astype(str).str.len().max(),
+                                'min_length': df[col].astype(str).str.len().min(),
+                                'avg_length': df[col].astype(str).str.len().mean(),
+                                'most_common': df[col].value_counts().head().to_dict()
+                            })
+                        except Exception as e:
+                            col_info['text_stats_error'] = str(e)
+                    
+                    # Datetime columns
+                    elif pd.api.types.is_datetime64_any_dtype(df[col]):
+                        try:
+                            col_info.update({
+                                'earliest': df[col].min(),
+                                'latest': df[col].max(),
+                                'date_range_days': (df[col].max() - df[col].min()).days
+                            })
+                        except Exception as e:
+                            col_info['datetime_stats_error'] = str(e)
+                    
+                    # Boolean columns (including string booleans)
+                    elif str(df[col].dtype) == 'bool' or DataProcessor._is_boolean_column(df[col]):
+                        try:
+                            # Convert string booleans to actual booleans for analysis
+                            if pd.api.types.is_object_dtype(df[col]):
+                                bool_series = df[col].astype(str).str.lower().map({'true': True, 'false': False})
+                            else:
+                                bool_series = df[col].astype(bool)
+                            
+                            col_info.update({
+                                'true_count': bool_series.sum(),
+                                'false_count': (~bool_series).sum(),
+                                'true_percentage': (bool_series.sum() / len(bool_series)) * 100,
+                                'false_percentage': ((~bool_series).sum() / len(bool_series)) * 100
+                            })
+                        except Exception as e:
+                            col_info['boolean_stats_error'] = str(e)
+                    
+                    profile['column_info'][col] = col_info
+                    
+                except Exception as col_error:
+                    # If individual column processing fails, add error info
+                    profile['column_info'][col] = {
+                        'dtype': str(df[col].dtype),
+                        'processing_error': str(col_error)
+                    }
             
             return profile
             
@@ -254,6 +297,43 @@ class DataProcessor:
         
         # Fallback to random sampling
         return df.sample(n=max_rows, random_state=42).reset_index(drop=True), is_sampled
+    
+    @staticmethod
+    def _is_boolean_column(series: pd.Series) -> bool:
+        """Check if a column contains boolean-like values"""
+        if pd.api.types.is_object_dtype(series):
+            unique_vals = series.dropna().unique()
+            if len(unique_vals) <= 2:
+                # Check if all values are boolean-like
+                bool_like = all(str(val).lower() in ['true', 'false', '1', '0', 'yes', 'no'] for val in unique_vals)
+                return bool_like
+        return False
+    
+    @staticmethod
+    def _convert_string_booleans(df: pd.DataFrame) -> pd.DataFrame:
+        """Convert string boolean values to actual boolean type"""
+        df_clean = df.copy()
+        
+        for col in df_clean.columns:
+            if pd.api.types.is_object_dtype(df_clean[col]):
+                # Check if column contains only boolean-like strings
+                unique_vals = df_clean[col].dropna().unique()
+                if len(unique_vals) <= 2:
+                    # Check if all values are boolean-like
+                    bool_like = all(str(val).lower() in ['true', 'false', '1', '0', 'yes', 'no'] for val in unique_vals)
+                    if bool_like:
+                        try:
+                            # Convert to boolean
+                            df_clean[col] = df_clean[col].astype(str).str.lower().map({
+                                'true': True, 'false': False,
+                                '1': True, '0': False,
+                                'yes': True, 'no': False
+                            })
+                        except Exception:
+                            # If conversion fails, keep as is
+                            pass
+        
+        return df_clean
     
     @staticmethod
     def export_to_format(df: pd.DataFrame, format_type: str) -> bytes:

@@ -1,0 +1,21 @@
+name,age,email,salary,department,join_date,active
+Alice Johnson,25,alice@email.com,50000,Engineering,2023-01-15,true
+Bob Smith,32,bob@email.com,65000,Marketing,2022-03-20,true
+Carol Davis,,carol.invalid.email,45000,Sales,2023-07-10,true
+David Wilson,28,david@email.com,55000,Engineering,2023-02-28,false
+Emma Brown,45,emma@email.com,80000,Management,2021-11-05,true
+Frank Miller,22,frank@email.com,35000,Sales,2023-05-12,true
+Grace Lee,35,,70000,Engineering,2022-08-15,true
+Henry Taylor,65,henry@email.com,90000,Management,2020-01-10,true
+Ivy Chen,29,ivy@email.com,52000,Marketing,2023-03-05,true
+Jack Robinson,31,jack@email.com,58000,Engineering,2022-12-01,true
+Karen White,27,karen@email.com,48000,Sales,2023-04-18,true
+Liam Green,-5,liam@email.com,60000,Engineering,2023-01-20,true
+Maya Patel,30,maya@email.com,1000000,Marketing,2022-09-12,true
+Noah Davis,33,noah@email.com,62000,Sales,2023-06-08,true
+Olivia Martinez,26,olivia@email.com,0,Engineering,2023-02-14,false
+Paul Anderson,40,paul@email.com,75000,,2021-10-25,true
+Quinn Thompson,24,quinn@email.com,42000,Sales,invalid-date,true
+Rachel Clark,36,rachel@email.com,68000,Marketing,2022-07-30,true
+Sam Wilson,29,duplicate@email.com,54000,Engineering,2023-01-12,true
+Tom Brown,31,duplicate@email.com,56000,Sales,2022-11-18,true

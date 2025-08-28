@@ -57,7 +57,7 @@ class DataUploadComponent:
                 self.show_basic_stats(df)
                 
                 # Advance to next step button
-                if st.button("Continue to Data Profiling →", type="primary"):
+                if st.button("Continue to Data Profiling →", type="primary", key="continue_to_profiling_btn"):
                     st.session_state.current_step = 'profile'
                     st.rerun()
     
@@ -214,12 +214,12 @@ class DataUploadComponent:
         # Action buttons
         col1, col2 = st.columns(2)
         with col1:
-            if st.button("← Back to Upload", type="secondary"):
+            if st.button("← Back to Upload", type="secondary", key="back_to_upload_btn"):
                 st.session_state.current_step = 'upload'
                 st.rerun()
         
         with col2:
-            if st.button("Configure Expectations →", type="primary"):
+            if st.button("Configure Expectations →", type="primary", key="configure_expectations_btn"):
                 st.session_state.current_step = 'expectations'
                 st.rerun()
     

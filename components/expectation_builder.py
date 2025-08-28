@@ -80,7 +80,7 @@ class ExpectationBuilderComponent:
             template_config = self.config.EXPECTATION_TEMPLATES[selected_template]
             st.info(f"**{selected_template}**: {template_config['description']}")
             
-            if st.button(f"Apply {selected_template} Template"):
+            if st.button(f"Apply {selected_template} Template", key=f"apply_template_{selected_template}"):
                 self._apply_template(selected_template, data)
     
     def _apply_template(self, template_name: str, data: pd.DataFrame):
@@ -145,7 +145,7 @@ class ExpectationBuilderComponent:
         expectation_config = self._build_expectation_config(expectation_type, data)
         
         # Add expectation button
-        if st.button("Add Expectation", type="primary"):
+        if st.button("Add Expectation", type="primary", key="add_expectation_btn"):
             if expectation_config:
                 st.session_state.expectation_configs.append(expectation_config)
                 st.success("Expectation added successfully!")
@@ -341,11 +341,16 @@ class ExpectationBuilderComponent:
             
             col1, col2 = st.columns(2)
             with col1:
-                if st.button("Remove Selected", type="secondary"):
+                if st.button("Remove Selected", type="secondary", key="remove_selected_btn"):
                     # Remove in reverse order to maintain indices
                     for idx in sorted(selected_expectations, reverse=True):
                         st.session_state.expectation_configs.pop(idx)
                     st.success("Selected expectations removed!")
+                    st.rerun()
+                
+                if st.button("Clear All", type="secondary", key="clear_all_btn"):
+                    st.session_state.expectation_configs = []
+                    st.success("All expectations cleared!")
                     st.rerun()
             
             with col2:
@@ -362,7 +367,7 @@ class ExpectationBuilderComponent:
         col1, col2, col3 = st.columns(3)
         
         with col1:
-            if st.button("← Back to Profiling", type="secondary"):
+            if st.button("← Back to Profiling", type="secondary", key="back_to_profiling_btn"):
                 st.session_state.current_step = 'profile'
                 st.rerun()
         
@@ -372,23 +377,7 @@ class ExpectationBuilderComponent:
         
         with col3:
             if len(st.session_state.expectation_configs) > 0:
-                if st.button("Configure Suite →", type="primary"):
-                    # Debug: Check what expectations are configured
-                    st.write(f"🔍 Debug: Found {len(st.session_state.expectation_configs)} configured expectations")
-                    st.write(f"🔍 Debug: Session state keys: {list(st.session_state.keys())}")
-                    st.write(f"🔍 Debug: expectation_configs type: {type(st.session_state.expectation_configs)}")
-                    
-                    if st.session_state.expectation_configs:
-                        for i, config in enumerate(st.session_state.expectation_configs):
-                            st.write(f"  {i+1}. {config.get('expectation_type', 'Unknown')} - {config}")
-                    else:
-                        st.write("⚠️ No expectations found in session state!")
-                        st.write("🔍 Debug: Checking if default suite was loaded...")
-                        if hasattr(st.session_state, 'default_suite_loaded'):
-                            st.write(f"Default suite loaded: {st.session_state.default_suite_loaded}")
-                        else:
-                            st.write("Default suite not loaded")
-                    
+                if st.button("Configure Suite →", type="primary", key="configure_suite_btn"):
                     # Create the expectation suite and store it
                     suite = self.ge_helpers.create_expectation_suite(
                         st.session_state.current_suite_name
@@ -396,7 +385,6 @@ class ExpectationBuilderComponent:
                     
                     if suite:
                         # Add all configured expectations to the suite
-                        st.write(f"🔍 Debug: Adding {len(st.session_state.expectation_configs)} expectations to suite...")
                         success_count = 0
                         for i, config in enumerate(st.session_state.expectation_configs):
                             if self.ge_helpers.add_expectation_to_suite(suite, config):
@@ -404,18 +392,18 @@ class ExpectationBuilderComponent:
                             else:
                                 st.error(f"Failed to add expectation {i+1}")
                         
-                        st.write(f"🔍 Debug: Successfully added {success_count}/{len(st.session_state.expectation_configs)} expectations")
-                        st.write(f"🔍 Debug: Final suite has {len(suite.expectations)} expectations")
-                        
-                        # Persist suite and configs in session
-                        st.session_state.expectation_suite = suite
-                        try:
-                            st.session_state.expectation_suite_json = self.ge_helpers.export_suite_to_json(suite)
-                        except Exception:
-                            st.session_state.expectation_suite_json = None
-                        st.session_state.current_step = 'validate'
-                        st.success("Expectation suite created! Ready for validation.")
-                        st.rerun()
+                        if success_count > 0:
+                            # Persist suite and configs in session
+                            st.session_state.expectation_suite = suite
+                            try:
+                                st.session_state.expectation_suite_json = self.ge_helpers.export_suite_to_json(suite)
+                            except Exception:
+                                st.session_state.expectation_suite_json = None
+                            st.session_state.current_step = 'validate'
+                            st.success(f"✅ Expectation suite created with {success_count} expectations! Ready for validation.")
+                            st.rerun()
+                        else:
+                            st.error("Failed to add any expectations to the suite!")
                     else:
                         st.error("Failed to create expectation suite!")
             else:
@@ -438,34 +426,101 @@ class ExpectationBuilderComponent:
                     "Download JSON",
                     data=export_json,
                     file_name=f"{st.session_state.current_suite_name}.json",
-                    mime="application/json"
+                    mime="application/json",
+                    key="export_expectations_btn"
                 )
             else:
                 st.info("No expectations to export")
             
             st.markdown("**Import Expectations**")
-            uploaded_json = st.file_uploader(
-                "Upload expectation suite:",
-                type=['json'],
-                help="Upload a previously exported expectation suite"
-            )
+            
+            # Add sample file download
+            st.markdown("*Download a sample file to test import:*")
+            try:
+                with open("sample_expectations.json", "r", encoding="utf-8") as f:
+                    sample_data = f.read()
+                st.download_button(
+                    "📥 Download Sample",
+                    data=sample_data,
+                    file_name="sample_expectations.json",
+                    mime="application/json",
+                    key="download_sample_btn"
+                )
+            except FileNotFoundError:
+                st.warning("Sample file not found")
+            except Exception as e:
+                st.error(f"Error loading sample file: {str(e)}")
+            
+            st.markdown("---")
+            
+            # Add a manual import button for better UX
+            if st.button("📁 Import from File", type="secondary", key="import_file_btn"):
+                uploaded_json = st.file_uploader(
+                    "Upload expectation suite:",
+                    type=['json'],
+                    help="Upload a previously exported expectation suite",
+                    key="import_uploader"
+                )
+            else:
+                uploaded_json = None
             
             if uploaded_json is not None:
                 try:
                     import json
+                    # Reset file pointer to beginning
+                    uploaded_json.seek(0)
                     import_data = json.loads(uploaded_json.read())
                     
+                    # Validate the imported data structure
+                    if 'expectations' not in import_data:
+                        st.error("Invalid file format: 'expectations' key not found")
+                        return
+                    
+                    if not isinstance(import_data['expectations'], list):
+                        st.error("Invalid file format: 'expectations' must be a list")
+                        return
+                    
+                    # Validate each expectation has required fields
+                    valid_expectations = []
+                    for i, exp in enumerate(import_data['expectations']):
+                        if not isinstance(exp, dict):
+                            st.warning(f"Expectation {i+1} is not a valid dictionary, skipping...")
+                            continue
+                        
+                        if 'expectation_type' not in exp:
+                            st.warning(f"Expectation {i+1} missing 'expectation_type', skipping...")
+                            continue
+                        
+                        if 'kwargs' not in exp:
+                            st.warning(f"Expectation {i+1} missing 'kwargs', skipping...")
+                            continue
+                        
+                        valid_expectations.append(exp)
+                    
+                    if not valid_expectations:
+                        st.error("No valid expectations found in the file!")
+                        return
+                    
+                    # Update session state
                     st.session_state.current_suite_name = import_data.get(
                         'suite_name', 'imported_suite'
                     )
-                    st.session_state.expectation_configs = import_data.get(
-                        'expectations', []
-                    )
+                    st.session_state.expectation_configs = valid_expectations
                     
-                    st.success("Expectations imported successfully!")
+                    # Clear any existing suite to force recreation
+                    if 'expectation_suite' in st.session_state:
+                        del st.session_state.expectation_suite
+                    
+                    st.success(f"✅ Successfully imported {len(valid_expectations)} expectations!")
+                    if len(valid_expectations) < len(import_data['expectations']):
+                        st.warning(f"⚠️ {len(import_data['expectations']) - len(valid_expectations)} expectations were skipped due to invalid format.")
                     st.rerun()
+                    
+                except json.JSONDecodeError as e:
+                    st.error(f"Invalid JSON file: {str(e)}")
                 except Exception as e:
                     st.error(f"Error importing expectations: {str(e)}")
+                    st.error("Please ensure the file is a valid expectation suite JSON file.")
     
     def _load_default_suite(self):
         """Load default expectation suite from file"""
@@ -478,14 +533,19 @@ class ExpectationBuilderComponent:
             default_suite_path = os.path.join(current_dir, 'default_suite.json')
             
             if os.path.exists(default_suite_path):
-                with open(default_suite_path, 'r') as f:
+                with open(default_suite_path, 'r', encoding='utf-8') as f:
                     import_data = json.load(f)
                 
-                st.session_state.current_suite_name = import_data.get('suite_name', 'default_suite')
-                st.session_state.expectation_configs = import_data.get('expectations', [])
-                st.session_state.default_suite_loaded = True
-                
-                st.success(f"✅ Loaded default suite with {len(st.session_state.expectation_configs)} expectations!")
+                # Validate the imported data
+                if 'expectations' in import_data and isinstance(import_data['expectations'], list):
+                    st.session_state.current_suite_name = import_data.get('suite_name', 'default_suite')
+                    st.session_state.expectation_configs = import_data.get('expectations', [])
+                    st.session_state.default_suite_loaded = True
+                    
+                    st.success(f"✅ Loaded default suite with {len(st.session_state.expectation_configs)} expectations!")
+                else:
+                    st.warning("Default suite file has invalid format")
+                    st.session_state.default_suite_loaded = True
             else:
                 st.warning("Default suite file not found")
                 st.session_state.default_suite_loaded = True  # Don't try again

@@ -38,7 +38,7 @@ class ValidationRunnerComponent:
                 expectation_suite = rebuilt_suite
             else:
                 st.error("❌ Expectation suite has no expectations! Please go back and add some expectations.")
-                if st.button("← Back to Expectations", type="secondary"):
+                if st.button("← Back to Expectations", type="secondary", key="back_to_expectations_btn1"):
                     st.session_state.current_step = 'expectations'
                     st.rerun()
                 return
@@ -158,17 +158,10 @@ class ValidationRunnerComponent:
             if st.session_state.validation_results:
                 self._show_quick_results_summary()
             
-            col1, col2 = st.columns(2)
-            with col1:
-                if st.button("Run Validation Again", type="secondary"):
-                    st.session_state.validation_completed = False
-                    st.session_state.validation_results = None
-                    st.rerun()
-            
-            with col2:
-                if st.button("View Detailed Results →", type="primary"):
-                    st.session_state.current_step = 'results'
-                    st.rerun()
+            if st.button("Run Validation Again", type="secondary", key="run_validation_again_btn", use_container_width=True):
+                st.session_state.validation_completed = False
+                st.session_state.validation_results = None
+                st.rerun()
         
         else:
             # Run validation button
@@ -423,7 +416,7 @@ class ValidationRunnerComponent:
         
         st.markdown("#### 📊 Quick Results Summary")
         
-        col1, col2, col3, col4 = st.columns(4)
+        col1, col2, col3, col4, col5 = st.columns(5)
         
         with col1:
             total = stats.get('evaluated_expectations', 0)
@@ -450,6 +443,31 @@ class ValidationRunnerComponent:
                     st.metric("Success Rate", f"{success_rate:.1f}%")
                 else:
                     st.metric("Success Rate", "0.0%")
+        
+        with col5:
+            # Calculate average data failure rate across all expectations
+            if 'results' in results and results['results']:
+                total_failure_rate = 0
+                valid_expectations = 0
+                
+                for result in results['results']:
+                    if 'result' in result and 'element_count' in result['result']:
+                        element_count = result['result']['element_count']
+                        unexpected_count = result['result'].get('unexpected_count', 0)
+                        missing_count = result['result'].get('missing_count', 0)
+                        
+                        if element_count > 0:
+                            failure_rate = (unexpected_count + missing_count) / element_count * 100
+                            total_failure_rate += failure_rate
+                            valid_expectations += 1
+                
+                if valid_expectations > 0:
+                    avg_failure_rate = total_failure_rate / valid_expectations
+                    st.metric("Avg Data Failure Rate", f"{avg_failure_rate:.1f}%")
+                else:
+                    st.metric("Avg Data Failure Rate", "N/A")
+            else:
+                st.metric("Avg Data Failure Rate", "N/A")
     
     def _render_navigation_buttons(self):
         """Render navigation buttons"""
@@ -458,13 +476,13 @@ class ValidationRunnerComponent:
         col1, col2 = st.columns(2)
         
         with col1:
-            if st.button("← Back to Expectations", type="secondary"):
+            if st.button("← Back to Expectations", type="secondary", key="back_to_expectations_btn2"):
                 st.session_state.current_step = 'expectations'
                 st.rerun()
         
         with col2:
             if st.session_state.get('validation_completed', False):
-                if st.button("View Results →", type="primary"):
+                if st.button("View Results →", type="primary", key="view_results_btn"):
                     st.session_state.current_step = 'results'
                     st.rerun()
             else:

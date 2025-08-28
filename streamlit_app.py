@@ -34,6 +34,8 @@ def initialize_session_state():
         st.session_state.validation_results = None
     if 'current_step' not in st.session_state:
         st.session_state.current_step = 'upload'
+    if 'current_suite_name' not in st.session_state:
+        st.session_state.current_suite_name = 'validation_suite'
     if 'ge_helpers' not in st.session_state:
         st.session_state.ge_helpers = GEHelpers()
 
