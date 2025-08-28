@@ -33,9 +33,14 @@ class GEHelpers:
                 if not self.initialize_context():
                     return None
             
-            # Create expectation suite directly
-            suite = ExpectationSuite()
-            suite.name = suite_name
+            # Create expectation suite directly - handle different GE versions
+            try:
+                # Try the new GE 0.18+ style first
+                suite = ExpectationSuite()
+                suite.name = suite_name
+            except TypeError:
+                # Fallback to older style if needed
+                suite = ExpectationSuite(expectation_suite_name=suite_name)
             
             # Add the suite to context if it has suites attribute
             if hasattr(self.context, 'suites'):
@@ -159,9 +164,15 @@ class GEHelpers:
             if hasattr(suite, 'expectations') and all(not isinstance(exp, dict) for exp in (suite.expectations or [])):
                 return suite
 
-            # Rebuild a new suite with the same name
-            rebuilt_suite = ExpectationSuite()
-            rebuilt_suite.name = getattr(suite, 'name', 'rebuilt_suite')
+            # Rebuild a new suite with the same name - handle different GE versions
+            suite_name = getattr(suite, 'name', 'rebuilt_suite')
+            try:
+                # Try the new GE 0.18+ style first
+                rebuilt_suite = ExpectationSuite()
+                rebuilt_suite.name = suite_name
+            except TypeError:
+                # Fallback to older style if needed
+                rebuilt_suite = ExpectationSuite(expectation_suite_name=suite_name)
             # Attempt to register with context if available
             try:
                 if self.context is not None and hasattr(self.context, 'suites'):
@@ -219,10 +230,18 @@ class GEHelpers:
         """Import expectation suite from JSON string"""
         try:
             suite_dict = json.loads(json_string)
-            suite = ExpectationSuite()
-            # Set attributes manually for GE 0.18+ compatibility
-            if 'name' in suite_dict:
-                suite.name = suite_dict['name']
+            suite_name = suite_dict.get('name', 'imported_suite')
+            
+            # Handle different GE versions
+            try:
+                # Try the new GE 0.18+ style first
+                suite = ExpectationSuite()
+                suite.name = suite_name
+            except TypeError:
+                # Fallback to older style if needed
+                suite = ExpectationSuite(expectation_suite_name=suite_name)
+            
+            # Set other attributes manually
             if 'meta' in suite_dict:
                 suite.meta = suite_dict['meta']
             if 'expectations' in suite_dict:
