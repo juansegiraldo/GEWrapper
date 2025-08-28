@@ -1,0 +1,4 @@
+name,age,email,salary,department,join_date,active,Failed_Test_4_column_values_to_not_be_null,Failed_Test_5_column_values_to_not_be_null,Failed_Test_7_column_values_to_not_be_null,All_Failed_Tests,Failed_Tests_Count
+Carol Davis,,carol.invalid.email,45000,Sales,2023-07-10,True,Null value: expect_column_values_to_not_be_null,,,Null value: expect_column_values_to_not_be_null,1
+Grace Lee,35.0,,70000,Engineering,2022-08-15,True,,Null value: expect_column_values_to_not_be_null,,Null value: expect_column_values_to_not_be_null,1
+Paul Anderson,40.0,paul@email.com,75000,,2021-10-25,True,,,Null value: expect_column_values_to_not_be_null,Null value: expect_column_values_to_not_be_null,1

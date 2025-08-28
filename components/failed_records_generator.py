@@ -69,16 +69,15 @@ class FailedRecordsGenerator:
             else:
                 st.metric("Overall Failure Rate", "0.0%")
         
-        # Show breakdown by expectation type
+        # Show breakdown by column
         if failed_stats['breakdown_by_type']:
-            st.markdown("**Breakdown by Expectation Type:**")
+            st.markdown("**Breakdown by Column:**")
             breakdown_df = pd.DataFrame(failed_stats['breakdown_by_type'])
             st.dataframe(
                 breakdown_df,
                 use_container_width=True,
                 column_config={
-                    "Expectation Type": st.column_config.TextColumn("Expectation Type", width="medium"),
-                    "Column": st.column_config.TextColumn("Column", width="small"),
+                    "Column": st.column_config.TextColumn("Column", width="medium"),
                     "Failed Records": st.column_config.NumberColumn("Failed Records", width="small"),
                     "Failure Rate": st.column_config.TextColumn("Failure Rate", width="small")
                 }
@@ -294,7 +293,6 @@ class FailedRecordsGenerator:
                             failure_rate = (failed_count / element_count * 100) if element_count > 0 else 0
                             
                             breakdown_by_type.append({
-                                'Expectation Type': exp_type.replace('expect_', '').replace('_', ' ').title(),
                                 'Column': column,
                                 'Failed Records': failed_count,
                                 'Failure Rate': f"{failure_rate:.1f}%"
@@ -340,7 +338,6 @@ class FailedRecordsGenerator:
                     # Add to expectation summary
                     if failure_details:
                         expectation_summary.append({
-                            'Expectation Type': exp_type.replace('expect_', '').replace('_', ' ').title(),
                             'Column': column,
                             'Failed Records': len(failure_details),
                             'Failure Rate': f"{(len(failure_details) / len(original_data) * 100):.1f}%"
@@ -636,7 +633,7 @@ class FailedRecordsGenerator:
                 summary_ws['A7'].font = Font(bold=True, size=12)
                 
                 # Headers
-                headers = ['Expectation Type', 'Column', 'Failed Records', 'Failure Rate']
+                headers = ['Column', 'Failed Records', 'Failure Rate']
                 for col, header in enumerate(headers, 1):
                     cell = summary_ws.cell(row=8, column=col)
                     cell.value = header
@@ -645,10 +642,9 @@ class FailedRecordsGenerator:
                 
                 # Data
                 for row, summary in enumerate(failed_records_data['expectation_summary'], 9):
-                    summary_ws.cell(row=row, column=1, value=summary['Expectation Type'])
-                    summary_ws.cell(row=row, column=2, value=summary['Column'])
-                    summary_ws.cell(row=row, column=3, value=summary['Failed Records'])
-                    summary_ws.cell(row=row, column=4, value=summary['Failure Rate'])
+                    summary_ws.cell(row=row, column=1, value=summary['Column'])
+                    summary_ws.cell(row=row, column=2, value=summary['Failed Records'])
+                    summary_ws.cell(row=row, column=3, value=summary['Failure Rate'])
             
             # Create failed records sheet
             records_ws = wb.create_sheet("Failed Records")

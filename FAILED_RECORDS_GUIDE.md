@@ -38,7 +38,7 @@ The Failed Records Report Generator is a powerful feature that allows you to cre
 
 ### Report Contents
 - **Summary Statistics**: Total failed records, failed expectations, affected columns, overall failure rate
-- **Breakdown by Expectation Type**: Failure rates for each expectation type and column
+- **Breakdown by Column**: Failure rates for each column that had validation failures
 - **Detailed Failed Records**: Each failed record with:
   - Row index (if available)
   - Failed expectations list

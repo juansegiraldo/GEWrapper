@@ -502,7 +502,12 @@ class ReportGenerator:
                     column = exp_config.get('kwargs', {}).get('column', 'N/A')
                     
                     # Create column name for this failed expectation
-                    failure_col_name = f"Failed_Test_{i}_{expectation_type.replace('expect_', '')}"
+                    if column != 'N/A':
+                        # Include column name in the failure column name for clarity
+                        failure_col_name = f"Failed_Test_{i}_{column}_{expectation_type.replace('expect_', '')}"
+                    else:
+                        # For table-level expectations, use a generic name
+                        failure_col_name = f"Failed_Test_{i}_{expectation_type.replace('expect_', '')}"
                     expectation_failure_columns.append(failure_col_name)
                     
                     # Initialize failure column
@@ -515,12 +520,12 @@ class ReportGenerator:
                         # Mark rows with unexpected values
                         if unexpected_list:
                             mask = data_copy[column].isin(unexpected_list)
-                            data_copy.loc[mask, failure_col_name] = f"Unexpected value: {expectation_type}"
+                            data_copy.loc[mask, failure_col_name] = f"Column '{column}' has unexpected value: {expectation_type}"
                         
                         # Mark rows with missing values if this expectation checks for missing values
                         if 'missing_count' in result_data and result_data.get('missing_count', 0) > 0:
                             missing_mask = data_copy[column].isna()
-                            data_copy.loc[missing_mask, failure_col_name] = f"Missing value: {expectation_type}"
+                            data_copy.loc[missing_mask, failure_col_name] = f"Column '{column}' has missing value: {expectation_type}"
                         
                         # For range-based expectations, we need to check the actual condition
                         kwargs = exp_config.get('kwargs', {})
@@ -530,36 +535,36 @@ class ReportGenerator:
                             
                             if min_val is not None and max_val is not None:
                                 mask = ~data_copy[column].between(min_val, max_val)
-                                data_copy.loc[mask, failure_col_name] = f"Out of range ({min_val}-{max_val}): {expectation_type}"
+                                data_copy.loc[mask, failure_col_name] = f"Column '{column}' out of range ({min_val}-{max_val}): {expectation_type}"
                             elif min_val is not None:
                                 mask = data_copy[column] < min_val
-                                data_copy.loc[mask, failure_col_name] = f"Below minimum ({min_val}): {expectation_type}"
+                                data_copy.loc[mask, failure_col_name] = f"Column '{column}' below minimum ({min_val}): {expectation_type}"
                             elif max_val is not None:
                                 mask = data_copy[column] > max_val
-                                data_copy.loc[mask, failure_col_name] = f"Above maximum ({max_val}): {expectation_type}"
+                                data_copy.loc[mask, failure_col_name] = f"Column '{column}' above maximum ({max_val}): {expectation_type}"
                         
                         # For value set expectations
                         if 'value_set' in kwargs:
                             value_set = kwargs['value_set']
                             if expectation_type == 'expect_column_values_to_be_in_set':
                                 mask = ~data_copy[column].isin(value_set)
-                                data_copy.loc[mask, failure_col_name] = f"Not in allowed set: {expectation_type}"
+                                data_copy.loc[mask, failure_col_name] = f"Column '{column}' not in allowed set: {expectation_type}"
                             elif expectation_type == 'expect_column_values_to_not_be_in_set':
                                 mask = data_copy[column].isin(value_set)
-                                data_copy.loc[mask, failure_col_name] = f"In forbidden set: {expectation_type}"
+                                data_copy.loc[mask, failure_col_name] = f"Column '{column}' in forbidden set: {expectation_type}"
                         
                         # For uniqueness expectations
                         if expectation_type == 'expect_column_values_to_be_unique':
                             duplicated_mask = data_copy[column].duplicated(keep=False)
-                            data_copy.loc[duplicated_mask, failure_col_name] = f"Duplicate value: {expectation_type}"
+                            data_copy.loc[duplicated_mask, failure_col_name] = f"Column '{column}' has duplicate value: {expectation_type}"
                         
                         # For null expectations
                         if expectation_type == 'expect_column_values_to_not_be_null':
                             null_mask = data_copy[column].isna()
-                            data_copy.loc[null_mask, failure_col_name] = f"Null value: {expectation_type}"
+                            data_copy.loc[null_mask, failure_col_name] = f"Column '{column}' has null value: {expectation_type}"
                         elif expectation_type == 'expect_column_values_to_be_null':
                             not_null_mask = data_copy[column].notna()
-                            data_copy.loc[not_null_mask, failure_col_name] = f"Not null value: {expectation_type}"
+                            data_copy.loc[not_null_mask, failure_col_name] = f"Column '{column}' has not null value: {expectation_type}"
                     
                     else:
                         # For table-level expectations or when column is not found
@@ -567,7 +572,7 @@ class ReportGenerator:
                             # Try to find rows matching unexpected values across all columns
                             for unexpected_val in unexpected_list:
                                 mask = (data_copy == unexpected_val).any(axis=1)
-                                data_copy.loc[mask, failure_col_name] = f"Table-level failure: {expectation_type}"
+                                data_copy.loc[mask, failure_col_name] = f"Table-level failure (value '{unexpected_val}'): {expectation_type}"
             
             # Filter to only rows that have at least one failure
             failure_mask = pd.Series(False, index=data_copy.index)
@@ -577,10 +582,20 @@ class ReportGenerator:
             
             failed_rows = data_copy[failure_mask].copy()
             
-            # Add a summary column showing all failed tests for each row
+                            # Add a summary column showing all failed tests for each row
             if not failed_rows.empty:
+                # Clean up the failure messages to make them more readable
+                def clean_failure_message(message):
+                    """Clean up failure messages to remove redundant expectation type info"""
+                    if message:
+                        # Remove the generic expectation type at the end for better readability
+                        if ': expect_' in message:
+                            return message.split(': expect_')[0]
+                        return message
+                    return message
+                
                 failed_rows['All_Failed_Tests'] = failed_rows[expectation_failure_columns].apply(
-                    lambda row: ' | '.join([test for test in row if test != '']), axis=1
+                    lambda row: ' | '.join([clean_failure_message(test) for test in row if test != '']), axis=1
                 )
                 
                 # Add a count of failed tests per row
