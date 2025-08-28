@@ -34,7 +34,8 @@ class GEHelpers:
                     return None
             
             # Create expectation suite directly
-            suite = ExpectationSuite(name=suite_name)
+            suite = ExpectationSuite()
+            suite.name = suite_name
             
             # Add the suite to context if it has suites attribute
             if hasattr(self.context, 'suites'):
@@ -159,7 +160,8 @@ class GEHelpers:
                 return suite
 
             # Rebuild a new suite with the same name
-            rebuilt_suite = ExpectationSuite(name=getattr(suite, 'name', 'rebuilt_suite'))
+            rebuilt_suite = ExpectationSuite()
+            rebuilt_suite.name = getattr(suite, 'name', 'rebuilt_suite')
             # Attempt to register with context if available
             try:
                 if self.context is not None and hasattr(self.context, 'suites'):
@@ -217,7 +219,14 @@ class GEHelpers:
         """Import expectation suite from JSON string"""
         try:
             suite_dict = json.loads(json_string)
-            suite = ExpectationSuite(**suite_dict)
+            suite = ExpectationSuite()
+            # Set attributes manually for GE 0.18+ compatibility
+            if 'name' in suite_dict:
+                suite.name = suite_dict['name']
+            if 'meta' in suite_dict:
+                suite.meta = suite_dict['meta']
+            if 'expectations' in suite_dict:
+                suite.expectations = suite_dict['expectations']
             return suite
         except Exception as e:
             st.error(f"Error importing suite from JSON: {str(e)}")
