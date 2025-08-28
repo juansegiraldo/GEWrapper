@@ -12,7 +12,6 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from utils.report_generator import ReportGenerator
 from config.app_config import AppConfig
-from components.failed_records_generator import FailedRecordsGenerator
 
 class ResultsDisplayComponent:
     """Component for displaying validation results"""
@@ -20,7 +19,6 @@ class ResultsDisplayComponent:
     def __init__(self):
         self.report_generator = ReportGenerator()
         self.config = AppConfig()
-        self.failed_records_generator = FailedRecordsGenerator()
     
     def render(self, validation_results: Dict):
         """Render the validation results interface"""
@@ -53,9 +51,6 @@ class ResultsDisplayComponent:
         
         # Export options
         self._render_export_options(validation_results)
-        
-        # Failed Records Generator
-        self._render_failed_records_generator(validation_results)
         
         # Navigation
         self._render_navigation_buttons()
@@ -671,21 +666,7 @@ class ResultsDisplayComponent:
                 st.write("3. Consider updating data collection or cleaning processes")
                 st.write("4. Re-run validation after implementing fixes")
     
-    def _render_failed_records_generator(self, validation_results: Dict):
-        """Render the failed records generator section"""
-        st.markdown("---")
-        st.markdown("## 📊 Failed Records Report Generator")
-        st.markdown("Generate a comprehensive, downloadable report of all records that failed validation expectations.")
-        
-        # Check if we have failed expectations
-        summary_metrics = self.report_generator.create_summary_metrics(validation_results)
-        if summary_metrics and summary_metrics.get('failed', 0) > 0:
-            # Render the failed records generator
-            self.failed_records_generator.render(validation_results, st.session_state.uploaded_data)
-        else:
-            st.info("🎉 No failed expectations found! All validations passed successfully.")
-            st.markdown("The failed records report generator is only available when there are validation failures to analyze.")
-    
+
     def _render_navigation_buttons(self):
         """Render navigation buttons"""
         st.markdown("---")
