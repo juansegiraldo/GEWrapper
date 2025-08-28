@@ -290,20 +290,34 @@ class ResultsDisplayComponent:
         with col4:
             if 'Failure Rate' in detailed_table.columns:
                 # Extract numeric values for failure rate filtering
-                failure_rates = detailed_table['Failure Rate'].replace('N/A', '0.0%').str.rstrip('%').astype(float)
-                max_rate = failure_rates.max() if not failure_rates.empty else 100
-                min_rate = failure_rates.min() if not failure_rates.empty else 0
-                
-                failure_rate_filter = st.slider(
-                    "Max Failure Rate (%):",
-                    min_value=float(min_rate),
-                    max_value=float(max_rate),
-                    value=float(max_rate),
-                    step=0.1,
-                    help="Filter expectations by maximum failure rate"
-                )
+                try:
+                    failure_rates = detailed_table['Failure Rate'].replace('N/A', '0.0%').str.rstrip('%').astype(float)
+                    max_rate = failure_rates.max() if not failure_rates.empty else 100.0
+                    min_rate = failure_rates.min() if not failure_rates.empty else 0.0
+                    
+                    # Ensure we have valid numeric values
+                    if pd.isna(max_rate) or pd.isna(min_rate):
+                        max_rate = 100.0
+                        min_rate = 0.0
+                    
+                    # Ensure min_value is less than max_value
+                    if min_rate >= max_rate:
+                        min_rate = 0.0
+                        max_rate = 100.0
+                    
+                    failure_rate_filter = st.slider(
+                        "Max Failure Rate (%):",
+                        min_value=min_rate,
+                        max_value=max_rate,
+                        value=min(max_rate, 100.0),
+                        step=0.1,
+                        help="Filter expectations by maximum failure rate"
+                    )
+                except Exception as e:
+                    st.warning(f"Error creating failure rate filter: {str(e)}")
+                    failure_rate_filter = 100.0
             else:
-                failure_rate_filter = 100
+                failure_rate_filter = 100.0
         
         # Apply filters
         filtered_table = detailed_table.copy()
