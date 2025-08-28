@@ -1,6 +1,6 @@
 import great_expectations as gx
 from great_expectations.core import ExpectationSuite
-from great_expectations.expectations.expectation_configuration import ExpectationConfiguration
+from great_expectations.core.expectation_configuration import ExpectationConfiguration
 import pandas as pd
 import json
 import tempfile
