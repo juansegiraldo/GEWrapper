@@ -13,6 +13,7 @@ from components.expectation_builder import ExpectationBuilderComponent
 from components.validation_runner import ValidationRunnerComponent
 from components.results_display import ResultsDisplayComponent
 from utils.ge_helpers import GEHelpers
+from utils.suite_helpers import generate_suite_name
 from config.app_config import AppConfig
 
 st.set_page_config(
@@ -35,7 +36,14 @@ def initialize_session_state():
     if 'current_step' not in st.session_state:
         st.session_state.current_step = 'upload'
     if 'current_suite_name' not in st.session_state:
-        st.session_state.current_suite_name = 'validation_suite'
+        # Generate suite name based on uploaded file + timestamp
+        suite_name = generate_suite_name()
+        st.session_state.current_suite_name = suite_name
+    elif (st.session_state.get('uploaded_filename') and 
+          st.session_state.get('current_suite_name', '').startswith('unknown_dataset')):
+        # Update suite name if we now have an uploaded filename
+        suite_name = generate_suite_name()
+        st.session_state.current_suite_name = suite_name
     if 'ge_helpers' not in st.session_state:
         st.session_state.ge_helpers = GEHelpers()
 
@@ -116,7 +124,7 @@ def render_expectations_step():
 
 def render_validation_step():
     """Render the validation execution step"""
-    st.header("✅ Run Data Validation")
+    # Removed duplicate header - title is now handled in ValidationRunnerComponent
     
     if st.session_state.uploaded_data is None:
         st.warning("Please upload data first!")

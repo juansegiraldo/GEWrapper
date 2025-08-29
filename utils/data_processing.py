@@ -4,6 +4,9 @@ import json
 from typing import Dict, List, Any, Optional, Tuple
 import streamlit as st
 from io import StringIO, BytesIO
+import base64
+from datetime import datetime
+import html
 
 class DataProcessor:
     """Utility class for data processing operations"""
@@ -357,3 +360,276 @@ class DataProcessor:
         except Exception as e:
             st.error(f"Error exporting data: {str(e)}")
             return None
+    
+    @staticmethod
+    def generate_downloadable_profile(df: pd.DataFrame, profile: Dict[str, Any], format_type: str = 'json') -> bytes:
+        """Generate downloadable data profile in specified format"""
+        try:
+            if format_type == 'json':
+                return DataProcessor._generate_json_profile(df, profile)
+            elif format_type == 'excel':
+                return DataProcessor._generate_excel_profile(df, profile)
+            elif format_type == 'html':
+                return DataProcessor._generate_html_profile(df, profile)
+            elif format_type == 'csv':
+                return DataProcessor._generate_csv_profile(df, profile)
+            else:
+                raise ValueError(f"Unsupported format: {format_type}")
+        except Exception as e:
+            st.error(f"Error generating profile download: {str(e)}")
+            return None
+    
+    @staticmethod
+    def _generate_json_profile(df: pd.DataFrame, profile: Dict[str, Any]) -> bytes:
+        """Generate JSON format data profile"""
+        # Add metadata
+        profile_with_metadata = {
+            'metadata': {
+                'generated_at': datetime.now().isoformat(),
+                'file_name': getattr(df, 'name', 'unknown'),
+                'total_rows': len(df),
+                'total_columns': len(df.columns)
+            },
+            'profile': profile
+        }
+        
+        return json.dumps(profile_with_metadata, indent=2, default=str).encode('utf-8')
+    
+    @staticmethod
+    def _generate_excel_profile(df: pd.DataFrame, profile: Dict[str, Any]) -> bytes:
+        """Generate Excel format data profile with multiple sheets"""
+        buffer = BytesIO()
+        
+        with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
+            # Summary sheet
+            summary_data = [
+                ['Metric', 'Value'],
+                ['Total Rows', profile['basic_info']['rows']],
+                ['Total Columns', profile['basic_info']['columns']],
+                ['Memory Usage (MB)', profile['basic_info']['memory_usage'] / (1024 * 1024)],
+                ['Total Missing Values', profile['missing_data']['total_missing']],
+                ['Missing Percentage', f"{profile['missing_data']['missing_percentage']:.2f}%"],
+                ['Duplicate Rows', profile['duplicates']['duplicate_rows']],
+                ['Duplicate Percentage', f"{profile['duplicates']['duplicate_percentage']:.2f}%"],
+                ['Generated At', datetime.now().strftime('%Y-%m-%d %H:%M:%S')]
+            ]
+            
+            summary_df = pd.DataFrame(summary_data[1:], columns=summary_data[0])
+            summary_df.to_excel(writer, sheet_name='Summary', index=False)
+            
+            # Data types distribution
+            dtype_data = list(profile['basic_info']['data_types'].items())
+            dtype_df = pd.DataFrame(dtype_data, columns=['Data Type', 'Count'])
+            dtype_df.to_excel(writer, sheet_name='Data Types', index=False)
+            
+            # Missing data analysis
+            if profile['missing_data']['columns_with_missing']:
+                missing_data = list(profile['missing_data']['columns_with_missing'].items())
+                missing_df = pd.DataFrame(missing_data, columns=['Column', 'Missing Count'])
+                missing_df['Missing Percentage'] = (missing_df['Missing Count'] / len(df)) * 100
+                missing_df = missing_df.sort_values('Missing Count', ascending=False)
+                missing_df.to_excel(writer, sheet_name='Missing Data', index=False)
+            
+            # Column details
+            column_details = []
+            for col, col_info in profile['column_info'].items():
+                row = {
+                    'Column': col,
+                    'Data Type': col_info.get('dtype', 'N/A'),
+                    'Non-null Count': col_info.get('non_null_count', 0),
+                    'Null Count': col_info.get('null_count', 0),
+                    'Null Percentage': f"{col_info.get('null_percentage', 0):.2f}%",
+                    'Unique Count': col_info.get('unique_count', 0),
+                    'Unique Percentage': f"{col_info.get('unique_percentage', 0):.2f}%"
+                }
+                
+                # Add type-specific information
+                if 'mean' in col_info:
+                    row.update({
+                        'Mean': col_info.get('mean', 'N/A'),
+                        'Median': col_info.get('median', 'N/A'),
+                        'Std Dev': col_info.get('std', 'N/A'),
+                        'Min': col_info.get('min', 'N/A'),
+                        'Max': col_info.get('max', 'N/A')
+                    })
+                elif 'max_length' in col_info:
+                    row.update({
+                        'Max Length': col_info.get('max_length', 'N/A'),
+                        'Min Length': col_info.get('min_length', 'N/A'),
+                        'Avg Length': f"{col_info.get('avg_length', 0):.1f}"
+                    })
+                elif 'earliest' in col_info:
+                    row.update({
+                        'Earliest': col_info.get('earliest', 'N/A'),
+                        'Latest': col_info.get('latest', 'N/A'),
+                        'Date Range (Days)': col_info.get('date_range_days', 'N/A')
+                    })
+                
+                column_details.append(row)
+            
+            column_df = pd.DataFrame(column_details)
+            column_df.to_excel(writer, sheet_name='Column Details', index=False)
+            
+            # Sample data
+            sample_df = df.head(1000)  # Limit to first 1000 rows for Excel
+            sample_df.to_excel(writer, sheet_name='Sample Data', index=False)
+        
+        return buffer.getvalue()
+    
+    @staticmethod
+    def _generate_html_profile(df: pd.DataFrame, profile: Dict[str, Any]) -> bytes:
+        """Generate HTML format data profile with styling"""
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Data Profile Report</title>
+            <style>
+                body {{ font-family: Arial, sans-serif; margin: 20px; }}
+                .header {{ background-color: #f0f0f0; padding: 20px; border-radius: 5px; margin-bottom: 20px; }}
+                .section {{ margin-bottom: 30px; }}
+                .metric {{ display: inline-block; margin: 10px; padding: 10px; background-color: #e8f4fd; border-radius: 5px; }}
+                table {{ border-collapse: collapse; width: 100%; margin: 10px 0; }}
+                th, td {{ border: 1px solid #ddd; padding: 8px; text-align: left; }}
+                th {{ background-color: #f2f2f2; }}
+                .warning {{ color: #856404; background-color: #fff3cd; padding: 10px; border-radius: 5px; }}
+                .success {{ color: #155724; background-color: #d4edda; padding: 10px; border-radius: 5px; }}
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>📊 Data Profile Report</h1>
+                <p><strong>Generated:</strong> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+                <p><strong>Dataset:</strong> {len(df):,} rows × {len(df.columns)} columns</p>
+            </div>
+            
+            <div class="section">
+                <h2>📋 Dataset Overview</h2>
+                <div class="metric"><strong>Total Rows:</strong> {profile['basic_info']['rows']:,}</div>
+                <div class="metric"><strong>Total Columns:</strong> {profile['basic_info']['columns']}</div>
+                <div class="metric"><strong>Memory Usage:</strong> {profile['basic_info']['memory_usage'] / (1024 * 1024):.1f} MB</div>
+                <div class="metric"><strong>Duplicate Rows:</strong> {profile['duplicates']['duplicate_rows']:,}</div>
+            </div>
+            
+            <div class="section">
+                <h2>🏷️ Data Types Distribution</h2>
+                <table>
+                    <tr><th>Data Type</th><th>Count</th></tr>
+        """
+        
+        for dtype, count in profile['basic_info']['data_types'].items():
+            html_content += f"<tr><td>{html.escape(str(dtype))}</td><td>{count}</td></tr>"
+        
+        html_content += """
+                </table>
+            </div>
+        """
+        
+        # Missing data section
+        if profile['missing_data']['columns_with_missing']:
+            html_content += """
+            <div class="section">
+                <h2>🕳️ Missing Data Analysis</h2>
+                <table>
+                    <tr><th>Column</th><th>Missing Count</th><th>Missing Percentage</th></tr>
+            """
+            
+            for col, missing_count in profile['missing_data']['columns_with_missing'].items():
+                missing_pct = (missing_count / len(df)) * 100
+                html_content += f"<tr><td>{html.escape(col)}</td><td>{missing_count:,}</td><td>{missing_pct:.2f}%</td></tr>"
+            
+            html_content += """
+                </table>
+            </div>
+            """
+        
+        # Column details section
+        html_content += """
+            <div class="section">
+                <h2>📊 Column Details</h2>
+                <table>
+                    <tr><th>Column</th><th>Data Type</th><th>Non-null</th><th>Null</th><th>Null %</th><th>Unique</th><th>Unique %</th></tr>
+        """
+        
+        for col, col_info in profile['column_info'].items():
+            html_content += f"""
+                <tr>
+                    <td>{html.escape(col)}</td>
+                    <td>{html.escape(str(col_info.get('dtype', 'N/A')))}</td>
+                    <td>{col_info.get('non_null_count', 0):,}</td>
+                    <td>{col_info.get('null_count', 0):,}</td>
+                    <td>{col_info.get('null_percentage', 0):.2f}%</td>
+                    <td>{col_info.get('unique_count', 0):,}</td>
+                    <td>{col_info.get('unique_percentage', 0):.2f}%</td>
+                </tr>
+            """
+        
+        html_content += """
+                </table>
+            </div>
+        """
+        
+        # Data quality insights
+        html_content += """
+            <div class="section">
+                <h2>🎯 Data Quality Insights</h2>
+        """
+        
+        # Check for potential issues
+        issues = []
+        if profile['missing_data']['missing_percentage'] > 10:
+            issues.append(f"High missing data rate: {profile['missing_data']['missing_percentage']:.1f}%")
+        
+        if profile['duplicates']['duplicate_percentage'] > 5:
+            issues.append(f"High duplicate rate: {profile['duplicates']['duplicate_percentage']:.1f}%")
+        
+        if issues:
+            html_content += '<div class="warning"><h3>⚠️ Potential Issues:</h3><ul>'
+            for issue in issues:
+                html_content += f'<li>{issue}</li>'
+            html_content += '</ul></div>'
+        else:
+            html_content += '<div class="success"><h3>✅ Data Quality Assessment:</h3><p>No major data quality issues detected.</p></div>'
+        
+        html_content += """
+            </div>
+        </body>
+        </html>
+        """
+        
+        return html_content.encode('utf-8')
+    
+    @staticmethod
+    def _generate_csv_profile(df: pd.DataFrame, profile: Dict[str, Any]) -> bytes:
+        """Generate CSV format data profile summary"""
+        # Create a summary CSV with key metrics
+        summary_data = []
+        
+        # Basic info
+        summary_data.append(['Metric', 'Value'])
+        summary_data.append(['Total Rows', profile['basic_info']['rows']])
+        summary_data.append(['Total Columns', profile['basic_info']['columns']])
+        summary_data.append(['Memory Usage (MB)', profile['basic_info']['memory_usage'] / (1024 * 1024)])
+        summary_data.append(['Total Missing Values', profile['missing_data']['total_missing']])
+        summary_data.append(['Missing Percentage', f"{profile['missing_data']['missing_percentage']:.2f}%"])
+        summary_data.append(['Duplicate Rows', profile['duplicates']['duplicate_rows']])
+        summary_data.append(['Duplicate Percentage', f"{profile['duplicates']['duplicate_percentage']:.2f}%"])
+        summary_data.append(['Generated At', datetime.now().strftime('%Y-%m-%d %H:%M:%S')])
+        summary_data.append(['', ''])  # Empty row
+        
+        # Column details
+        summary_data.append(['Column', 'Data Type', 'Non-null', 'Null', 'Null %', 'Unique', 'Unique %'])
+        for col, col_info in profile['column_info'].items():
+            summary_data.append([
+                col,
+                str(col_info.get('dtype', 'N/A')),
+                col_info.get('non_null_count', 0),
+                col_info.get('null_count', 0),
+                f"{col_info.get('null_percentage', 0):.2f}%",
+                col_info.get('unique_count', 0),
+                f"{col_info.get('unique_percentage', 0):.2f}%"
+            ])
+        
+        # Convert to CSV
+        csv_content = '\n'.join([','.join([str(cell) for cell in row]) for row in summary_data])
+        return csv_content.encode('utf-8')

@@ -488,7 +488,22 @@ class ResultsDisplayComponent:
                 with col3:
                     if 'Failed_Tests_Count' in failed_records_df.columns:
                         avg_failures_per_row = failed_records_df['Failed_Tests_Count'].mean()
-                        st.metric("Avg Tests Failed/Row", f"{avg_failures_per_row:.1f}")
+                        st.metric(
+                            "Tests Failed per Row", 
+                            f"{avg_failures_per_row:.1f}",
+                            help="Average number of validation tests that failed per problematic row. 1.0 means each failed row failed exactly one test."
+                        )
+                
+                # Add explanation for the metrics
+                st.info(f"""
+                **What these numbers mean:**
+                - **{len(failed_records_df)} rows** failed at least one validation test
+                - **{failure_percentage:.1f}%** of your total data failed validation
+                - **{avg_failures_per_row:.1f} tests** failed on average per problematic row
+                
+                💡 **Interpretation:** {avg_failures_per_row:.1f} means each failed row failed exactly {avg_failures_per_row:.1f} validation test(s). 
+                This suggests {'widespread but isolated issues' if avg_failures_per_row <= 1.5 else 'some rows have multiple problems'}.
+                """)
                 
                 # Column selection for preview
                 st.markdown("##### Preview Options")

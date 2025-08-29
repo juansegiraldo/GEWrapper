@@ -6,10 +6,12 @@ from plotly.subplots import make_subplots
 from typing import Optional, Dict, Any
 import sys
 import os
+from datetime import datetime
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from utils.data_processing import DataProcessor
+from utils.suite_helpers import get_clean_filename
 from config.app_config import AppConfig
 
 class DataUploadComponent:
@@ -46,6 +48,16 @@ class DataUploadComponent:
             if df is not None:
                 # Store in session state
                 st.session_state.uploaded_data = df
+                
+                # Store uploaded file name for suite naming
+                uploaded_filename = uploaded_file.name
+                base_filename = get_clean_filename(uploaded_filename)
+                st.session_state.uploaded_filename = base_filename
+                
+                # Regenerate suite name with new filename
+                from utils.suite_helpers import generate_suite_name
+                new_suite_name = generate_suite_name()
+                st.session_state.current_suite_name = new_suite_name
                 
                 # Show success message
                 st.success(f"✅ Data loaded successfully! {len(df)} rows, {len(df.columns)} columns")
@@ -211,6 +223,62 @@ class DataUploadComponent:
         else:
             st.info("All columns are already using optimal data types!")
         
+        # Download section
+        st.markdown("### 💾 Download Data Profile")
+        st.write("Export your data profile in various formats for reporting and analysis.")
+        
+        # Preview what will be included in the download
+        with st.expander("👁️ Preview Download Contents", expanded=False):
+            st.markdown("**📊 What's included in your download:**")
+            
+            preview_col1, preview_col2 = st.columns(2)
+            with preview_col1:
+                st.markdown("**Summary Information:**")
+                st.write(f"• Total rows: {profile['basic_info']['rows']:,}")
+                st.write(f"• Total columns: {profile['basic_info']['columns']}")
+                st.write(f"• Memory usage: {profile['basic_info']['memory_usage'] / (1024 * 1024):.1f} MB")
+                st.write(f"• Missing data: {profile['missing_data']['missing_percentage']:.1f}%")
+                st.write(f"• Duplicate rows: {profile['duplicates']['duplicate_rows']:,}")
+            
+            with preview_col2:
+                st.markdown("**Detailed Analysis:**")
+                st.write(f"• Column-by-column statistics")
+                st.write(f"• Data type distribution")
+                st.write(f"• Missing data analysis")
+                st.write(f"• Data quality insights")
+                st.write(f"• Sample data (Excel format)")
+        
+        # Show download options with descriptions
+        with st.expander("📋 Download Options", expanded=True):
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.markdown("**📄 JSON Format**")
+                st.write("Complete profile data in JSON format. Best for programmatic analysis and integration.")
+                if st.button("Download JSON", key="download_json_btn", type="secondary"):
+                    self._download_profile(df, profile, 'json')
+                
+                st.markdown("**📊 Excel Format**")
+                st.write("Multi-sheet Excel file with summary, column details, and sample data. Best for business users.")
+                if st.button("Download Excel", key="download_excel_btn", type="secondary"):
+                    self._download_profile(df, profile, 'excel')
+            
+            with col2:
+                st.markdown("**🌐 HTML Format**")
+                st.write("Formatted HTML report with styling. Best for web viewing and sharing.")
+                if st.button("Download HTML", key="download_html_btn", type="secondary"):
+                    self._download_profile(df, profile, 'html')
+                
+                st.markdown("**📋 CSV Format**")
+                st.write("Summary data in CSV format. Best for spreadsheet analysis.")
+                if st.button("Download CSV", key="download_csv_btn", type="secondary"):
+                    self._download_profile(df, profile, 'csv')
+        
+        # Quick download all formats
+        st.markdown("**🚀 Quick Download All Formats**")
+        if st.button("Download All Formats", key="download_all_btn", type="primary"):
+            self._download_all_formats(df, profile)
+        
         # Action buttons
         col1, col2 = st.columns(2)
         with col1:
@@ -327,3 +395,97 @@ class DataUploadComponent:
             return "Unknown"
         except:
             return "Unknown"
+    
+    def _download_profile(self, df: pd.DataFrame, profile: Dict[str, Any], format_type: str):
+        """Download data profile in specified format"""
+        try:
+            # Generate the profile content
+            profile_content = self.processor.generate_downloadable_profile(df, profile, format_type)
+            
+            if profile_content is None:
+                st.error("Failed to generate profile download!")
+                return
+            
+            # Create filename with timestamp
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            
+            # Map format types to proper file extensions
+            file_extensions = {
+                'json': 'json',
+                'excel': 'xlsx',
+                'html': 'html',
+                'csv': 'csv'
+            }
+            
+            file_extension = file_extensions.get(format_type, format_type)
+            filename = f"data_profile_{timestamp}.{file_extension}"
+            
+            # Set appropriate MIME type
+            mime_types = {
+                'json': 'application/json',
+                'excel': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'html': 'text/html',
+                'csv': 'text/csv'
+            }
+            
+            # Create download button
+            st.download_button(
+                label=f"📥 Download {format_type.upper()} Profile",
+                data=profile_content,
+                file_name=filename,
+                mime=mime_types.get(format_type, 'application/octet-stream'),
+                key=f"download_{format_type}_{timestamp}"
+            )
+            
+            # Show success message
+            st.success(f"✅ {format_type.upper()} profile ready for download!")
+            
+        except Exception as e:
+            st.error(f"Error creating download: {str(e)}")
+    
+    def _download_all_formats(self, df: pd.DataFrame, profile: Dict[str, Any]):
+        """Download data profile in all available formats"""
+        try:
+            formats = ['json', 'excel', 'html', 'csv']
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            
+            # Create a zip file containing all formats
+            import zipfile
+            from io import BytesIO
+            
+            zip_buffer = BytesIO()
+            
+            with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+                for format_type in formats:
+                    try:
+                        # Generate content for each format
+                        content = self.processor.generate_downloadable_profile(df, profile, format_type)
+                        if content:
+                            # Map format types to proper file extensions
+                            file_extensions = {
+                                'json': 'json',
+                                'excel': 'xlsx',
+                                'html': 'html',
+                                'csv': 'csv'
+                            }
+                            file_extension = file_extensions.get(format_type, format_type)
+                            filename = f"data_profile_{timestamp}.{file_extension}"
+                            zip_file.writestr(filename, content)
+                    except Exception as e:
+                        st.warning(f"Could not generate {format_type.upper()} format: {str(e)}")
+            
+            # Create download button for zip file
+            zip_filename = f"data_profile_all_formats_{timestamp}.zip"
+            
+            st.download_button(
+                label="📦 Download All Formats (ZIP)",
+                data=zip_buffer.getvalue(),
+                file_name=zip_filename,
+                mime='application/zip',
+                key=f"download_all_{timestamp}"
+            )
+            
+            st.success("✅ All formats packaged and ready for download!")
+            
+        except Exception as e:
+            st.error(f"Error creating multi-format download: {str(e)}")

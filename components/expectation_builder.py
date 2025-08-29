@@ -7,6 +7,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from utils.ge_helpers import GEHelpers
+from utils.suite_helpers import generate_suite_name
 from config.app_config import AppConfig
 
 class ExpectationBuilderComponent:
@@ -19,18 +20,20 @@ class ExpectationBuilderComponent:
         # Initialize session state for expectations
         if 'expectation_configs' not in st.session_state:
             st.session_state.expectation_configs = []
-        if 'current_suite_name' not in st.session_state:
-            st.session_state.current_suite_name = "default_suite"
         
-        # Auto-load default suite if no expectations are configured
-        if (len(st.session_state.expectation_configs) == 0 and 
-            'default_suite_loaded' not in st.session_state):
-            self._load_default_suite()
+        # Generate suite name only if not already set or if we have a new uploaded file
+        if ('current_suite_name' not in st.session_state or 
+            (st.session_state.get('uploaded_filename') and 
+             st.session_state.get('current_suite_name', '').startswith('unknown_dataset'))):
+            self._generate_suite_name()
+    
+    def _generate_suite_name(self):
+        """Generate suite name based on uploaded file + timestamp"""
+        suite_name = generate_suite_name()
+        st.session_state.current_suite_name = suite_name
     
     def render(self, data: pd.DataFrame):
         """Render the expectation builder interface"""
-        st.markdown("### ⚙️ Configure Your Data Expectations")
-        
         # Suite management
         self._render_suite_management()
         
@@ -50,7 +53,12 @@ class ExpectationBuilderComponent:
         """Render suite management interface"""
         st.markdown("#### 📋 Expectation Suite")
         
-        col1, col2 = st.columns([3, 1])
+        # Show current dataset info
+        uploaded_filename = st.session_state.get('uploaded_filename', 'No dataset uploaded')
+        if uploaded_filename != 'No dataset uploaded':
+            st.info(f"📄 **Dataset:** {uploaded_filename}")
+        
+        col1, col2, col3 = st.columns([3, 1, 1])
         
         with col1:
             suite_name = st.text_input(
@@ -61,27 +69,127 @@ class ExpectationBuilderComponent:
             st.session_state.current_suite_name = suite_name
         
         with col2:
+            if st.button("🔄 Regenerate", type="secondary", help="Generate new suite name with current timestamp"):
+                new_suite_name = generate_suite_name()
+                st.session_state.current_suite_name = new_suite_name
+                st.success(f"Generated new suite name: {new_suite_name}")
+                st.rerun()
+        
+        with col3:
             if st.button("Clear All", type="secondary"):
                 st.session_state.expectation_configs = []
+                # Clear any processing flags
+                if 'import_processing' in st.session_state:
+                    del st.session_state.import_processing
+                if 'last_imported_file' in st.session_state:
+                    del st.session_state.last_imported_file
                 st.success("All expectations cleared!")
     
     def _render_template_selection(self, data: pd.DataFrame):
         """Render template selection interface"""
         st.markdown("#### 📑 Quick Start Templates")
         
-        template_options = ["None"] + list(self.config.EXPECTATION_TEMPLATES.keys())
-        selected_template = st.selectbox(
-            "Choose a template to get started:",
-            options=template_options,
-            help="Templates provide pre-configured expectations for common scenarios"
-        )
+        col1, col2 = st.columns([2, 1])
         
-        if selected_template != "None":
-            template_config = self.config.EXPECTATION_TEMPLATES[selected_template]
-            st.info(f"**{selected_template}**: {template_config['description']}")
+        with col1:
+            template_options = ["None"] + list(self.config.EXPECTATION_TEMPLATES.keys())
+            selected_template = st.selectbox(
+                "Choose a template to get started:",
+                options=template_options,
+                help="Templates provide pre-configured expectations for common scenarios"
+            )
             
-            if st.button(f"Apply {selected_template} Template", key=f"apply_template_{selected_template}"):
-                self._apply_template(selected_template, data)
+            if selected_template != "None":
+                template_config = self.config.EXPECTATION_TEMPLATES[selected_template]
+                st.info(f"**{selected_template}**: {template_config['description']}")
+                
+                if st.button(f"Apply {selected_template} Template", key=f"apply_template_{selected_template}"):
+                    self._apply_template(selected_template, data)
+        
+        with col2:
+            st.markdown("**Quick Import**")
+            uploaded_json = st.file_uploader(
+                "Upload expectation suite:",
+                type=['json'],
+                help="Upload a previously exported expectation suite",
+                key="quick_import_uploader"
+            )
+            
+            # Check if we're already processing an import to prevent loops
+            if 'import_processing' in st.session_state and st.session_state.import_processing:
+                st.info("Processing import...")
+                return
+            
+            if uploaded_json is not None:
+                # Check if we've already processed this file
+                if 'last_imported_file' in st.session_state and st.session_state.last_imported_file == uploaded_json.name:
+                    st.info("File already imported. Upload a different file to import again.")
+                    return
+                
+                try:
+                    # Set processing flag to prevent loops
+                    st.session_state.import_processing = True
+                    
+                    import json
+                    # Reset file pointer to beginning
+                    uploaded_json.seek(0)
+                    import_data = json.loads(uploaded_json.read())
+                    
+                    # Validate the imported data structure
+                    if 'expectations' not in import_data:
+                        st.error("Invalid file format: 'expectations' key not found")
+                        return
+                    
+                    if not isinstance(import_data['expectations'], list):
+                        st.error("Invalid file format: 'expectations' must be a list")
+                        return
+                    
+                    # Validate each expectation has required fields
+                    valid_expectations = []
+                    for i, exp in enumerate(import_data['expectations']):
+                        if not isinstance(exp, dict):
+                            st.warning(f"Expectation {i+1} is not a valid dictionary, skipping...")
+                            continue
+                        
+                        if 'expectation_type' not in exp:
+                            st.warning(f"Expectation {i+1} missing 'expectation_type', skipping...")
+                            continue
+                        
+                        if 'kwargs' not in exp:
+                            st.warning(f"Expectation {i+1} missing 'kwargs', skipping...")
+                            continue
+                        
+                        valid_expectations.append(exp)
+                    
+                    if not valid_expectations:
+                        st.error("No valid expectations found in the file!")
+                        return
+                    
+                    # Update session state
+                    st.session_state.current_suite_name = import_data.get(
+                        'suite_name', 'imported_suite'
+                    )
+                    st.session_state.expectation_configs = valid_expectations
+                    
+                    # Clear any existing suite to force recreation
+                    if 'expectation_suite' in st.session_state:
+                        del st.session_state.expectation_suite
+                    
+                    # Mark this file as imported to prevent re-processing
+                    st.session_state.last_imported_file = uploaded_json.name
+                    
+                    st.success(f"✅ Successfully imported {len(valid_expectations)} expectations!")
+                    if len(valid_expectations) < len(import_data['expectations']):
+                        st.warning(f"⚠️ {len(import_data['expectations']) - len(valid_expectations)} expectations were skipped due to invalid format.")
+                    
+                except json.JSONDecodeError as e:
+                    st.error(f"Invalid JSON file: {str(e)}")
+                except Exception as e:
+                    st.error(f"Error importing expectations: {str(e)}")
+                    st.error("Please ensure the file is a valid expectation suite JSON file.")
+                finally:
+                    # Always clear the processing flag
+                    st.session_state.import_processing = False
     
     def _apply_template(self, template_name: str, data: pd.DataFrame):
         """Apply a template to the current suite"""
@@ -372,8 +480,8 @@ class ExpectationBuilderComponent:
                 st.rerun()
         
         with col2:
-            # Export/Import expectations
-            self._render_import_export()
+            # Export expectations
+            self._render_export()
         
         with col3:
             if len(st.session_state.expectation_configs) > 0:
@@ -409,10 +517,9 @@ class ExpectationBuilderComponent:
             else:
                 st.warning("Add some expectations before proceeding!")
     
-    def _render_import_export(self):
-        """Render import/export functionality"""
-        with st.popover("💾 Import/Export"):
-            # Export
+    def _render_export(self):
+        """Render export functionality"""
+        with st.popover("💾 Export"):
             st.markdown("**Export Expectations**")
             if st.session_state.expectation_configs:
                 import json
@@ -432,17 +539,15 @@ class ExpectationBuilderComponent:
             else:
                 st.info("No expectations to export")
             
-            st.markdown("**Import Expectations**")
-            
             # Add sample file download
-            st.markdown("*Download a sample file to test import:*")
+            st.markdown("*Download a sample file:*")
             try:
                 with open("sample_expectations.json", "r", encoding="utf-8") as f:
                     sample_data = f.read()
                 st.download_button(
                     "📥 Download Sample",
                     data=sample_data,
-                    file_name="sample_expectations.json",
+                    file_name=f"{st.session_state.current_suite_name}_sample.json",
                     mime="application/json",
                     key="download_sample_btn"
                 )
@@ -450,106 +555,5 @@ class ExpectationBuilderComponent:
                 st.warning("Sample file not found")
             except Exception as e:
                 st.error(f"Error loading sample file: {str(e)}")
-            
-            st.markdown("---")
-            
-            # Add a manual import button for better UX
-            if st.button("📁 Import from File", type="secondary", key="import_file_btn"):
-                uploaded_json = st.file_uploader(
-                    "Upload expectation suite:",
-                    type=['json'],
-                    help="Upload a previously exported expectation suite",
-                    key="import_uploader"
-                )
-            else:
-                uploaded_json = None
-            
-            if uploaded_json is not None:
-                try:
-                    import json
-                    # Reset file pointer to beginning
-                    uploaded_json.seek(0)
-                    import_data = json.loads(uploaded_json.read())
-                    
-                    # Validate the imported data structure
-                    if 'expectations' not in import_data:
-                        st.error("Invalid file format: 'expectations' key not found")
-                        return
-                    
-                    if not isinstance(import_data['expectations'], list):
-                        st.error("Invalid file format: 'expectations' must be a list")
-                        return
-                    
-                    # Validate each expectation has required fields
-                    valid_expectations = []
-                    for i, exp in enumerate(import_data['expectations']):
-                        if not isinstance(exp, dict):
-                            st.warning(f"Expectation {i+1} is not a valid dictionary, skipping...")
-                            continue
-                        
-                        if 'expectation_type' not in exp:
-                            st.warning(f"Expectation {i+1} missing 'expectation_type', skipping...")
-                            continue
-                        
-                        if 'kwargs' not in exp:
-                            st.warning(f"Expectation {i+1} missing 'kwargs', skipping...")
-                            continue
-                        
-                        valid_expectations.append(exp)
-                    
-                    if not valid_expectations:
-                        st.error("No valid expectations found in the file!")
-                        return
-                    
-                    # Update session state
-                    st.session_state.current_suite_name = import_data.get(
-                        'suite_name', 'imported_suite'
-                    )
-                    st.session_state.expectation_configs = valid_expectations
-                    
-                    # Clear any existing suite to force recreation
-                    if 'expectation_suite' in st.session_state:
-                        del st.session_state.expectation_suite
-                    
-                    st.success(f"✅ Successfully imported {len(valid_expectations)} expectations!")
-                    if len(valid_expectations) < len(import_data['expectations']):
-                        st.warning(f"⚠️ {len(import_data['expectations']) - len(valid_expectations)} expectations were skipped due to invalid format.")
-                    st.rerun()
-                    
-                except json.JSONDecodeError as e:
-                    st.error(f"Invalid JSON file: {str(e)}")
-                except Exception as e:
-                    st.error(f"Error importing expectations: {str(e)}")
-                    st.error("Please ensure the file is a valid expectation suite JSON file.")
     
-    def _load_default_suite(self):
-        """Load default expectation suite from file"""
-        try:
-            import json
-            import os
-            
-            # Get the path to default_suite.json
-            current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            default_suite_path = os.path.join(current_dir, 'default_suite.json')
-            
-            if os.path.exists(default_suite_path):
-                with open(default_suite_path, 'r', encoding='utf-8') as f:
-                    import_data = json.load(f)
-                
-                # Validate the imported data
-                if 'expectations' in import_data and isinstance(import_data['expectations'], list):
-                    st.session_state.current_suite_name = import_data.get('suite_name', 'default_suite')
-                    st.session_state.expectation_configs = import_data.get('expectations', [])
-                    st.session_state.default_suite_loaded = True
-                    
-                    st.success(f"✅ Loaded default suite with {len(st.session_state.expectation_configs)} expectations!")
-                else:
-                    st.warning("Default suite file has invalid format")
-                    st.session_state.default_suite_loaded = True
-            else:
-                st.warning("Default suite file not found")
-                st.session_state.default_suite_loaded = True  # Don't try again
-                
-        except Exception as e:
-            st.error(f"Error loading default suite: {str(e)}")
-            st.session_state.default_suite_loaded = True  # Don't try again
+    

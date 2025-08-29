@@ -59,7 +59,8 @@ class ValidationRunnerComponent:
         """Render validation summary information"""
         st.markdown("#### 📋 Validation Summary")
         
-        col1, col2, col3, col4 = st.columns(4)
+        # First row with main metrics
+        col1, col2, col3 = st.columns(3)
         
         with col1:
             st.metric("Dataset Rows", f"{len(data):,}")
@@ -71,9 +72,10 @@ class ValidationRunnerComponent:
             expectation_count = len(expectation_suite.expectations) if expectation_suite else 0
             st.metric("Expectations", expectation_count)
         
-        with col4:
-            suite_name = expectation_suite.name if expectation_suite else "Unknown"
-            st.metric("Suite Name", suite_name)
+        # Second row with suite name in full width for better readability
+        st.markdown("---")
+        suite_name = expectation_suite.name if expectation_suite else "Unknown"
+        st.markdown(f"**📋 Suite Name:** `{suite_name}`")
         
         # Show expectation details
         if expectation_suite and hasattr(expectation_suite, 'expectations'):
