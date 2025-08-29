@@ -281,11 +281,121 @@ class GEHelpers:
                                         else:
                                             validation_result["statistics"]["unsuccessful_expectations"] += 1
                                 
+                                elif exp_type == 'expect_table_row_count_to_be_between':
+                                    min_value = exp_kwargs.get('min_value')
+                                    max_value = exp_kwargs.get('max_value')
+                                    actual_count = len(data)
+                                    
+                                    # Check if the actual count is within the expected range
+                                    success = (min_value is None or actual_count >= min_value) and (max_value is None or actual_count <= max_value)
+                                    
+                                    # For table-level expectations, there are no "unexpected" records
+                                    # The entire table either passes or fails the expectation
+                                    unexpected_count = 0 if success else 1
+                                    
+                                    validation_result["results"].append({
+                                        "success": success,
+                                        "expectation_config": exp_config,
+                                        "result": {
+                                            "element_count": actual_count,
+                                            "unexpected_count": unexpected_count,
+                                            "unexpected_percent": 0.0 if success else 100.0
+                                        }
+                                    })
+                                    if success:
+                                        validation_result["statistics"]["successful_expectations"] += 1
+                                    else:
+                                        validation_result["statistics"]["unsuccessful_expectations"] += 1
+                                
+                                elif exp_type == 'expect_table_columns_to_match_ordered_list':
+                                    expected_columns = exp_kwargs.get('column_list', [])
+                                    actual_columns = list(data.columns)
+                                    
+                                    # Check if the actual columns match the expected list exactly
+                                    success = actual_columns == expected_columns
+                                    
+                                    # For table-level expectations, there are no "unexpected" records
+                                    unexpected_count = 0 if success else 1
+                                    
+                                    validation_result["results"].append({
+                                        "success": success,
+                                        "expectation_config": exp_config,
+                                        "result": {
+                                            "element_count": len(actual_columns),
+                                            "unexpected_count": unexpected_count,
+                                            "unexpected_percent": 0.0 if success else 100.0
+                                        }
+                                    })
+                                    if success:
+                                        validation_result["statistics"]["successful_expectations"] += 1
+                                    else:
+                                        validation_result["statistics"]["unsuccessful_expectations"] += 1
+                                
+                                elif exp_type == 'expect_column_values_to_match_regex':
+                                    column = exp_kwargs.get('column')
+                                    regex_pattern = exp_kwargs.get('regex')
+                                    if column in data.columns and regex_pattern:
+                                        import re
+                                        try:
+                                            pattern = re.compile(regex_pattern)
+                                            # Check which values don't match the regex
+                                            non_matching = data[~data[column].astype(str).str.match(pattern, na=False)]
+                                            unexpected_count = len(non_matching)
+                                            success = unexpected_count == 0
+                                            
+                                            validation_result["results"].append({
+                                                "success": success,
+                                                "expectation_config": exp_config,
+                                                "result": {
+                                                    "element_count": len(data),
+                                                    "unexpected_count": unexpected_count,
+                                                    "unexpected_percent": (unexpected_count / len(data) * 100) if len(data) > 0 else 0
+                                                }
+                                            })
+                                            if success:
+                                                validation_result["statistics"]["successful_expectations"] += 1
+                                            else:
+                                                validation_result["statistics"]["unsuccessful_expectations"] += 1
+                                        except Exception as regex_e:
+                                            # If regex compilation fails, mark as failed
+                                            validation_result["results"].append({
+                                                "success": False,
+                                                "expectation_config": exp_config,
+                                                "exception_info": {"exception_message": f"Invalid regex pattern: {str(regex_e)}"}
+                                            })
+                                            validation_result["statistics"]["unsuccessful_expectations"] += 1
+                                
+                                elif exp_type == 'expect_column_value_lengths_to_be_between':
+                                    column = exp_kwargs.get('column')
+                                    min_value = exp_kwargs.get('min_value')
+                                    max_value = exp_kwargs.get('max_value')
+                                    if column in data.columns:
+                                        # Convert to string and get lengths
+                                        string_lengths = data[column].astype(str).str.len()
+                                        out_of_range = string_lengths[(string_lengths < min_value) | (string_lengths > max_value)]
+                                        unexpected_count = len(out_of_range)
+                                        success = unexpected_count == 0
+                                        
+                                        validation_result["results"].append({
+                                            "success": success,
+                                            "expectation_config": exp_config,
+                                            "result": {
+                                                "element_count": len(data),
+                                                "unexpected_count": unexpected_count,
+                                                "unexpected_percent": (unexpected_count / len(data) * 100) if len(data) > 0 else 0
+                                            }
+                                        })
+                                        if success:
+                                            validation_result["statistics"]["successful_expectations"] += 1
+                                        else:
+                                            validation_result["statistics"]["unsuccessful_expectations"] += 1
+                                
                                 else:
                                     # Generic handling for other expectation types
                                     validation_result["results"].append({
                                         "success": False,
                                         "expectation_config": exp_config,
+                                        "exception_info": {"exception_message": f"Expectation type '{exp_type}' not yet implemented in manual validation"},
                                         "result": {
                                             "element_count": len(data),
                                             "unexpected_count": 0,

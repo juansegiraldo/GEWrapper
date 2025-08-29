@@ -695,6 +695,141 @@ class ResultsDisplayComponent:
                 st.write("3. Consider updating data collection or cleaning processes")
                 st.write("4. Re-run validation after implementing fixes")
     
+    def _download_all_reports(self):
+        """Download all report files currently available on screen"""
+        try:
+            # Get current timestamp for file naming
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            
+            # Create comprehensive ZIP file with all reports
+            import zipfile
+            import io
+            
+            zip_buffer = io.BytesIO()
+            with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+                
+                # 1. Export JSON Report (validation_results_*.json)
+                if st.session_state.get('validation_results'):
+                    json_data = json.dumps(st.session_state.validation_results, indent=2, default=str)
+                    zip_file.writestr(f'validation_results_{timestamp}.json', json_data)
+                
+                # 2. Export HTML Report (validation_report_*.html)
+                if st.session_state.get('validation_results') and st.session_state.get('uploaded_data') is not None:
+                    try:
+                        suite_name = st.session_state.get('current_suite_name', 'validation_suite')
+                        html_report = self.report_generator.generate_html_report(
+                            st.session_state.validation_results, 
+                            st.session_state.uploaded_data,
+                            suite_name
+                        )
+                        zip_file.writestr(f'validation_report_{timestamp}.html', html_report)
+                    except Exception as e:
+                        st.warning(f"Could not generate HTML report: {str(e)}")
+                
+                # 3. Export CSV Report (validation_details_*.csv)
+                if st.session_state.get('validation_results'):
+                    try:
+                        detailed_table = self.report_generator.create_detailed_results_table(st.session_state.validation_results)
+                        if not detailed_table.empty:
+                            csv_data = detailed_table.to_csv(index=False)
+                            zip_file.writestr(f'validation_details_{timestamp}.csv', csv_data)
+                    except Exception as e:
+                        st.warning(f"Could not generate detailed CSV: {str(e)}")
+                
+                # 4-6. Failed Records Reports (if available)
+                if st.session_state.get('validation_results') and st.session_state.get('uploaded_data') is not None:
+                    try:
+                        failed_records_df = self.report_generator.create_failed_records_dataset(
+                            st.session_state.validation_results, st.session_state.uploaded_data
+                        )
+                        
+                        if not failed_records_df.empty:
+                            # Get original columns (excluding our added failure columns)
+                            original_cols = [col for col in failed_records_df.columns 
+                                           if not col.startswith('Failed_Test_') and col not in ['All_Failed_Tests', 'Failed_Tests_Count']]
+                            
+                            # 4. Download Summary CSV (failed_records_summary_*.csv)
+                            summary_cols = original_cols + ['Failed_Tests_Count', 'All_Failed_Tests']
+                            summary_df = failed_records_df[summary_cols]
+                            summary_csv = summary_df.to_csv(index=False)
+                            zip_file.writestr(f'failed_records_summary_{timestamp}.csv', summary_csv)
+                            
+                            # 5. Download Detailed CSV (failed_records_detailed_*.csv)
+                            full_csv = failed_records_df.to_csv(index=False)
+                            zip_file.writestr(f'failed_records_detailed_{timestamp}.csv', full_csv)
+                            
+                            # 6. Download JSON (failed_records_*.json)
+                            failed_json = failed_records_df.to_json(orient='records', indent=2)
+                            zip_file.writestr(f'failed_records_{timestamp}.json', failed_json)
+                    except Exception as e:
+                        st.warning(f"Could not generate failed records reports: {str(e)}")
+                
+                # Additional comprehensive report with metadata
+                comprehensive_report = {
+                    'timestamp': timestamp,
+                    'suite_name': st.session_state.get('current_suite_name', 'unknown'),
+                    'dataset_info': {
+                        'filename': st.session_state.get('uploaded_filename', 'unknown'),
+                        'rows': len(st.session_state.uploaded_data) if st.session_state.get('uploaded_data') is not None else 0,
+                        'columns': len(st.session_state.uploaded_data.columns) if st.session_state.get('uploaded_data') is not None else 0,
+                        'columns_list': list(st.session_state.uploaded_data.columns) if st.session_state.get('uploaded_data') is not None else []
+                    },
+                    'summary_metrics': self.report_generator.create_summary_metrics(st.session_state.validation_results) if st.session_state.get('validation_results') else None
+                }
+                
+                comprehensive_json = json.dumps(comprehensive_report, indent=2, default=str)
+                zip_file.writestr(f'comprehensive_report_{timestamp}.json', comprehensive_json)
+            
+            zip_buffer.seek(0)
+            
+            # Count files in ZIP
+            with zipfile.ZipFile(zip_buffer, 'r') as zip_file:
+                file_count = len(zip_file.namelist())
+            
+            # Provide download button
+            st.download_button(
+                label=f"📦 Download ALL Reports ({file_count} files)",
+                data=zip_buffer.getvalue(),
+                file_name=f"complete_validation_report_{timestamp}.zip",
+                mime="application/zip",
+                key=f"download_all_reports_{timestamp}",
+                help=f"Download all {file_count} available reports including validation results, failed records, and summary metrics"
+            )
+            
+            st.success(f"✅ All {file_count} reports packaged and ready for download!")
+            
+        except Exception as e:
+            st.error(f"❌ Error creating download package: {str(e)}")
+            st.exception(e)
+    
+    def _restart_app(self):
+        """Clear all cache and rerun the app"""
+        try:
+            # Clear all session state variables
+            keys_to_clear = [
+                'uploaded_data', 'uploaded_filename', 'data_context',
+                'expectation_configs', 'expectation_suite', 'current_suite_name',
+                'validation_results', 'validation_completed', 'failed_records_data',
+                'ge_helpers', 'current_step'
+            ]
+            
+            for key in keys_to_clear:
+                if key in st.session_state:
+                    del st.session_state[key]
+            
+            # Reset to initial state
+            st.session_state.current_step = 'upload'
+            
+            # Clear any cached data
+            st.cache_data.clear()
+            st.cache_resource.clear()
+            
+            st.success("✅ Application restarted successfully! All data and cache cleared.")
+            st.rerun()
+            
+        except Exception as e:
+            st.error(f"❌ Error restarting application: {str(e)}")
+            st.exception(e)
 
     def _render_navigation_buttons(self):
         """Render navigation buttons"""
@@ -708,19 +843,11 @@ class ResultsDisplayComponent:
                 st.rerun()
         
         with col2:
-            if st.button("🔄 Run New Validation", type="secondary", key="run_new_validation_btn"):
-                # Reset validation state
-                st.session_state.validation_completed = False
-                st.session_state.validation_results = None
-                st.session_state.current_step = 'expectations'
-                st.rerun()
+            if st.button("📥 Download ALL", type="secondary", key="download_all_btn"):
+                # Download all report files currently available on screen
+                self._download_all_reports()
         
         with col3:
-            if st.button("📁 Upload New Data", type="primary", key="upload_new_data_btn"):
-                # Reset all state
-                for key in ['uploaded_data', 'expectation_configs', 'expectation_suite', 
-                           'validation_results', 'validation_completed']:
-                    if key in st.session_state:
-                        del st.session_state[key]
-                st.session_state.current_step = 'upload'
-                st.rerun()
+            if st.button("🔄 Restart", type="primary", key="restart_btn"):
+                # Clear all cache and rerun the app
+                self._restart_app()
