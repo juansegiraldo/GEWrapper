@@ -572,27 +572,11 @@ class ReportGenerator:
                                     data_copy.loc[idx, failure_col_name] = f"Failed custom SQL rule: {exp_name}"
                         
                         # For custom SQL queries that have violation count but no specific rows identified,
-                        # we need to manually identify the failing rows based on the query logic
+                        # avoid marking every row as failed to prevent false positives.
                         elif result_data.get('unexpected_count', 0) > 0:
-                            # Try to identify failing rows based on common query patterns
-                            query = exp_config.get('kwargs', {}).get('query', '').lower()
-                            
-                            # Handle the specific Sales salary validation pattern
-                            if "department = 'sales'" in query and "active" in query and "salary" in query:
-                                try:
-                                    # Apply the same logic as the query: department = 'Sales' AND active = True AND salary < 40000
-                                    failing_mask = (
-                                        (data_copy['department'] == 'Sales') & 
-                                        (data_copy['active'] == True) & 
-                                        (data_copy['salary'] < 40000)
-                                    )
-                                    data_copy.loc[failing_mask, failure_col_name] = f"Failed custom SQL rule: {exp_name}"
-                                except Exception as e:
-                                    # If we can't apply the specific logic, mark as general failure
-                                    data_copy[failure_col_name] = f"Custom SQL rule '{exp_name}' failed - check query results for details"
-                            else:
-                                # For other query patterns, mark as general failure
-                                data_copy[failure_col_name] = f"Custom SQL rule '{exp_name}' failed - check query results for details"
+                            # Without explicit failing rows or indices, we cannot safely mark per-row failures.
+                            # Leave cells blank here; the summary view will still reflect the expectation failure.
+                            pass
                     
                     elif column != 'N/A' and column in data_copy.columns:
                         # Mark rows with unexpected values

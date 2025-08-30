@@ -33,51 +33,58 @@ class SQLQueryBuilderComponent:
         return query_config
     
     def _render_template_selection(self) -> Optional[Dict[str, Any]]:
-        """Render template selection interface"""
-        st.markdown("**Choose a Template or Build Custom Query:**")
-        
-        # Get template categories with detailed descriptions
-        categories = self.custom_sql_expectation.get_template_categories()
-        
-        # Create detailed tooltips for each category
-        category_descriptions = {
-            "aggregations": "Templates for counting, summing, and aggregating data across columns",
-            "business": "Business logic validations like salary ranges, department rules, and compliance checks",
-            "calculations": "Mathematical validations and computed field checks",
-            "duplicates": "Finding duplicate records and uniqueness validations",
-            "integrity": "Data integrity checks like foreign key relationships and referential integrity",
-            "relationships": "Cross-table and cross-column relationship validations",
-            "temporal": "Date and time-based validations, range checks, and chronological order"
-        }
-        
-        # Create comprehensive help text with all categories
-        help_text = "Choose a category of pre-built query templates. Each category contains specialized templates for different types of data validation scenarios.\n\n**Available Categories:**\n"
-        for category in categories:
-            category_templates = self.custom_sql_expectation.get_templates_by_category(category)
-            help_text += f"• **{category.title()}** ({len(category_templates)} templates): {category_descriptions.get(category.lower(), 'General templates')}\n"
-        
-        selected_category = st.selectbox(
-            "Template Category:",
-            options=["None"] + categories,
-            help=help_text,
-            format_func=lambda x: f"{x.title()} - {category_descriptions.get(x.lower(), 'General templates')}" if x != "None" else "None - Build custom query manually"
-        )
-        
-        if selected_category != "None":
-            templates = self.custom_sql_expectation.get_templates_by_category(selected_category)
-            template_names = list(templates.keys())
+        """Render template selection interface inside a collapsible expander"""
+        with st.expander("Use a Template (optional)", expanded=False):
+            # Get template categories with detailed descriptions
+            categories = self.custom_sql_expectation.get_template_categories()
             
-            selected_template = st.selectbox(
-                "Template:",
-                options=[""] + template_names,
-                format_func=lambda x: templates[x]["name"] if x else "Select template...",
-                help=f"Choose a specific {selected_category.lower()} template to use as a starting point"
+            # Create detailed tooltips for each category
+            category_descriptions = {
+                "aggregations": "Templates for counting, summing, and aggregating data across columns",
+                "business": "Business logic validations like salary ranges, department rules, and compliance checks",
+                "calculations": "Mathematical validations and computed field checks",
+                "duplicates": "Finding duplicate records and uniqueness validations",
+                "integrity": "Data integrity checks like foreign key relationships and referential integrity",
+                "relationships": "Cross-table and cross-column relationship validations",
+                "temporal": "Date and time-based validations, range checks, and chronological order"
+            }
+            
+            # Create comprehensive help text with all categories
+            help_text = (
+                "Choose a category of pre-built query templates. Each category contains specialized templates for different types of data validation scenarios.\n\n**Available Categories:**\n"
+            )
+            for category in categories:
+                category_templates = self.custom_sql_expectation.get_templates_by_category(category)
+                help_text += (
+                    f"• **{category.title()}** ({len(category_templates)} templates): "
+                    f"{category_descriptions.get(category.lower(), 'General templates')}\n"
+                )
+            
+            selected_category = st.selectbox(
+                "Template Category:",
+                options=["None"] + categories,
+                help=help_text,
+                format_func=lambda x: (
+                    f"{x.title()} - {category_descriptions.get(x.lower(), 'General templates')}"
+                    if x != "None" else "None - Build custom query manually"
+                )
             )
             
-            if selected_template:
-                template_config = templates[selected_template]
-                st.info(f"**{template_config['name']}**: {template_config['description']}")
-                return template_config
+            if selected_category != "None":
+                templates = self.custom_sql_expectation.get_templates_by_category(selected_category)
+                template_names = list(templates.keys())
+                
+                selected_template = st.selectbox(
+                    "Template:",
+                    options=[""] + template_names,
+                    format_func=lambda x: templates[x]["name"] if x else "Select template...",
+                    help=f"Choose a specific {selected_category.lower()} template to use as a starting point"
+                )
+                
+                if selected_template:
+                    template_config = templates[selected_template]
+                    st.info(f"**{template_config['name']}**: {template_config['description']}")
+                    return template_config
         
         return None
     
@@ -231,12 +238,11 @@ class SQLQueryBuilderComponent:
             return None
     
     def _render_manual_query_builder(self, data: pd.DataFrame) -> Optional[Dict[str, Any]]:
-        """Render manual SQL query builder with 3x3 grid layout"""
-        st.markdown("##### ✏️ Manual SQL Query Builder")
+        """Render manual SQL builder with simplified 2-column layout"""
+        st.markdown("##### Manual SQL Query")
         
-        # Create a 3x3 grid layout
-        # Row 1: SQL Input, Available Columns, Template Categories
-        col1, col2, col3 = st.columns([2, 1, 1])
+        # Two-column layout: SQL input (wide) + Available Columns (narrow)
+        col1, col2 = st.columns([3, 1])
         
         with col1:
             # Initialize session state for SQL query
@@ -245,7 +251,7 @@ class SQLQueryBuilderComponent:
             
             # Manual SQL input - takes up more space
             sql_query = st.text_area(
-                "Custom SQL Query:",
+                "SQL query:",
                 value=st.session_state.get('sql_query', ''),
                 height=200,
                 help="Write your custom SQL query. Use {table_name} as placeholder for the data table.",
@@ -260,20 +266,12 @@ WHERE department = 'Sales' AND active = True AND salary < 40000
 """
             )
             
-            # Add prominent link to custom GPT for SQL help
-            st.markdown("---")
-            st.markdown("""
-            <div style="background-color: #f0f8ff; border: 2px solid #0066cc; border-radius: 8px; padding: 15px; margin: 10px 0; text-align: center;">
-                <h4 style="color: #0066cc; margin: 0 0 10px 0;">🤖 Need help writing SQL?</h4>
-                <p style="margin: 0 0 15px 0; font-size: 16px;">Get AI-powered assistance with your custom SQL queries!</p>
-                <a href="https://chatgpt.com/g/g-68b1ee414c4081919498f880f3ee5993-datawash-custom-sql-generator" 
-                   target="_blank" 
-                   style="background-color: #0066cc; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px; display: inline-block;">
-                    🚀 Open DataWash SQL Generator GPT
-                </a>
-            </div>
-            """, unsafe_allow_html=True)
-            st.markdown("---")
+            # Native link button to custom GPT for SQL help
+            gpt_url = "https://chatgpt.com/g/g-68b1ee414c4081919498f880f3ee5993-datawash-custom-sql-generator"
+            if hasattr(st, "link_button"):
+                st.link_button("🚀 Open DataWash SQL Generator GPT", gpt_url, use_container_width=True)
+            else:
+                st.markdown(f"[🚀 Open DataWash SQL Generator GPT]({gpt_url})")
             
             # Update session state
             st.session_state['sql_query'] = sql_query
@@ -296,61 +294,46 @@ WHERE department = 'Sales' AND active = True AND salary < 40000
                     return self._render_query_configuration(data, sql_query, "empty", "Custom SQL Validation")
         
         with col2:
-            # Available Columns
-            st.markdown("**📊 Available Columns:**")
-            for col in data.columns:
+            # Available Columns (with filter)
+            st.markdown("**Available Columns**")
+            filter_text = st.text_input("Filter columns", key="available_cols_filter")
+            columns_iter = data.columns
+            if filter_text:
+                lower_filter = filter_text.lower()
+                columns_iter = [c for c in data.columns if lower_filter in c.lower()]
+            for col in columns_iter:
                 col_type = str(data[col].dtype)
                 st.write(f"• `{col}` ({col_type})")
-        
-        with col3:
-            # SQL Tips
-            st.markdown("**💡 SQL Tips:**")
-            st.write("• Use `{table_name}` as table placeholder")
-            st.write("• Return `violation_count` column")
-            st.write("• Use WHERE NOT (condition) pattern")
-            st.write("• Handle NULL values appropriately")
-            st.write("• For boolean columns, use `column = True` or `column = False`")
-            st.write("• The app will automatically fix `column = 1` to `column = True`")
-        
-        # Row 2: Boolean Syntax, LLM Prompt, Common Patterns
-        col1, col2, col3 = st.columns([1, 1, 1])
-        
-        with col1:
-            # Boolean Column Syntax
-            st.markdown("**🔄 Boolean Column Syntax:**")
-            st.info("""
-**✅ Correct (Recommended):**
-- `active = True` / `active = False`
-- `status = 'active'` / `status = 'inactive'`
 
-**⚠️ Works but not recommended:**
-- `active = 1` / `active = 0` (automatically converted)
-- `active = 'true'` / `active = 'false'` (string comparison)
+        # Collapsed helper area
+        with st.expander("Help & Tools", expanded=False):
+            tips_tab, patterns_tab, prompt_tab, examples_tab, data_tab, tools_tab = st.tabs([
+                "Tips", "Patterns", "Prompt", "Examples", "Data", "Tools"
+            ])
 
-**❌ Won't work:**
-- `active = '1'` / `active = '0'` (string comparison)
-            """)
-        
-        with col2:
-            # LLM Prompt for SQL Generation
-            st.markdown("**🤖 LLM Prompt for SQL Generation:**")
-            st.code("""
-Generate a SQL query to validate data quality. Requirements:
-- Use {table_name} as the table name placeholder
-- Return COUNT(*) as violation_count
-- Use True/False for boolean columns (not 1/0)
-- Example: WHERE active = True AND salary < 40000
-- Focus on finding violations (rows that should NOT exist)
-- Use clear, descriptive conditions
+            with tips_tab:
+                st.markdown("**General SQL Tips**")
+                st.write("• Use `{table_name}` as table placeholder")
+                st.write("• Return `violation_count` column")
+                st.write("• Use WHERE NOT (condition) pattern")
+                st.write("• Handle NULL values appropriately")
+                st.write("• For boolean columns, prefer `column = True` or `column = False`")
+                st.write("• The app will automatically fix `column = 1` to `column = True`")
+                st.markdown("**Boolean Column Syntax**")
+                st.info(
+                    """
+✅ Recommended: `active = True` / `active = False`, `status = 'active'` / `status = 'inactive'`
 
-Context: [Describe your validation rule here]
-""", language="text")
-        
-        with col3:
-            # Common Validation Patterns
-            st.markdown("**🔧 Common Validation Patterns:**")
-            with st.expander("Click to see examples", expanded=False):
-                st.markdown("""
+⚠️ Works but discouraged: `active = 1` / `active = 0`, `active = 'true'` / `active = 'false'`
+
+❌ Won't work: `active = '1'` / `active = '0'`
+                    """
+                )
+
+            with patterns_tab:
+                st.markdown("**Common Validation Patterns**")
+                st.markdown(
+                    """
 **Salary Validation:**
 ```sql
 SELECT COUNT(*) as violation_count
@@ -392,59 +375,91 @@ SELECT COUNT(*) as violation_count
 FROM {table_name}
 WHERE start_date >= end_date AND start_date IS NOT NULL AND end_date IS NOT NULL
 ```
-                """)
-        
-        # Row 3: Query Examples, Data Preview, Quick Actions
-        col1, col2, col3 = st.columns([1, 1, 1])
-        
-        with col1:
-            # Quick Query Examples
-            st.markdown("**⚡ Quick Query Examples:**")
-            example_queries = {
-                "Check for NULL values": "SELECT COUNT(*) as violation_count FROM {table_name} WHERE name IS NULL",
-                "Salary range check": "SELECT COUNT(*) as violation_count FROM {table_name} WHERE salary < 30000 OR salary > 100000",
-                "Email format": "SELECT COUNT(*) as violation_count FROM {table_name} WHERE email NOT LIKE '%@%.%'",
-                "Active employees": "SELECT COUNT(*) as violation_count FROM {table_name} WHERE active = False AND department = 'Sales'"
-            }
-            
-            for name, query in example_queries.items():
-                if st.button(f"📋 {name}", key=f"example_{name}"):
-                    st.session_state['sql_query'] = query
-                    st.rerun()
-        
-        with col2:
-            # Data Preview
-            st.markdown("**📈 Data Preview:**")
-            st.write(f"**Shape:** {data.shape[0]} rows × {data.shape[1]} columns")
-            st.write(f"**Memory:** {data.memory_usage(deep=True).sum() / 1024:.1f} KB")
-            
-            # Show sample data
-            with st.expander("Sample Data (first 5 rows)", expanded=False):
-                st.dataframe(data.head(), use_container_width=True)
-        
-        with col3:
-            # Quick Actions
-            st.markdown("**🚀 Quick Actions:**")
-            
-            if st.button("🧹 Clear Query", key="clear_query"):
-                st.session_state['sql_query'] = ""
-                st.rerun()
-            
-            if st.button("📋 Copy Template", key="copy_template"):
-                template = """SELECT COUNT(*) as violation_count
+                    """
+                )
+
+            with prompt_tab:
+                st.markdown("**LLM Prompt for SQL Generation**")
+                st.code(
+                    """
+Generate a SQL query to validate data quality. Requirements:
+- Use {table_name} as the table name placeholder
+- Return COUNT(*) as violation_count
+- Use True/False for boolean columns (not 1/0)
+- Example: WHERE active = True AND salary < 40000
+- Focus on finding violations (rows that should NOT exist)
+- Use clear, descriptive conditions
+
+Context: [Describe your validation rule here]
+                    """,
+                    language="text",
+                )
+
+            with examples_tab:
+                st.markdown("**Quick Query Examples**")
+                example_queries = {
+                    "Check for NULL values": "SELECT COUNT(*) as violation_count FROM {table_name} WHERE name IS NULL",
+                    "Salary range check": "SELECT COUNT(*) as violation_count FROM {table_name} WHERE salary < 30000 OR salary > 100000",
+                    "Email format": "SELECT COUNT(*) as violation_count FROM {table_name} WHERE email NOT LIKE '%@%.%'",
+                    "Active employees": "SELECT COUNT(*) as violation_count FROM {table_name} WHERE active = False AND department = 'Sales'",
+                }
+                cols = st.columns(2)
+                for idx, (name, query) in enumerate(example_queries.items()):
+                    with cols[idx % 2]:
+                        if st.button(f"📋 {name}", key=f"example_{name}"):
+                            st.session_state['sql_query'] = query
+                            st.rerun()
+
+            with data_tab:
+                st.write(f"**Shape:** {data.shape[0]} rows × {data.shape[1]} columns")
+                st.write(f"**Memory:** {data.memory_usage(deep=True).sum() / 1024:.1f} KB")
+                with st.expander("Sample Data (first 5 rows)", expanded=False):
+                    st.dataframe(data.head(), use_container_width=True)
+
+            with tools_tab:
+                col_a, col_b, col_c = st.columns(3)
+                with col_a:
+                    if st.button("🧹 Clear Query", key="clear_query"):
+                        st.session_state['sql_query'] = ""
+                        st.rerun()
+                with col_b:
+                    if st.button("📋 Copy Template", key="copy_template"):
+                        template = """SELECT COUNT(*) as violation_count
 FROM {table_name}
 WHERE [your_condition_here]"""
-                st.code(template, language="sql")
-            
-            if st.button("🔍 Validate Current Query", key="validate_query"):
-                if 'sql_query' in st.session_state and st.session_state['sql_query']:
-                    validation_result = self.custom_sql_expectation.validate_sql_query(st.session_state['sql_query'])
-                    if validation_result["is_valid"]:
-                        st.success("✅ Query is valid!")
-                    else:
-                        st.error("❌ Query has issues")
-                        for error in validation_result["errors"]:
-                            st.write(f"• {error}")
+                        st.code(template, language="sql")
+                with col_c:
+                    if st.button("🔍 Validate Current Query", key="validate_query"):
+                        if 'sql_query' in st.session_state and st.session_state['sql_query']:
+                            validation_result = self.custom_sql_expectation.validate_sql_query(st.session_state['sql_query'])
+                            if validation_result["is_valid"]:
+                                st.success("✅ Query is valid!")
+                            else:
+                                st.error("❌ Query has issues")
+                                for error in validation_result["errors"]:
+                                    st.write(f"• {error}")
+
+                # Test query action and debugging output
+                if st.button("🧪 Test Query", key="test_query_btn"):
+                    try:
+                        fixed_sql_query = self._fix_boolean_conditions(st.session_state.get('sql_query', ''), data)
+                        st.markdown("**🔍 Testing Query:**")
+                        st.code(fixed_sql_query, language="sql")
+                        st.write("**📊 Data Info:**")
+                        st.write(f"Data shape: {data.shape}")
+                        st.write(f"Data columns: {list(data.columns)}")
+                        st.write(f"Data types: {dict(data.dtypes)}")
+                        result = self.custom_sql_expectation.execute_sql_query(data, fixed_sql_query)
+                        if not result.empty:
+                            st.success("✅ Query executed successfully!")
+                            st.dataframe(result.head(), use_container_width=True)
+                            if 'violation_count' in result.columns:
+                                violation_count = result['violation_count'].iloc[0]
+                                st.info(f"Violation count: {violation_count}")
+                        else:
+                            st.warning("Query returned no results")
+                    except Exception as e:
+                        st.error(f"Query test failed: {str(e)}")
         
         return None
 

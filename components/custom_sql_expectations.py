@@ -234,7 +234,11 @@ FROM (
             return pd.DataFrame()
     
     def _build_failing_rows_query(self, original_query: str) -> Optional[str]:
-        """Convert a violation count query to a query that returns the actual failing rows"""
+        """Convert a violation count query to a query that returns the actual failing rows.
+
+        Note: We intentionally avoid window functions like ROW_NUMBER() for maximum SQLite/pandasql
+        compatibility. The caller can still map rows back to the original data by value matching.
+        """
         try:
             # Parse the original query to extract the WHERE condition
             query_upper = original_query.upper().strip()
@@ -260,13 +264,10 @@ FROM (
                 if condition_end > 0:
                     # Extract the condition (remove the NOT part)
                     condition = where_clause[:condition_end]
-                    
-                    # Build a query to return the actual failing rows
-                    failing_rows_query = """
-                    SELECT *, ROW_NUMBER() OVER() - 1 as __row_index__
-                    FROM {table_name}
-                    WHERE NOT (""" + condition + ")"
-                    
+                    # Build a query to return the actual failing rows (no window function)
+                    failing_rows_query = (
+                        "SELECT *\nFROM {table_name}\nWHERE NOT (" + condition + ")"
+                    )
                     return failing_rows_query.strip()
             
             elif "WHERE " in query_upper:
@@ -276,11 +277,9 @@ FROM (
                 
                 # For COUNT(*) queries that find violations, the WHERE clause directly identifies the violating rows
                 # So we can use the same WHERE clause to get the actual failing rows
-                failing_rows_query = """
-                SELECT *, ROW_NUMBER() OVER() - 1 as __row_index__
-                FROM {table_name}
-                WHERE """ + where_clause
-                
+                failing_rows_query = (
+                    "SELECT *\nFROM {table_name}\nWHERE " + where_clause
+                )
                 return failing_rows_query.strip()
                 
         except Exception as e:
@@ -307,33 +306,15 @@ FROM (
         try:
             # Execute the main query to get violation count
             result_df = self.execute_sql_query(data, query)
-            
-            # For custom SQL queries, we'll manually identify failing rows based on the query logic
-            # This is a simpler approach that avoids complex query parsing
+
+            # Derive failing rows directly from the WHERE clause whenever possible
             failing_rows_df = pd.DataFrame()
-            
-            # Try to extract the WHERE condition manually for common patterns
-            query_lower = query.lower().strip()
-            if "where" in query_lower and "department = 'sales'" in query_lower and "active" in query_lower and "salary" in query_lower:
-                # This is likely our Sales salary validation query
-                # Manually filter the data to get failing rows
-                try:
-                    # Apply the same logic as the query: department = 'Sales' AND active = True AND salary < 40000
-                    failing_rows_df = data[
-                        (data['department'] == 'Sales') & 
-                        (data['active'] == True) & 
-                        (data['salary'] < 40000)
-                    ].copy()
-                    
-                    # Add row index for consistency
-                    failing_rows_df['__row_index__'] = failing_rows_df.index
-                    
-                    # Successfully identified failing rows
-                except Exception as e:
-                    # Error in manual filtering, continue with empty dataframe
-                    failing_rows_df = pd.DataFrame()
-            else:
-                # Could not identify query pattern, continue with empty dataframe
+            try:
+                failing_rows_query = self._build_failing_rows_query(query)
+                if failing_rows_query:
+                    failing_rows_df = self.execute_sql_query(data, failing_rows_query)
+            except Exception:
+                # Fall back to empty failing rows if we can't derive them
                 failing_rows_df = pd.DataFrame()
             
             if result_df.empty:
@@ -403,14 +384,8 @@ FROM (
             unexpected_index_list = []
             
             if not failing_rows_df.empty and violation_count > 0:
-                # Extract row indices if available
-                if '__row_index__' in failing_rows_df.columns:
-                    unexpected_index_list = failing_rows_df['__row_index__'].tolist()
-                    # Remove the helper column
-                    display_failing_rows = failing_rows_df.drop(columns=['__row_index__'])
-                else:
-                    display_failing_rows = failing_rows_df
-                    unexpected_index_list = list(range(len(failing_rows_df)))
+                display_failing_rows = failing_rows_df
+                unexpected_index_list = []
                 
                 # Convert failing rows to list of dictionaries for partial_unexpected_list
                 partial_unexpected_list = display_failing_rows.head(100).to_dict('records')  # Limit to first 100 for performance
@@ -426,14 +401,7 @@ FROM (
             
             # Add full failing rows data for download if available
             if not failing_rows_df.empty:
-                # Store the full failing rows dataframe for potential download
-                # Remove helper column if present
-                if '__row_index__' in failing_rows_df.columns:
-                    full_failing_rows = failing_rows_df.drop(columns=['__row_index__'])
-                else:
-                    full_failing_rows = failing_rows_df
-                
-                result["unexpected_rows_data"] = full_failing_rows.to_dict('records')
+                result["unexpected_rows_data"] = failing_rows_df.to_dict('records')
             
             return {
                 "success": success,
