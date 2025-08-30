@@ -23,7 +23,6 @@ class DataUploadComponent:
     
     def render(self):
         """Render the data upload interface"""
-        st.markdown("### Upload your data file")
         
         # File uploader
         uploaded_file = st.file_uploader(
@@ -136,34 +135,41 @@ class DataUploadComponent:
         with col4:
             st.metric("Duplicate Rows", f"{profile['duplicates']['duplicate_rows']:,}")
         
-        # Data types distribution
-        st.markdown("### 🏷️ Data Types Distribution")
-        dtype_df = pd.DataFrame(list(profile['basic_info']['data_types'].items()), 
-                               columns=['Data Type', 'Count'])
+        # Data types distribution and Missing data analysis in columns
+        col1, col2 = st.columns(2)
         
-        fig_dtype = px.pie(dtype_df, values='Count', names='Data Type', 
-                          title="Distribution of Data Types")
-        fig_dtype.update_layout(height=400)
-        st.plotly_chart(fig_dtype, use_container_width=True)
+        with col1:
+            st.markdown("### 🏷️ Data Types Distribution")
+            dtype_df = pd.DataFrame(list(profile['basic_info']['data_types'].items()), 
+                                   columns=['Data Type', 'Count'])
+            
+            fig_dtype = px.pie(dtype_df, values='Count', names='Data Type', 
+                              title="Distribution of Data Types")
+            fig_dtype.update_layout(height=400)
+            st.plotly_chart(fig_dtype, use_container_width=True)
         
-        # Missing data analysis
-        if profile['missing_data']['columns_with_missing']:
-            st.markdown("### 🕳️ Missing Data Analysis")
-            
-            missing_df = pd.DataFrame(list(profile['missing_data']['columns_with_missing'].items()),
-                                    columns=['Column', 'Missing Count'])
-            missing_df['Missing Percentage'] = (missing_df['Missing Count'] / len(df)) * 100
-            missing_df = missing_df.sort_values('Missing Count', ascending=False)
-            
-            fig_missing = px.bar(missing_df, x='Column', y='Missing Percentage',
-                               title="Missing Data by Column",
-                               color='Missing Percentage',
-                               color_continuous_scale='Reds')
-            fig_missing.update_layout(height=400, xaxis_tickangle=-45)
-            st.plotly_chart(fig_missing, use_container_width=True)
-            
-            # Show table
-            st.dataframe(missing_df, use_container_width=True)
+        with col2:
+            if profile['missing_data']['columns_with_missing']:
+                st.markdown("### 🕳️ Missing Data Analysis")
+                
+                missing_df = pd.DataFrame(list(profile['missing_data']['columns_with_missing'].items()),
+                                        columns=['Column', 'Missing Count'])
+                missing_df['Missing Percentage'] = (missing_df['Missing Count'] / len(df)) * 100
+                missing_df = missing_df.sort_values('Missing Count', ascending=False)
+                
+                fig_missing = px.bar(missing_df, x='Column', y='Missing Percentage',
+                                   title="Missing Data by Column",
+                                   color='Missing Percentage',
+                                   color_continuous_scale='Reds')
+                fig_missing.update_layout(height=400, xaxis_tickangle=-45)
+                st.plotly_chart(fig_missing, use_container_width=True)
+                
+                # Show table
+                st.dataframe(missing_df, use_container_width=True)
+            else:
+                st.markdown("### 🕳️ Missing Data Analysis")
+                st.info("No missing data found in the dataset!")
+                st.markdown("🎉 **Perfect!** All columns have complete data.")
         
         # Column details
         st.markdown("### 📊 Column Details")
@@ -249,7 +255,7 @@ class DataUploadComponent:
                 st.write(f"• Sample data (Excel format)")
         
         # Show download options with descriptions
-        with st.expander("📋 Download Options", expanded=True):
+        with st.expander("📋 Download Options", expanded=False):
             col1, col2 = st.columns(2)
             
             with col1:
@@ -406,8 +412,9 @@ class DataUploadComponent:
                 st.error("Failed to generate profile download!")
                 return
             
-            # Create filename with timestamp
+            # Create filename with original filename and timestamp
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            original_filename = st.session_state.get('uploaded_filename', 'unknown_dataset')
             
             # Map format types to proper file extensions
             file_extensions = {
@@ -418,7 +425,7 @@ class DataUploadComponent:
             }
             
             file_extension = file_extensions.get(format_type, format_type)
-            filename = f"data_profile_{timestamp}.{file_extension}"
+            filename = f"{original_filename}_profile_{timestamp}.{file_extension}"
             
             # Set appropriate MIME type
             mime_types = {
@@ -448,6 +455,7 @@ class DataUploadComponent:
         try:
             formats = ['json', 'excel', 'html', 'csv']
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            original_filename = st.session_state.get('uploaded_filename', 'unknown_dataset')
             
             # Create a zip file containing all formats
             import zipfile
@@ -469,13 +477,13 @@ class DataUploadComponent:
                                 'csv': 'csv'
                             }
                             file_extension = file_extensions.get(format_type, format_type)
-                            filename = f"data_profile_{timestamp}.{file_extension}"
+                            filename = f"{original_filename}_profile_{timestamp}.{file_extension}"
                             zip_file.writestr(filename, content)
                     except Exception as e:
                         st.warning(f"Could not generate {format_type.upper()} format: {str(e)}")
             
             # Create download button for zip file
-            zip_filename = f"data_profile_all_formats_{timestamp}.zip"
+            zip_filename = f"{original_filename}_profile_all_formats_{timestamp}.zip"
             
             st.download_button(
                 label="📦 Download All Formats (ZIP)",

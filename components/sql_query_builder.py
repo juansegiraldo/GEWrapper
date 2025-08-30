@@ -260,6 +260,21 @@ WHERE department = 'Sales' AND active = True AND salary < 40000
 """
             )
             
+            # Add prominent link to custom GPT for SQL help
+            st.markdown("---")
+            st.markdown("""
+            <div style="background-color: #f0f8ff; border: 2px solid #0066cc; border-radius: 8px; padding: 15px; margin: 10px 0; text-align: center;">
+                <h4 style="color: #0066cc; margin: 0 0 10px 0;">🤖 Need help writing SQL?</h4>
+                <p style="margin: 0 0 15px 0; font-size: 16px;">Get AI-powered assistance with your custom SQL queries!</p>
+                <a href="https://chatgpt.com/g/g-68b1ee414c4081919498f880f3ee5993-datawash-custom-sql-generator" 
+                   target="_blank" 
+                   style="background-color: #0066cc; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px; display: inline-block;">
+                    🚀 Open DataWash SQL Generator GPT
+                </a>
+            </div>
+            """, unsafe_allow_html=True)
+            st.markdown("---")
+            
             # Update session state
             st.session_state['sql_query'] = sql_query
             

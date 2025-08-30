@@ -17,7 +17,7 @@ from utils.suite_helpers import generate_suite_name
 from config.app_config import AppConfig
 
 st.set_page_config(
-    page_title="DataWashCopiaMia - Great Expectations Wrapper",
+    page_title="DataWash by Stratesys - Data Quality made simple",
     page_icon="🧹",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -51,8 +51,8 @@ def main():
     """Main application function"""
     initialize_session_state()
     
-    st.title("🧹 DataWashCopiaMia")
-    st.markdown("### Great Expectations Data Validation Made Simple")
+    st.title("🧹 DataWash by Stratesys")
+    st.markdown("### Data Quality made simple")
     st.markdown("---")
     
     # Sidebar navigation
@@ -81,6 +81,13 @@ def main():
     progress = (step_index + 1) / len(steps)
     st.sidebar.progress(progress)
     st.sidebar.markdown(f"**Step {step_index + 1} of {len(steps)}**")
+    
+    # Copyright and attribution
+    st.sidebar.markdown("---")
+    st.sidebar.markdown("### 📝 About")
+    st.sidebar.markdown("**Developed by**  \n*Juan Giraldo*")
+    st.sidebar.markdown("**Product**  \n*DataWash by Stratesys*  \n*v 0.2*")
+    st.sidebar.markdown("**© 2025 All Rights Reserved**  \n*Data Quality Made Simple*")
     
     # Main content area
     if selected_step == 'upload':
