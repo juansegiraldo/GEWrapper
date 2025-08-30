@@ -1,0 +1,15 @@
+{
+  "suite_name": "sales_salary_validation",
+  "expectations": [
+    {
+      "expectation_type": "expect_custom_sql_query_to_return_expected_result",
+      "kwargs": {
+        "name": "Sales Active Employee Salary Validation",
+        "query": "SELECT COUNT(*) as violation_count FROM {table_name} WHERE department = 'Sales' AND active = 1 AND salary < 40000",
+        "expected_result_type": "empty",
+        "description": "Ensures that active Sales department employees have a salary equal to or greater than 40000",
+        "tolerance": 0.0
+      }
+    }
+  ]
+}

@@ -1,219 +1,137 @@
-# DataWashCopiaMia - Great Expectations Streamlit Wrapper
+# GEWrapper - Great Expectations Data Validation Tool
 
-A comprehensive Streamlit web application that provides a user-friendly interface for Great Expectations data validation functionality. This application enables users to perform data validation, profiling, and quality assessment without requiring direct coding knowledge.
+A comprehensive Streamlit application for data validation using Great Expectations with custom SQL query capabilities.
 
-## 🚀 Features
+## 🚀 Quick Start
 
-### Core Functionality
-- **Multi-format Data Upload**: Support for CSV, JSON, Parquet, and Excel files
-- **Interactive Data Profiling**: Comprehensive data analysis with statistics and visualizations  
-- **Visual Expectation Builder**: Intuitive interface for creating data validation rules
-- **Real-time Validation**: Execute expectations with progress tracking
-- **Rich Results Dashboard**: Interactive charts and detailed reporting
-- **Export Capabilities**: Generate HTML, PDF, JSON, and CSV reports
+```powershell
+# Activate virtual environment
+.\scripts\activate_env.ps1
 
-### Data Validation Capabilities
-- **Column-level Expectations**: Null checks, data types, value ranges, regex patterns
-- **Table-level Expectations**: Row counts, column presence, uniqueness constraints
-- **Statistical Validations**: Mean, median, standard deviation checks
-- **Custom Templates**: Pre-configured expectation suites for common scenarios
-
-### Advanced Features
-- **Smart Data Sampling**: Handle large datasets efficiently
-- **Step-by-step Validation**: Progressive validation with real-time feedback
-- **Import/Export Suites**: Save and reuse expectation configurations
-- **Data Quality Scoring**: Automatic assessment with actionable recommendations
-
-## 📋 Requirements
-
-- Python 3.8+
-- Dependencies listed in `requirements.txt`
-
-## 🛠️ Installation
-
-1. Clone or download the project:
-```bash
-git clone <repository-url>
-cd GEWrapper
-```
-
-2. Install dependencies:
-```bash
+# Install dependencies
 pip install -r requirements.txt
-```
 
-3. Run the application:
-```bash
+# Run the application
 streamlit run streamlit_app.py
 ```
-
-## 📖 Usage Guide
-
-### Step 1: Upload Data
-- Navigate to the "Upload Data" section
-- Select your data file (CSV, JSON, Parquet, Excel)
-- Preview your data and basic statistics
-
-### Step 2: Data Profiling  
-- Review comprehensive data profiling
-- Analyze column types, missing values, and distributions
-- Get optimization suggestions for data types
-
-### Step 3: Configure Expectations
-- Choose from predefined templates or build custom expectations
-- Configure parameters for each validation rule
-- Preview and manage your expectation suite
-
-### Step 4: Run Validation
-- Choose validation mode (batch or step-by-step)
-- Configure sampling options for large datasets
-- Execute validation with real-time progress tracking
-
-### Step 5: View Results
-- Analyze results through interactive dashboards
-- Review detailed failure information
-- Export reports in multiple formats
-- Get data quality recommendations
 
 ## 📁 Project Structure
 
 ```
 GEWrapper/
-├── streamlit_app.py          # Main application entry point
-├── components/               # UI components
-│   ├── data_upload.py       # Data upload and profiling
-│   ├── expectation_builder.py # Expectation configuration
-│   ├── validation_runner.py  # Validation execution
-│   └── results_display.py   # Results visualization
-├── utils/                   # Utility functions
-│   ├── ge_helpers.py        # Great Expectations helpers
-│   ├── data_processing.py   # Data processing utilities
-│   └── report_generator.py  # Report generation
-├── config/                  # Configuration
-│   └── app_config.py        # Application settings
-├── sample_data/             # Sample datasets for testing
-│   ├── customers.csv
-│   ├── sales_data.csv
-│   └── inventory.json
-└── requirements.txt         # Python dependencies
+├── 📁 components/           # Core application components
+│   ├── custom_sql_expectations.py
+│   ├── data_upload.py
+│   ├── expectation_builder.py
+│   ├── failed_records_generator.py
+│   ├── results_display.py
+│   ├── sql_query_builder.py
+│   └── validation_runner.py
+├── 📁 config/              # Configuration files
+│   ├── app_config.py
+│   ├── default_suite.json
+│   ├── sales_salary_validation.json
+│   ├── sample_custom_sql_expectations.json
+│   └── sample_expectations.json
+├── 📁 data/                # Data files
+│   ├── 📁 output/          # Generated output files
+│   ├── 📁 processed/       # Processed data files
+│   └── 📁 sample_data/     # Sample datasets
+│       ├── customers.csv
+│       ├── inventory.json
+│       ├── sales_data.csv
+│       └── test_data_with_issues.csv
+├── 📁 docs/                # Documentation
+│   ├── CUSTOM_SQL_GUIDE.md
+│   ├── FAILED_RECORDS_GUIDE.md
+│   ├── INSTALL_GUIDE.md
+│   ├── PROJECT_SUMMARY.md
+│   ├── README.md
+│   ├── SQL_QUICK_REFERENCE.md
+│   ├── VENV_SETUP.md
+│   └── roadmap.md
+├── 📁 scripts/             # Utility scripts
+│   ├── activate_env.bat
+│   ├── activate_env.ps1
+│   └── start_app.bat
+├── 📁 tests/               # Test files
+│   ├── test_app_data_loading.py
+│   ├── test_boolean_fix.py
+│   ├── test_download.py
+│   ├── test_sales_validation.py
+│   ├── test_streamlit_app.py
+│   └── test_validation_fix.py
+├── 📁 utils/               # Utility modules
+│   ├── data_processing.py
+│   ├── ge_helpers.py
+│   ├── report_generator.py
+│   └── suite_helpers.py
+├── 📁 gewrapper_env/       # Virtual environment
+├── requirements.txt        # Production dependencies
+├── requirements_venv.txt   # Full environment dependencies
+├── setup.py               # Package setup
+└── streamlit_app.py       # Main application entry point
 ```
 
-## 🧪 Sample Data
+## 🎯 Key Features
 
-The `sample_data/` directory contains example datasets for testing:
+- **Custom SQL Query Builder**: Create complex data validation rules using SQL
+- **Data Upload & Processing**: Support for CSV, JSON, and other data formats
+- **Expectation Management**: Build, save, and reuse validation expectations
+- **Results Visualization**: Interactive displays of validation results
+- **Failed Records Analysis**: Detailed analysis of validation failures
+- **Report Generation**: Automated report creation for validation results
 
-- **customers.csv**: Customer information with various data types
-- **sales_data.csv**: Transaction data with relationships
-- **inventory.json**: Product inventory in JSON format
+## 📚 Documentation
 
-## 🎯 Use Cases
+- **[Installation Guide](docs/INSTALL_GUIDE.md)**: Complete setup instructions
+- **[Custom SQL Guide](docs/CUSTOM_SQL_GUIDE.md)**: How to create custom SQL validations
+- **[Failed Records Guide](docs/FAILED_RECORDS_GUIDE.md)**: Understanding validation failures
+- **[SQL Quick Reference](docs/SQL_QUICK_REFERENCE.md)**: SQL syntax and examples
+- **[Project Summary](docs/PROJECT_SUMMARY.md)**: Detailed project overview
 
-### Data Quality Monitoring
-- Validate daily data feeds
-- Monitor data pipeline health  
-- Ensure data consistency across systems
+## 🛠️ Development
 
-### Data Migration Validation
-- Verify data integrity after migrations
-- Validate row counts and relationships
-- Check data type preservation
+### Running Tests
+```powershell
+# Run all tests
+python -m pytest tests/
 
-### Exploratory Data Analysis
-- Profile new datasets quickly
-- Identify data quality issues
-- Generate data documentation
+# Run specific test
+python -m pytest tests/test_sales_validation.py
+```
 
-### Compliance Reporting
-- Create audit trails for data quality
-- Generate compliance reports
-- Track data quality metrics over time
+### Environment Setup
+```powershell
+# Create virtual environment
+python -m venv gewrapper_env
+
+# Activate (Windows)
+.\scripts\activate_env.ps1
+
+# Install dependencies
+pip install -r requirements_venv.txt
+```
+
+## 📊 Sample Data
+
+The application includes sample datasets in `data/sample_data/`:
+- `customers.csv`: Customer information
+- `sales_data.csv`: Sales transaction data
+- `inventory.json`: Inventory management data
+- `test_data_with_issues.csv`: Data with known validation issues
 
 ## 🔧 Configuration
 
-### Application Settings
-Modify `config/app_config.py` to customize:
-- File upload limits
-- Sampling thresholds  
-- UI preferences
-- Export formats
-- Expectation templates
+Configuration files are stored in `config/`:
+- `app_config.py`: Application settings
+- `default_suite.json`: Default validation suite
+- `sample_expectations.json`: Example expectations
 
-### Great Expectations Integration
-The application uses Great Expectations for validation logic:
-- Temporary contexts for isolation
-- JSON-based suite serialization
-- Comprehensive result formatting
+## 📝 License
 
-## 📊 Supported Expectations
-
-### Table-level
-- Row count validation
-- Column presence checks
-- Duplicate detection
-
-### Column-level  
-- Null value validation
-- Data type verification
-- Value range checks
-- Pattern matching (regex)
-- Set membership validation
-- Statistical constraints
-
-### Advanced
-- Cross-column relationships
-- Custom business rules
-- Multi-column constraints
-
-## 🚨 Troubleshooting
-
-### Common Issues
-
-**File Upload Errors**
-- Check file size limits (100MB default)
-- Verify file format compatibility
-- Try different encoding if CSV fails
-
-**Memory Issues with Large Files**
-- Enable data sampling
-- Reduce sample size
-- Use Parquet format for better performance
-
-**Validation Failures**
-- Check expectation parameters
-- Verify column names match exactly
-- Review data types for numeric validations
-
-### Performance Tips
-- Use sampling for datasets > 10,000 rows
-- Choose batch validation for faster execution
-- Optimize expectation complexity
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create feature branches
-3. Add comprehensive tests
-4. Update documentation
-5. Submit pull requests
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 🙏 Acknowledgments
-
-- Built on [Great Expectations](https://greatexpectations.io/)
-- UI powered by [Streamlit](https://streamlit.io/)
-- Visualizations using [Plotly](https://plotly.com/)
-
-## 📞 Support
-
-For issues and questions:
-1. Check the troubleshooting section
-2. Review sample data examples  
-3. Create GitHub issues for bugs
-4. Contribute improvements via pull requests
+This project is part of the CodingCamp initiative for data validation and quality assurance.
 
 ---
 
-**DataWashCopiaMia** - Making data validation accessible to everyone! 🧹✨
+**Happy Data Validating! 🎉**

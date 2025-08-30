@@ -9,6 +9,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.ge_helpers import GEHelpers
 from utils.suite_helpers import generate_suite_name
 from config.app_config import AppConfig
+from components.sql_query_builder import SQLQueryBuilderComponent
 
 class ExpectationBuilderComponent:
     """Component for building and managing expectations"""
@@ -16,6 +17,7 @@ class ExpectationBuilderComponent:
     def __init__(self):
         self.ge_helpers = GEHelpers()
         self.config = AppConfig()
+        self.sql_query_builder = SQLQueryBuilderComponent()
         
         # Initialize session state for expectations
         if 'expectation_configs' not in st.session_state:
@@ -280,6 +282,15 @@ class ExpectationBuilderComponent:
                 default=list(data.columns)
             )
             config['kwargs'] = {'column_list': expected_columns}
+        
+        elif expectation_type == "expect_custom_sql_query_to_return_expected_result":
+            # Custom SQL expectation
+            st.markdown("**Custom SQL-based validation allows you to create complex business rules and multi-column checks.**")
+            custom_config = self.sql_query_builder.render(data)
+            if custom_config:
+                return custom_config
+            else:
+                return None
         
         elif "column" in expectation_type:
             # Column-based expectations

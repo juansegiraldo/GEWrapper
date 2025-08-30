@@ -7,6 +7,10 @@ import tempfile
 import os
 from typing import Dict, List, Any, Optional
 import streamlit as st
+import sys
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from components.custom_sql_expectations import CustomSQLExpectation
 
 class GEHelpers:
     """Helper class for Great Expectations operations"""
@@ -14,6 +18,7 @@ class GEHelpers:
     def __init__(self):
         self.context = None
         self.data_source = None
+        self.custom_sql_expectation = CustomSQLExpectation()
         
     def initialize_context(self):
         """Initialize Great Expectations context"""
@@ -390,6 +395,30 @@ class GEHelpers:
                                         else:
                                             validation_result["statistics"]["unsuccessful_expectations"] += 1
                                 
+                                elif exp_type == 'expect_custom_sql_query_to_return_expected_result':
+                                    # Handle custom SQL expectations
+                                    try:
+                                        custom_result = self.custom_sql_expectation.validate_expectation(data, exp_config)
+                                        validation_result["results"].append(custom_result)
+                                        
+                                        if custom_result.get("success", False):
+                                            validation_result["statistics"]["successful_expectations"] += 1
+                                        else:
+                                            validation_result["statistics"]["unsuccessful_expectations"] += 1
+                                    except Exception as custom_e:
+                                        st.write(f"🔍 Debug: Custom SQL expectation failed: {str(custom_e)}")
+                                        validation_result["results"].append({
+                                            "success": False,
+                                            "expectation_config": exp_config,
+                                            "exception_info": {"exception_message": f"Custom SQL validation failed: {str(custom_e)}"},
+                                            "result": {
+                                                "element_count": len(data),
+                                                "unexpected_count": len(data),
+                                                "unexpected_percent": 100.0
+                                            }
+                                        })
+                                        validation_result["statistics"]["unsuccessful_expectations"] += 1
+                                
                                 else:
                                     # Generic handling for other expectation types
                                     validation_result["results"].append({
@@ -563,7 +592,8 @@ class GEHelpers:
             "expect_column_stdev_to_be_between",
             "expect_column_sum_to_be_between",
             "expect_column_values_to_be_dateutil_parseable",
-            "expect_column_values_to_match_strftime_format"
+            "expect_column_values_to_match_strftime_format",
+            "expect_custom_sql_query_to_return_expected_result"
         ]
     
     def get_expectation_description(self, expectation_type: str) -> str:
@@ -583,7 +613,8 @@ class GEHelpers:
             "expect_column_stdev_to_be_between": "Expect column standard deviation to be within range",
             "expect_column_sum_to_be_between": "Expect column sum to be within specified range",
             "expect_column_values_to_be_dateutil_parseable": "Expect column values to be parseable as dates",
-            "expect_column_values_to_match_strftime_format": "Expect column values to match date format"
+            "expect_column_values_to_match_strftime_format": "Expect column values to match date format",
+            "expect_custom_sql_query_to_return_expected_result": "Custom SQL-based validation for complex business rules and multi-column checks"
         }
         return descriptions.get(expectation_type, "No description available")
     
