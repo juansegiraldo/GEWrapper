@@ -1,5 +1,7 @@
 # DataWashCopiaMia - Project Summary
 
+> Note: In code and docs you may see both "DataWash by Stratesys" (product name) and "DataWashCopiaMia" (app folder/name used in summaries). They refer to the same application.
+
 ## 🎯 Project Overview
 
 **DataWashCopiaMia** is a comprehensive Streamlit web application that serves as a user-friendly wrapper around Great Expectations functionality. It enables users to perform data validation, profiling, and quality assessment through an intuitive web interface without requiring direct coding knowledge.

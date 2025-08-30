@@ -11,6 +11,8 @@
 
 *Data Quality Made Simple* • *v0.2*
 
+<img src="docs/assets/hero.gif" alt="DataWash demo" width="720"/>
+
 [🚀 Quick Start](#-quick-start) • [📚 Documentation](#-documentation) • [🎯 Features](#-key-features) • [🛠️ Development](#-development)
 
 </div>
@@ -103,16 +105,22 @@ GEWrapper/
 │   ├── app_config.py               # Application configuration
 │   ├── default_suite.json          # Default validation suite
 │   ├── sample_expectations.json    # Example validation rules
-│   └── custom_sql_expectations.json # SQL validation templates
+│   └── sample_custom_sql_expectations.json # SQL validation templates (samples)
 ├── 📊 data/                # Data storage and samples
 │   ├── output/             # Generated reports and exports
 │   ├── processed/          # Processed data files
 │   └── sample_data/        # Sample datasets for testing
 ├── 📚 docs/                # Comprehensive documentation
-│   ├── INSTALL_GUIDE.md    # Setup and installation
-│   ├── CUSTOM_SQL_GUIDE.md # SQL validation guide
-│   ├── FAILED_RECORDS_GUIDE.md # Failure analysis guide
-│   └── SQL_QUICK_REFERENCE.md # SQL syntax reference
+│   ├── README.md                 # Docs index and navigation
+│   ├── INSTALL_GUIDE.md          # Setup and installation
+│   ├── USER_GUIDE.md             # End-to-end usage
+│   ├── CUSTOM_SQL_GUIDE.md       # SQL validation guide
+│   ├── SQL_QUICK_REFERENCE.md    # SQL syntax reference
+│   ├── FAILED_RECORDS_GUIDE.md   # Failure analysis guide
+│   ├── CONFIGURATION.md          # Settings and env vars
+│   ├── PROJECT_SUMMARY.md        # Technical overview
+│   ├── VENV_SETUP.md             # Virtual environment guide
+│   └── roadmap.md                # Milestones
 ├── 🧪 tests/               # Test suite and validation
 ├── 🛠️ utils/               # Utility functions and helpers
 └── 🚀 scripts/             # Automation and utility scripts
@@ -126,11 +134,19 @@ Our comprehensive documentation covers every aspect of DataWash by Stratesys:
 
 | Guide | Description | Use Case |
 |-------|-------------|----------|
-| 📖 [Installation Guide](docs/INSTALL_GUIDE.md) | Complete setup and configuration | Getting started with DataWash by Stratesys |
-| 🔍 [Custom SQL Guide](docs/CUSTOM_SQL_GUIDE.md) | Creating SQL-based validations | Building custom validation rules |
-| ❌ [Failed Records Guide](docs/FAILED_RECORDS_GUIDE.md) | Understanding validation failures | Troubleshooting data issues |
-| 🗃️ [SQL Quick Reference](docs/SQL_QUICK_REFERENCE.md) | SQL syntax and examples | Writing validation queries |
-| 📋 [Project Summary](docs/PROJECT_SUMMARY.md) | Detailed project overview | Understanding the platform |
+| 📚 [Docs Index](docs/INDEX.md) | Navigation for all docs | Find the right guide fast |
+| 📖 [Installation Guide](docs/INSTALL_GUIDE.md) | Setup and configuration | Getting started |
+| 🚀 [User Guide](docs/USER_GUIDE.md) | End-to-end app workflow | Everyday usage |
+| 📘 [Tutorials](docs/TUTORIALS.md) | Hands-on walkthroughs | Learn by example |
+| ❓ [FAQ](docs/FAQ.md) | Common questions | Quick answers |
+| 🔧 [Configuration](docs/CONFIGURATION.md) | Settings and env vars | Tune defaults |
+| 🔍 [Custom SQL Guide](docs/CUSTOM_SQL_GUIDE.md) | SQL-based validations | Business rules |
+| 🗃️ [SQL Quick Reference](docs/SQL_QUICK_REFERENCE.md) | SQL syntax & examples | Write queries |
+| ❌ [Failed Records Guide](docs/FAILED_RECORDS_GUIDE.md) | Failure analysis | Troubleshooting data |
+| 📋 [Project Summary](docs/PROJECT_SUMMARY.md) | Technical overview | Understand platform |
+| 🧪 [VENV Setup](docs/VENV_SETUP.md) | Virtual env usage | Local dev |
+| 🧭 [Roadmap](docs/roadmap.md) | Milestones | What's next |
+| 🛠️ [Developer Guide](docs/DEVELOPER_GUIDE.md) | For contributors | Extend the app |
 
 ---
 

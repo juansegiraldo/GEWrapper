@@ -18,8 +18,8 @@ This guide will help you set up and run the DataWashCopiaMia application on your
 - Navigate to the extracted folder
 
 **Option B: Clone with Git**
-```bash
-git clone <repository-url>
+```powershell
+git clone https://github.com/juansegiraldo/GEWrapper.git
 cd GEWrapper
 ```
 
@@ -27,22 +27,27 @@ cd GEWrapper
 
 Create a virtual environment to isolate dependencies:
 
-**Windows:**
-```bash
-python -m venv datawash_env
-datawash_env\Scripts\activate
+**Windows (PowerShell):**
+```powershell
+python -m venv gewrapper_env
+.\gewrapper_env\Scripts\Activate.ps1
 ```
 
 **macOS/Linux:**
 ```bash
-python3 -m venv datawash_env
-source datawash_env/bin/activate
+python3 -m venv gewrapper_env
+source gewrapper_env/bin/activate
+```
+
+Alternatively, use the helper scripts (Windows):
+```powershell
+.\scripts\activate_env.ps1
 ```
 
 ### 3. Install Dependencies
 
 Install all required Python packages:
-```bash
+```powershell
 pip install -r requirements.txt
 ```
 
@@ -58,14 +63,14 @@ This will install:
 ### 4. Verify Installation
 
 Test that all components are working:
-```bash
+```powershell
 python -c "import streamlit, great_expectations, pandas, plotly; print('All dependencies installed successfully!')"
 ```
 
 ### 5. Run the Application
 
 Start the Streamlit server:
-```bash
+```powershell
 streamlit run streamlit_app.py
 ```
 
@@ -78,7 +83,7 @@ The application should automatically open in your default web browser at:
 
 1. **Start the application** using the command above
 2. **Navigate to the Upload Data section**
-3. **Try the sample files** in the `sample_data/` folder:
+3. **Try the sample files** in the `data/sample_data/` folder:
    - `customers.csv` - Customer information dataset
    - `sales_data.csv` - Transaction data  
    - `inventory.json` - Product inventory
@@ -107,7 +112,7 @@ Error: Permission denied installing packages
 ```
 *Solutions:*
 - Use `pip install --user -r requirements.txt`
-- Run command prompt as administrator (Windows)
+- Run PowerShell as Administrator (Windows)
 - Use `sudo pip install -r requirements.txt` (macOS/Linux)
 
 **Memory/Dependency Conflicts**
@@ -131,7 +136,7 @@ ModuleNotFoundError: No module named 'streamlit'
 Error: Port 8501 is already in use
 ```
 *Solution: Use a different port*
-```bash
+```powershell
 streamlit run streamlit_app.py --server.port 8502
 ```
 
@@ -169,20 +174,20 @@ Edit `config/app_config.py` to modify:
 
 ### Environment Variables
 
-Set these environment variables for advanced configuration:
+Set these environment variables for advanced configuration (PowerShell):
 
-```bash
+```powershell
 # Maximum file upload size (in bytes)
-export STREAMLIT_MAX_UPLOAD_SIZE=104857600
+$env:STREAMLIT_MAX_UPLOAD_SIZE = 104857600
 
 # Disable usage statistics
-export STREAMLIT_GATHER_USAGE_STATS=false
+$env:STREAMLIT_GATHER_USAGE_STATS = "false"
 ```
 
 ### Network Configuration
 
 **Running on Different Host/Port:**
-```bash
+```powershell
 streamlit run streamlit_app.py --server.address 0.0.0.0 --server.port 8080
 ```
 
@@ -209,7 +214,7 @@ CMD ["streamlit", "run", "streamlit_app.py", "--server.address", "0.0.0.0"]
 ```
 
 Build and run:
-```bash
+```powershell
 docker build -t datawash .
 docker run -p 8501:8501 datawash
 ```
@@ -231,7 +236,7 @@ docker run -p 8501:8501 datawash
 
 After successful installation:
 
-1. **Read the User Guide** in README.md
+1. **Read the User Guide** in `docs/USER_GUIDE.md`
 2. **Try sample datasets** to understand features
 3. **Import your own data** for validation
 4. **Create expectation templates** for your use cases
@@ -251,4 +256,4 @@ If you encounter issues:
 
 **Happy Data Validating!** 🎉
 
-Need more help? Check the README.md for detailed usage instructions and examples.
+Need more help? Check `docs/USER_GUIDE.md` for detailed usage instructions and examples.
