@@ -85,8 +85,8 @@ def main():
     # Copyright and attribution
     st.sidebar.markdown("---")
     st.sidebar.markdown("### 📝 About")
-    st.sidebar.markdown("**Developed by**  \n*Juan Giraldo*")
-    st.sidebar.markdown("**Product**  \n*DataWash by Stratesys*  \n*v 0.2*")
+    st.sidebar.markdown("**Developed by**  \n*[Juan Giraldo](https://www.linkedin.com/in/juan-sebastian-giraldo/)*")
+    st.sidebar.markdown("**Product**  \n*DataWash by [Stratesys](https://www.stratesys-ts.com/)*  \n*v 0.2*")
     st.sidebar.markdown("**© 2025 All Rights Reserved**  \n*Data Quality Made Simple*")
     
     # Main content area

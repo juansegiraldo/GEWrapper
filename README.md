@@ -308,10 +308,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 <div align="center">
 
-**Made with ❤️ by Stratesys**
+**Made with ❤️ by [Stratesys](https://www.stratesys-ts.com/)**
 
-**Developed by Juan Giraldo**  
-**Product: DataWash by Stratesys v0.2**
+**Developed by [Juan Giraldo](https://www.linkedin.com/in/juan-sebastian-giraldo/)**  
+**Product: DataWash by [Stratesys](https://www.stratesys-ts.com/) v0.2**
 
 [🌐 Website](https://github.com/juansegiraldo/GEWrapper) • [📧 Contact](mailto:juan.giraldo@stratesys-ts.com) • [🐛 Issues](https://github.com/juansegiraldo/GEWrapper/issues)
 
