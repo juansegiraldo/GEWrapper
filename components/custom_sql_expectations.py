@@ -346,8 +346,15 @@ FROM (
                     
             elif expected_result_type == "non_empty":
                 # Expect violations to exist
-                success = len(result_df) > 0
-                violation_count = 0 if success else 1
+                # If query returns COUNT(*) as violation_count, use it; otherwise, use row count
+                if 'violation_count' in result_df.columns:
+                    actual_count = int(result_df['violation_count'].iloc[0])
+                else:
+                    actual_count = len(result_df)
+
+                success = actual_count > 0
+                # Report actual_count as the number of violations for downstream displays
+                violation_count = actual_count if not success else actual_count
                 
             elif expected_result_type == "count_equals":
                 # Expect specific count

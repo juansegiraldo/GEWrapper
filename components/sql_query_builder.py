@@ -242,7 +242,8 @@ class SQLQueryBuilderComponent:
         st.markdown("##### Manual SQL Query")
         
         # Two-column layout: SQL input (wide) + Available Columns (narrow)
-        col1, col2 = st.columns([3, 1])
+        # Use consistent 2:1 ratio across the Configure Expectations step
+        col1, col2 = st.columns([2, 1])
         
         with col1:
             # Initialize session state for SQL query
@@ -489,7 +490,8 @@ WHERE [your_condition_here]"""
         # Fix boolean conditions in the SQL query
         fixed_sql_query = self._fix_boolean_conditions(sql_query, data)
         
-        col1, col2 = st.columns(2)
+        # Keep a consistent 2:1 ratio for configuration as well
+        col1, col2 = st.columns([2, 1])
         
         with col1:
             name = st.text_input(

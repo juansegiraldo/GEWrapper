@@ -36,6 +36,8 @@ class ExpectationBuilderComponent:
     
     def render(self, data: pd.DataFrame):
         """Render the expectation builder interface"""
+        # Global layout/style tweaks so widgets consistently fill their columns
+        self._inject_layout_css()
         # Suite management
         self._render_suite_management()
         
@@ -59,9 +61,10 @@ class ExpectationBuilderComponent:
         uploaded_filename = st.session_state.get('uploaded_filename', 'No dataset uploaded')
         if uploaded_filename != 'No dataset uploaded':
             st.info(f"📄 **Dataset:** {uploaded_filename}")
-        
-        col1, col2, col3 = st.columns([3, 1, 1])
-        
+
+        # Consistent two-column layout: controls left, actions right
+        col1, col2 = st.columns([2, 1])
+
         with col1:
             suite_name = st.text_input(
                 "Suite Name:",
@@ -69,23 +72,24 @@ class ExpectationBuilderComponent:
                 help="Enter a name for your expectation suite"
             )
             st.session_state.current_suite_name = suite_name
-        
+
         with col2:
-            if st.button("🔄 Regenerate", type="secondary", help="Generate new suite name with current timestamp"):
-                new_suite_name = generate_suite_name()
-                st.session_state.current_suite_name = new_suite_name
-                st.success(f"Generated new suite name: {new_suite_name}")
-                st.rerun()
-        
-        with col3:
-            if st.button("Clear All", type="secondary"):
-                st.session_state.expectation_configs = []
-                # Clear any processing flags
-                if 'import_processing' in st.session_state:
-                    del st.session_state.import_processing
-                if 'last_imported_file' in st.session_state:
-                    del st.session_state.last_imported_file
-                st.success("All expectations cleared!")
+            btn_col1, btn_col2 = st.columns(2)
+            with btn_col1:
+                if st.button("🔄 Regenerate", type="secondary", help="Generate new suite name with current timestamp"):
+                    new_suite_name = generate_suite_name()
+                    st.session_state.current_suite_name = new_suite_name
+                    st.success(f"Generated new suite name: {new_suite_name}")
+                    st.rerun()
+            with btn_col2:
+                if st.button("Clear All", type="secondary"):
+                    st.session_state.expectation_configs = []
+                    # Clear any processing flags
+                    if 'import_processing' in st.session_state:
+                        del st.session_state.import_processing
+                    if 'last_imported_file' in st.session_state:
+                        del st.session_state.last_imported_file
+                    st.success("All expectations cleared!")
     
     def _render_template_selection(self, data: pd.DataFrame):
         """Render template selection interface"""
@@ -237,7 +241,8 @@ class ExpectationBuilderComponent:
         # Expectation type selection
         available_expectations = self.ge_helpers.get_available_expectations()
         
-        col1, col2 = st.columns([2, 3])
+        # Consistent two-column ratio across sections
+        col1, col2 = st.columns([2, 1])
         
         with col1:
             expectation_type = st.selectbox(
@@ -261,6 +266,24 @@ class ExpectationBuilderComponent:
                 st.success("Expectation added successfully!")
             else:
                 st.error("Please configure all required parameters!")
+
+    def _inject_layout_css(self):
+        """Inject lightweight CSS to normalize widget widths in columns."""
+        st.markdown(
+            """
+            <style>
+            /* Ensure core input widgets fill their column width */
+            div[data-testid="stSelectbox"] > div { width: 100%; }
+            div[data-testid="stTextInput"] > div > div { width: 100%; }
+            div[data-testid="stNumberInput"] > div { width: 100%; }
+            div[data-testid="stFileUploader"] { width: 100%; }
+            div[data-testid="stFileUploaderDropzone"] { min-height: 110px; }
+            /* Make info boxes use full width of their column */
+            div[role="alert"] { width: 100%; }
+            </style>
+            """,
+            unsafe_allow_html=True,
+        )
     
     def _build_expectation_config(self, expectation_type: str, data: pd.DataFrame) -> Optional[Dict]:
         """Build expectation configuration based on type"""

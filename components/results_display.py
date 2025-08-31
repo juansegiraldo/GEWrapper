@@ -640,60 +640,44 @@ class ResultsDisplayComponent:
         else:
             st.warning("⚠️ Original dataset not available. Cannot create failed records dataset.")
         
-        # Data quality score
+        # Compact data quality summary (minimal footprint, no duplicate KPIs)
         st.markdown("#### 📊 Data Quality Assessment")
         summary_metrics = self.report_generator.create_summary_metrics(validation_results)
         
         if summary_metrics:
             success_rate = summary_metrics['success_rate']
             
-            # Determine quality grade
+            # Map success rate to a compact letter grade and brief assessment only
             if success_rate >= 95:
-                grade = "A"
-                grade_color = "green"
-                assessment = "Excellent data quality!"
+                grade, grade_color, assessment = "A", "#2ca02c", "Excellent quality"
             elif success_rate >= 85:
-                grade = "B" 
-                grade_color = "lightgreen"
-                assessment = "Good data quality with minor issues"
+                grade, grade_color, assessment = "B", "#6fbf73", "Good quality"
             elif success_rate >= 70:
-                grade = "C"
-                grade_color = "orange"
-                assessment = "Acceptable data quality, improvements recommended"
+                grade, grade_color, assessment = "C", "#ff9800", "Needs improvement"
             elif success_rate >= 50:
-                grade = "D"
-                grade_color = "red"
-                assessment = "Poor data quality, immediate attention needed"
+                grade, grade_color, assessment = "D", "#e53935", "Poor quality"
             else:
-                grade = "F"
-                grade_color = "darkred"
-                assessment = "Critical data quality issues"
+                grade, grade_color, assessment = "F", "#8b0000", "Critical issues"
             
-            col1, col2 = st.columns([1, 3])
-            with col1:
-                st.markdown(f"## <span style='color: {grade_color}'>Grade: {grade}</span>", unsafe_allow_html=True)
-            with col2:
-                st.markdown(f"**Assessment:** {assessment}")
-                st.progress(success_rate / 100)
+            # Small badge-style summary (no charts, no repeated counts)
+            st.markdown(
+                f"""
+                <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid #eee;border-radius:8px;background:#fafafa;">
+                    <div style="min-width:40px;height:40px;border-radius:8px;background:{grade_color};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;">{grade}</div>
+                    <div style="line-height:1.2;">
+                        <div style="font-weight:600;">Overall assessment</div>
+                        <div style="color:#555;">{assessment}</div>
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
         
-        # Action recommendations
+        # Compact recommendations (minimal vertical space)
         if summary_metrics and summary_metrics['failed'] > 0:
-            st.markdown("#### 💡 Recommendations")
-            
-            failed_types = {k: v for k, v in summary_metrics['expectation_types'].items() 
-                          if v['total'] > v['passed']}
-            
-            if failed_types:
-                st.write("**Focus areas for data quality improvement:**")
-                for exp_type, counts in failed_types.items():
-                    failures = counts['total'] - counts['passed']
-                    st.write(f"- **{exp_type.replace('expect_', '').replace('_', ' ').title()}**: {failures} failures")
-                
-                st.write("**Suggested actions:**")
-                st.write("1. Review the detailed results table for specific failure details")
-                st.write("2. Investigate data sources for the most frequently failing expectations") 
-                st.write("3. Consider updating data collection or cleaning processes")
-                st.write("4. Re-run validation after implementing fixes")
+            with st.expander("💡 Recommendations", expanded=True):
+                # Compact next steps in minimal space
+                st.markdown("**Next steps:** Review failing rules in Detailed Results → fix source data → re-validate")
     
     def _download_all_reports(self):
         """Download all report files currently available on screen"""

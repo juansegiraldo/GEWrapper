@@ -549,15 +549,49 @@ class ReportGenerator:
                             for idx, row_data in enumerate(unexpected_rows_data):
                                 # Try to find matching row in original data by comparing values
                                 for orig_idx in range(len(data_copy)):
-                                    # Simple matching: compare all common columns
+                                    # Robust matching: compare common columns with tolerant equality
                                     match = True
                                     for col, val in row_data.items():
                                         if col in data_copy.columns:
                                             try:
-                                                if data_copy.iloc[orig_idx][col] != val:
+                                                orig_val = data_copy.iloc[orig_idx][col]
+
+                                                # 1) Treat NaN/None as equal
+                                                if pd.isna(orig_val) and pd.isna(val):
+                                                    continue
+
+                                                # 2) Normalize boolean-like values (True/1/'true' etc.)
+                                                def to_bool_like(x):
+                                                    sx = str(x).strip().lower()
+                                                    if sx in ['true', '1', 'yes']:
+                                                        return True
+                                                    if sx in ['false', '0', 'no']:
+                                                        return False
+                                                    return None
+
+                                                b1 = to_bool_like(orig_val)
+                                                b2 = to_bool_like(val)
+                                                if b1 is not None and b2 is not None:
+                                                    if b1 == b2:
+                                                        continue
                                                     match = False
                                                     break
-                                            except:
+
+                                                # 3) Numeric comparison tolerant to int/float differences
+                                                try:
+                                                    n1 = float(orig_val)
+                                                    n2 = float(val)
+                                                    if pd.notna(n1) and pd.notna(n2):
+                                                        if abs(n1 - n2) <= 0.0:
+                                                            continue
+                                                except Exception:
+                                                    pass
+
+                                                # 4) Fallback to string comparison
+                                                if str(orig_val) != str(val):
+                                                    match = False
+                                                    break
+                                            except Exception:
                                                 match = False
                                                 break
                                     
