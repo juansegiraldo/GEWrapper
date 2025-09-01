@@ -260,7 +260,7 @@ class SQLQueryBuilderComponent:
 Example:
 SELECT COUNT(*) as violation_count
 FROM {table_name}
-WHERE department = 'Sales' AND active = True AND salary < 40000
+WHERE email IS NULL OR email NOT LIKE '%@%.%'
 
 💡 Tip: Use True/False for boolean columns, not 1/0
 💡 The app automatically converts active = 1 to active = True
@@ -335,11 +335,11 @@ WHERE department = 'Sales' AND active = True AND salary < 40000
                 st.markdown("**Common Validation Patterns**")
                 st.markdown(
                     """
-**Salary Validation:**
+**Email Validation:**
 ```sql
 SELECT COUNT(*) as violation_count
 FROM {table_name}
-WHERE department = 'Sales' AND active = True AND salary < 40000
+WHERE email IS NULL OR email NOT LIKE '%@%.%'
 ```
 
 **Date Range Validation:**
@@ -387,7 +387,7 @@ Generate a SQL query to validate data quality. Requirements:
 - Use {table_name} as the table name placeholder
 - Return COUNT(*) as violation_count
 - Use True/False for boolean columns (not 1/0)
-- Example: WHERE active = True AND salary < 40000
+- Example: WHERE email IS NULL OR email NOT LIKE '%@%.%'
 - Focus on finding violations (rows that should NOT exist)
 - Use clear, descriptive conditions
 
@@ -402,7 +402,7 @@ Context: [Describe your validation rule here]
                     "Check for NULL values": "SELECT COUNT(*) as violation_count FROM {table_name} WHERE name IS NULL",
                     "Salary range check": "SELECT COUNT(*) as violation_count FROM {table_name} WHERE salary < 30000 OR salary > 100000",
                     "Email format": "SELECT COUNT(*) as violation_count FROM {table_name} WHERE email NOT LIKE '%@%.%'",
-                    "Active employees": "SELECT COUNT(*) as violation_count FROM {table_name} WHERE active = False AND department = 'Sales'",
+                    "Invalid emails": "SELECT COUNT(*) as violation_count FROM {table_name} WHERE email IS NULL OR email NOT LIKE '%@%.%'",
                 }
                 cols = st.columns(2)
                 for idx, (name, query) in enumerate(example_queries.items()):
@@ -450,6 +450,14 @@ WHERE [your_condition_here]"""
                         st.write(f"Data shape: {data.shape}")
                         st.write(f"Data columns: {list(data.columns)}")
                         st.write(f"Data types: {dict(data.dtypes)}")
+                        
+                        # Show sample data for debugging
+                        st.write("**📋 Sample Data (first 3 rows):**")
+                        sample_data = data.head(3)
+                        for idx, row in sample_data.iterrows():
+                            display_values = [f"{col}={row[col]}" for col in row.index]
+                            st.write(f"  Row {idx}: {', '.join(display_values)}")
+                        
                         result = self.custom_sql_expectation.execute_sql_query(data, fixed_sql_query)
                         if not result.empty:
                             st.success("✅ Query executed successfully!")
@@ -457,6 +465,11 @@ WHERE [your_condition_here]"""
                             if 'violation_count' in result.columns:
                                 violation_count = result['violation_count'].iloc[0]
                                 st.info(f"Violation count: {violation_count}")
+                                
+                                # Add more debugging for the specific case
+                                if violation_count == 0:
+                                    st.warning("⚠️ Query returned 0 violations. This means no data quality issues were found.")
+                                    st.info("ℹ️ Your data appears to be clean according to this validation rule.")
                         else:
                             st.warning("Query returned no results")
                     except Exception as e:
@@ -563,13 +576,12 @@ WHERE [your_condition_here]"""
                 st.write(f"Data columns: {list(data.columns)}")
                 st.write(f"Data types: {dict(data.dtypes)}")
                 
-                # Show Sales employees for debugging
-                sales_employees = data[data['department'] == 'Sales']
-                st.write(f"Sales employees count: {len(sales_employees)}")
-                if len(sales_employees) > 0:
-                    st.write("Sales employees:")
-                    for _, row in sales_employees.iterrows():
-                        st.write(f"  - {row['name']}: active={row['active']}, salary={row['salary']}")
+                # Show sample data for debugging
+                st.write("**📋 Sample Data (first 3 rows):**")
+                sample_data = data.head(3)
+                for idx, row in sample_data.iterrows():
+                    display_values = [f"{col}={row[col]}" for col in row.index]
+                    st.write(f"  Row {idx}: {', '.join(display_values)}")
                 
                 result = self.custom_sql_expectation.execute_sql_query(data, fixed_sql_query)
                 if not result.empty:
@@ -582,15 +594,8 @@ WHERE [your_condition_here]"""
                         
                         # Add more debugging for the specific case
                         if violation_count == 0:
-                            st.warning("⚠️ Query returned 0 violations. Checking data...")
-                            # Check if there are any Sales employees with low salary
-                            low_salary_sales = data[
-                                (data['department'] == 'Sales') & 
-                                (data['salary'] < 40000)
-                            ]
-                            st.write(f"Sales employees with salary < 40000: {len(low_salary_sales)}")
-                            for _, row in low_salary_sales.iterrows():
-                                st.write(f"  - {row['name']}: active={row['active']}, salary={row['salary']}")
+                            st.warning("⚠️ Query returned 0 violations. This means no data quality issues were found.")
+                            st.info("ℹ️ Your data appears to be clean according to this validation rule.")
                 else:
                     st.warning("Query returned no results")
             except Exception as e:
