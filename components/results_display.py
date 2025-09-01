@@ -27,17 +27,7 @@ class ResultsDisplayComponent:
             st.error("No validation results available!")
             return
         
-        # Debug: Show validation results structure
-        with st.expander("🔍 Debug: Validation Results Structure"):
-            st.write("**Keys in validation_results:**", list(validation_results.keys()))
-            if 'results' in validation_results:
-                st.write("**Results count:**", len(validation_results['results']))
-                if validation_results['results']:
-                    st.write("**First result structure:**", validation_results['results'][0])
-            if 'statistics' in validation_results:
-                st.write("**Statistics:**", validation_results['statistics'])
-            if 'meta' in validation_results:
-                st.write("**Meta:**", validation_results['meta'])
+        # Debug UI removed for a cleaner experience
         
         # Results overview
         self._render_results_overview(validation_results)
@@ -77,25 +67,20 @@ class ResultsDisplayComponent:
         with col2:
             st.metric(
                 "Passed",
-                summary_metrics['successful'],
-                delta=f"+{summary_metrics['successful']}"
+                summary_metrics['successful']
             )
         
         with col3:
             st.metric(
                 "Failed", 
-                summary_metrics['failed'],
-                delta=f"+{summary_metrics['failed']}" if summary_metrics['failed'] > 0 else None,
-                delta_color="inverse"
+                summary_metrics['failed']
             )
         
         with col4:
             success_rate = summary_metrics['success_rate']
             st.metric(
                 "Success Rate",
-                f"{success_rate:.1f}%",
-                delta=f"{success_rate-100:.1f}%" if success_rate < 100 else "Perfect!",
-                delta_color="normal" if success_rate == 100 else "inverse"
+                f"{success_rate:.1f}%"
             )
         
         with col5:
@@ -105,13 +90,7 @@ class ResultsDisplayComponent:
                 f"{execution_time:.2f}s"
             )
         
-        # Status indicator
-        if success_rate == 100:
-            st.success("🎉 Perfect! All expectations passed successfully!")
-        elif success_rate >= 80:
-            st.warning(f"⚠️ {summary_metrics['failed']} expectations failed. Review details below.")
-        else:
-            st.error(f"❌ {summary_metrics['failed']} expectations failed. Data quality needs attention.")
+        # Status banner removed to avoid redundancy; metrics above convey the state succinctly
         
         # Execution info
         validation_mode = validation_results.get('meta', {}).get('validation_mode', 'batch')
@@ -187,61 +166,22 @@ class ResultsDisplayComponent:
                 st.info("No failure rate data available")
     
     def _render_visualizations(self, validation_results: Dict):
-        """Render interactive visualizations"""
+        """Render simplified visual analysis with two pie charts"""
         st.markdown("#### 📈 Visual Analysis")
         
         summary_metrics = self.report_generator.create_summary_metrics(validation_results)
-        
         if not summary_metrics:
             return
         
-        # Create tabs for different visualizations
-        tab1, tab2, tab3, tab4 = st.tabs(["Overall Results", "By Expectation Type", "By Column", "Data Distribution"])
-        
-        with tab1:
-            # Success rate donut chart
-            fig_success = self.report_generator.create_success_rate_chart(summary_metrics)
-            st.plotly_chart(fig_success, width='stretch', config=self.config.CHART_CONFIG)
-        
-        with tab2:
-            # Results by expectation type
-            if summary_metrics['expectation_types']:
-                fig_types = self.report_generator.create_expectation_type_chart(summary_metrics)
-                st.plotly_chart(fig_types, width='stretch', config=self.config.CHART_CONFIG)
-            else:
-                st.info("No expectation type data available")
-        
-        with tab3:
-            # Results by column (if available)
-            if st.session_state.uploaded_data is not None:
-                fig_columns = self.report_generator.create_column_quality_chart(
-                    validation_results, st.session_state.uploaded_data
-                )
-                if fig_columns.data:
-                    st.plotly_chart(fig_columns, width='stretch', config=self.config.CHART_CONFIG)
-                else:
-                    st.info("No column-specific expectations found")
-            else:
-                st.info("Original data not available for column analysis")
-        
-        with tab4:
-            # Data distribution charts
-            if st.session_state.uploaded_data is not None:
-                st.markdown("**Sample Data Distributions**")
-                distribution_figs = self.report_generator.create_data_distribution_charts(
-                    st.session_state.uploaded_data
-                )
-                
-                if distribution_figs:
-                    # Display charts in a grid
-                    cols = st.columns(2)
-                    for i, fig in enumerate(distribution_figs):
-                        with cols[i % 2]:
-                            st.plotly_chart(fig, width='stretch', config=self.config.CHART_CONFIG)
-                else:
-                    st.info("No numeric columns available for distribution analysis")
-            else:
-                st.info("Original data not available for distribution analysis")
+        col1, col2 = st.columns(2)
+        with col1:
+            fig_tests = self.report_generator.create_failed_tests_rate_chart(summary_metrics)
+            st.plotly_chart(fig_tests, width='stretch', config=self.config.CHART_CONFIG)
+        with col2:
+            fig_rows = self.report_generator.create_failed_rows_rate_chart(
+                validation_results, st.session_state.get('uploaded_data')
+            )
+            st.plotly_chart(fig_rows, width='stretch', config=self.config.CHART_CONFIG)
     
     def _render_detailed_results(self, validation_results: Dict):
         """Render detailed results table"""
@@ -250,225 +190,207 @@ class ResultsDisplayComponent:
         # Create detailed results table
         detailed_table, debug_messages = self.report_generator.create_detailed_results_table(validation_results)
         
-        # Debug: Show detailed results processing debug messages
-        if debug_messages:
-            with st.expander("🔍 Debug: Detailed Results Processing", expanded=False):
-                for message in debug_messages:
-                    st.write(message)
+        # Internal debug messages are suppressed in the UI for cleanliness
         
         if detailed_table.empty:
             st.warning("No detailed results available!")
             return
         
-        # Filter options
-        col1, col2, col3, col4 = st.columns(4)
-        
-        with col1:
-            status_filter = st.selectbox(
-                "Filter by status:",
-                options=["All", "Passed Only", "Failed Only"],
-                index=0
-            )
-        
-        with col2:
-            if 'Expectation Type' in detailed_table.columns:
-                exp_types = ["All"] + list(detailed_table['Expectation Type'].unique())
-                type_filter = st.selectbox(
-                    "Filter by type:",
-                    options=exp_types,
+        # Hide table and filters behind an expander to reduce clutter
+        with st.expander("Detailed Results", expanded=False):
+            # Filter options
+            col1, col2, col3, col4 = st.columns(4)
+
+            with col1:
+                status_filter = st.selectbox(
+                    "Filter by status:",
+                    options=["All", "Passed Only", "Failed Only"],
                     index=0
                 )
-            else:
-                type_filter = "All"
-        
-        with col3:
-            if 'Column' in detailed_table.columns:
-                columns = ["All"] + list(detailed_table['Column'].unique())
-                column_filter = st.selectbox(
-                    "Filter by column:",
-                    options=columns,
-                    index=0
-                )
-            else:
-                column_filter = "All"
-        
-        with col4:
-            if 'Failure Rate' in detailed_table.columns:
-                # Extract numeric values for failure rate filtering
-                try:
-                    failure_rates = detailed_table['Failure Rate'].replace('N/A', '0.0%').str.rstrip('%').astype(float)
-                    max_rate = failure_rates.max() if not failure_rates.empty else 100.0
-                    min_rate = failure_rates.min() if not failure_rates.empty else 0.0
-                    
-                    # Ensure we have valid numeric values
-                    if pd.isna(max_rate) or pd.isna(min_rate):
-                        max_rate = 100.0
-                        min_rate = 0.0
-                    
-                    # Ensure min_value is less than max_value
-                    if min_rate >= max_rate:
-                        min_rate = 0.0
-                        max_rate = 100.0
-                    
-                    failure_rate_filter = st.slider(
-                        "Max Failure Rate (%):",
-                        min_value=min_rate,
-                        max_value=max_rate,
-                        value=min(max_rate, 100.0),
-                        step=0.1,
-                        help="Filter expectations by maximum failure rate"
+
+            with col2:
+                if 'Expectation Type' in detailed_table.columns:
+                    exp_types = ["All"] + list(detailed_table['Expectation Type'].unique())
+                    type_filter = st.selectbox(
+                        "Filter by type:",
+                        options=exp_types,
+                        index=0
                     )
-                except Exception as e:
-                    st.warning(f"Error creating failure rate filter: {str(e)}")
-                    failure_rate_filter = 100.0
-            else:
-                failure_rate_filter = 100.0
-        
-        # Apply filters
-        filtered_table = detailed_table.copy()
-        
-        if status_filter == "Passed Only":
-            filtered_table = filtered_table[filtered_table['Status'].str.contains('Pass')]
-        elif status_filter == "Failed Only":
-            filtered_table = filtered_table[filtered_table['Status'].str.contains('Fail')]
-        
-        if type_filter != "All":
-            filtered_table = filtered_table[filtered_table['Expectation Type'] == type_filter]
-        
-        if column_filter != "All":
-            filtered_table = filtered_table[filtered_table['Column'] == column_filter]
-        
-        # Apply failure rate filter
-        if 'Failure Rate' in filtered_table.columns and failure_rate_filter < 100:
-            # Convert failure rates to numeric for comparison
-            failure_rates = filtered_table['Failure Rate'].replace('N/A', '0.0%').str.rstrip('%').astype(float)
-            filtered_table = filtered_table[failure_rates <= failure_rate_filter]
-        
-        # Display results count
-        total_results = len(detailed_table)
-        filtered_results = len(filtered_table)
-        st.info(f"Showing {filtered_results} of {total_results} results")
-        
-        # Style the dataframe
-        def highlight_status(val):
-            if 'Pass' in str(val):
-                return 'background-color: #d4edda; color: #155724'
-            elif 'Fail' in str(val):
-                return 'background-color: #f8d7da; color: #721c24'
-            return ''
-        
-        def highlight_failure_rate(val):
-            if val == 'N/A':
-                return ''
-            try:
-                rate = float(val.rstrip('%'))
-                if rate == 0:
-                    return 'background-color: #d4edda; color: #155724'  # Green for 0%
-                elif rate <= 5:
-                    return 'background-color: #fff3cd; color: #856404'  # Yellow for low rates
-                elif rate <= 20:
-                    return 'background-color: #f8d7da; color: #721c24'  # Red for high rates
                 else:
-                    return 'background-color: #721c24; color: #ffffff'  # Dark red for very high rates
-            except:
+                    type_filter = "All"
+
+            with col3:
+                if 'Column' in detailed_table.columns:
+                    columns = ["All"] + list(detailed_table['Column'].unique())
+                    column_filter = st.selectbox(
+                        "Filter by column:",
+                        options=columns,
+                        index=0
+                    )
+                else:
+                    column_filter = "All"
+
+            with col4:
+                if 'Failure Rate' in detailed_table.columns:
+                    # Extract numeric values for failure rate filtering
+                    try:
+                        failure_rates = detailed_table['Failure Rate'].replace('N/A', '0.0%').str.rstrip('%').astype(float)
+                        max_rate = failure_rates.max() if not failure_rates.empty else 100.0
+                        min_rate = failure_rates.min() if not failure_rates.empty else 0.0
+
+                        # Ensure we have valid numeric values
+                        if pd.isna(max_rate) or pd.isna(min_rate):
+                            max_rate = 100.0
+                            min_rate = 0.0
+
+                        # Ensure min_value is less than max_value
+                        if min_rate >= max_rate:
+                            min_rate = 0.0
+                            max_rate = 100.0
+
+                        failure_rate_filter = st.slider(
+                            "Max Failure Rate (%):",
+                            min_value=min_rate,
+                            max_value=max_rate,
+                            value=min(max_rate, 100.0),
+                            step=0.1,
+                            help="Filter expectations by maximum failure rate"
+                        )
+                    except Exception as e:
+                        st.warning(f"Error creating failure rate filter: {str(e)}")
+                        failure_rate_filter = 100.0
+                else:
+                    failure_rate_filter = 100.0
+
+            # Apply filters
+            filtered_table = detailed_table.copy()
+
+            if status_filter == "Passed Only":
+                filtered_table = filtered_table[filtered_table['Status'].str.contains('Pass')]
+            elif status_filter == "Failed Only":
+                filtered_table = filtered_table[filtered_table['Status'].str.contains('Fail')]
+
+            if type_filter != "All":
+                filtered_table = filtered_table[filtered_table['Expectation Type'] == type_filter]
+
+            if column_filter != "All":
+                filtered_table = filtered_table[filtered_table['Column'] == column_filter]
+
+            # Apply failure rate filter
+            if 'Failure Rate' in filtered_table.columns and failure_rate_filter < 100:
+                # Convert failure rates to numeric for comparison
+                failure_rates = filtered_table['Failure Rate'].replace('N/A', '0.0%').str.rstrip('%').astype(float)
+                filtered_table = filtered_table[failure_rates <= failure_rate_filter]
+
+            # Display results count
+            total_results = len(detailed_table)
+            filtered_results = len(filtered_table)
+            st.info(f"Showing {filtered_results} of {total_results} results")
+
+            # Style the dataframe
+            def highlight_status(val):
+                if 'Pass' in str(val):
+                    return 'background-color: #d4edda; color: #155724'
+                elif 'Fail' in str(val):
+                    return 'background-color: #f8d7da; color: #721c24'
                 return ''
+
+            def highlight_failure_rate(val):
+                if val == 'N/A':
+                    return ''
+                try:
+                    rate = float(val.rstrip('%'))
+                    if rate == 0:
+                        return 'background-color: #d4edda; color: #155724'
+                    elif rate <= 5:
+                        return 'background-color: #fff3cd; color: #856404'
+                    elif rate <= 20:
+                        return 'background-color: #f8d7da; color: #721c24'
+                    else:
+                        return 'background-color: #721c24; color: #ffffff'
+                except:
+                    return ''
+
+            # Display the table
+            if not filtered_table.empty:
+                styled_table = filtered_table.style.map(
+                    highlight_status, subset=['Status']
+                ).map(
+                    highlight_failure_rate, subset=['Failure Rate']
+                ).format({
+                    'Observed Value': lambda x: str(x)[:50] + '...' if len(str(x)) > 50 else str(x),
+                    'Expected': lambda x: str(x)[:50] + '...' if len(str(x)) > 50 else str(x)
+                })
+
+                st.dataframe(
+                        styled_table,
+                        width='stretch',
+                        height=400,
+                        column_config={
+                            "ID": st.column_config.NumberColumn("ID", width="small"),
+                            "Status": st.column_config.TextColumn("Status", width="small"),
+                            "Failure Rate": st.column_config.TextColumn("Failure Rate", width="small"),
+                            "Details": st.column_config.TextColumn("Details", width="large")
+                        }
+                    )
+            else:
+                st.warning("No results match the selected filters")
+
+            # Removed inline failed expectations detail list for a cleaner UI
         
-        # Display the table
-        if not filtered_table.empty:
-            styled_table = filtered_table.style.map(
-                highlight_status, subset=['Status']
-            ).map(
-                highlight_failure_rate, subset=['Failure Rate']
-            ).format({
-                'Observed Value': lambda x: str(x)[:50] + '...' if len(str(x)) > 50 else str(x),
-                'Expected': lambda x: str(x)[:50] + '...' if len(str(x)) > 50 else str(x)
-            })
-            
-            st.dataframe(
-                    styled_table,
-                    width='stretch',
-                    height=400,
-                    column_config={
-                        "ID": st.column_config.NumberColumn("ID", width="small"),
-                        "Status": st.column_config.TextColumn("Status", width="small"),
-                        "Failure Rate": st.column_config.TextColumn("Failure Rate", width="small"),
-                        "Details": st.column_config.TextColumn("Details", width="large")
-                    }
-                )
-        else:
-            st.warning("No results match the selected filters")
-        
-        # Show failed expectations details
-        failed_results = detailed_table[detailed_table['Status'].str.contains('Fail')]
-        if not failed_results.empty:
-            with st.expander(f"❌ Failed Expectations Details ({len(failed_results)} failures)"):
-                for _, row in failed_results.iterrows():
-                    st.markdown(f"**{row['ID']}. {row['Expectation Type']}** (Column: `{row['Column']}`)")
-                    
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        st.write(f"**Observed:** {row['Observed Value']}")
-                    with col2:
-                        st.write(f"**Expected:** {row['Expected']}")
-                    
-                    if row['Details'] != 'No details available':
-                        st.write(f"**Details:** {row['Details']}")
-                    
-                    st.markdown("---")
+        # Removed secondary failed expectations expander to avoid duplication
     
     def _render_export_options(self, validation_results: Dict):
         """Render export options"""
-        st.markdown("#### 💾 Export Results")
-        
         col1, col2, col3 = st.columns(3)
         
         with col1:
-            # Export as JSON
-            if st.button("📄 Export JSON", width='stretch', key="export_json_btn"):
-                json_data = json.dumps(validation_results, indent=2, default=str)
-                st.download_button(
-                    "Download JSON Report",
-                    data=json_data,
-                    file_name=f"validation_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
-                    mime="application/json",
-                    key="download_json_report_btn"
-                )
+            # Direct JSON download
+            json_data = json.dumps(validation_results, indent=2, default=str)
+            st.download_button(
+                "📥 Download JSON",
+                data=json_data,
+                file_name=f"validation_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+                mime="application/json",
+                key="download_json_report_btn",
+                use_container_width=True
+            )
         
         with col2:
-            # Export as HTML
-            if st.button("🌐 Export HTML", width='stretch', key="export_html_btn"):
-                if st.session_state.uploaded_data is not None:
-                    suite_name = st.session_state.get('current_suite_name', 'validation_suite')
-                    html_report = self.report_generator.generate_html_report(
-                        validation_results, 
-                        st.session_state.uploaded_data,
-                        suite_name
-                    )
-                    st.download_button(
-                        "Download HTML Report",
-                        data=html_report,
-                        file_name=f"validation_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html",
-                        mime="text/html",
-                        key="download_html_report_btn"
-                    )
-                else:
-                    st.warning("Original data not available for HTML report")
+            # Direct HTML download (if original data available)
+            if st.session_state.uploaded_data is not None:
+                suite_name = st.session_state.get('current_suite_name', 'validation_suite')
+                html_report = self.report_generator.generate_html_report(
+                    validation_results, 
+                    st.session_state.uploaded_data,
+                    suite_name
+                )
+                st.download_button(
+                    "📥 Download HTML",
+                    data=html_report,
+                    file_name=f"validation_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html",
+                    mime="text/html",
+                    key="download_html_report_btn",
+                    use_container_width=True
+                )
+            else:
+                st.info("Original data required to generate HTML report")
         
         with col3:
-            # Export detailed table as CSV
-            if st.button("📊 Export CSV", width='stretch', key="export_csv_btn"):
-                detailed_table, _ = self.report_generator.create_detailed_results_table(validation_results)
-                if not detailed_table.empty:
-                    csv_data = detailed_table.to_csv(index=False)
-                    st.download_button(
-                        "Download CSV Report",
-                        data=csv_data,
-                        file_name=f"validation_details_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-                        mime="text/csv",
-                        key="download_csv_report_btn"
-                    )
-                else:
-                    st.warning("No detailed results available")
+            # Direct CSV download of detailed results
+            detailed_table, _ = self.report_generator.create_detailed_results_table(validation_results)
+            if not detailed_table.empty:
+                csv_data = detailed_table.to_csv(index=False)
+                st.download_button(
+                    "📥 Download CSV",
+                    data=csv_data,
+                    file_name=f"validation_details_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                    mime="text/csv",
+                    key="download_csv_report_btn",
+                    use_container_width=True
+                )
+            else:
+                st.info("No detailed results available for CSV export")
         
         # Failed Records Dataset Export
         st.markdown("#### ❌ Failed Records Dataset")
@@ -499,16 +421,7 @@ class ResultsDisplayComponent:
                             help="Average number of validation tests that failed per problematic row. 1.0 means each failed row failed exactly one test."
                         )
                 
-                # Add explanation for the metrics
-                st.info(f"""
-                **What these numbers mean:**
-                - **{len(failed_records_df)} rows** failed at least one validation test
-                - **{failure_percentage:.1f}%** of your total data failed validation
-                - **{avg_failures_per_row:.1f} tests** failed on average per problematic row
-                
-                💡 **Interpretation:** {avg_failures_per_row:.1f} means each failed row failed exactly {avg_failures_per_row:.1f} validation test(s). 
-                This suggests {'widespread but isolated issues' if avg_failures_per_row <= 1.5 else 'some rows have multiple problems'}.
-                """)
+                # Removed interpretation/explanatory box for a cleaner UI
                 
                 # Column selection for preview
                 st.markdown("##### Preview Options")
@@ -574,7 +487,6 @@ class ResultsDisplayComponent:
                     )
                 
                 # Download options
-                st.markdown("##### Download Options")
                 col1, col2, col3 = st.columns(3)
                 
                 with col1:
@@ -583,12 +495,12 @@ class ResultsDisplayComponent:
                     summary_df = failed_records_df[summary_cols]
                     summary_csv = summary_df.to_csv(index=False)
                     st.download_button(
-                        "📥 Download Summary CSV",
+                        "📥 Download CSV (Summary)",
                         data=summary_csv,
                         file_name=f"failed_records_summary_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
                         mime="text/csv",
                         key="download_failed_records_summary_csv",
-                        width='stretch',
+                        use_container_width=True,
                         help="Download original data with failed rows and test summary"
                     )
                 
@@ -596,12 +508,12 @@ class ResultsDisplayComponent:
                     # Full dataset with all failure details
                     full_csv = failed_records_df.to_csv(index=False)
                     st.download_button(
-                        "📥 Download Detailed CSV",
+                        "📥 Download CSV (Detailed)",
                         data=full_csv,
                         file_name=f"failed_records_detailed_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
                         mime="text/csv",
                         key="download_failed_records_detailed_csv",
-                        width='stretch',
+                        use_container_width=True,
                         help="Download complete dataset with individual test failure columns"
                     )
                 
@@ -614,75 +526,52 @@ class ResultsDisplayComponent:
                         file_name=f"failed_records_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
                         mime="application/json",
                         key="download_failed_records_json",
-                        width='stretch',
+                        use_container_width=True,
                         help="Download failed records in JSON format"
                     )
                 
                 # Additional insights
                 if 'Failed_Tests_Count' in failed_records_df.columns:
-                    st.markdown("##### Failure Pattern Analysis")
-                    
-                    # Distribution of failures per row
-                    failure_counts = failed_records_df['Failed_Tests_Count'].value_counts().sort_index()
-                    
-                    col1, col2 = st.columns(2)
-                    
-                    with col1:
-                        st.markdown("**Failures per Row Distribution:**")
-                        for count, freq in failure_counts.items():
-                            percentage = (freq / len(failed_records_df)) * 100
-                            st.write(f"• {count} test(s) failed: {freq} rows ({percentage:.1f}%)")
-                    
-                    with col2:
-                        # Show most common failure combinations
-                        if 'All_Failed_Tests' in failed_records_df.columns:
-                            st.markdown("**Most Common Failure Patterns:**")
-                            top_patterns = failed_records_df['All_Failed_Tests'].value_counts().head(5)
-                            for i, (pattern, count) in enumerate(top_patterns.items(), 1):
-                                st.write(f"{i}. {count} rows: {pattern[:100]}...")
+                    with st.expander("🔍 Failure Pattern Analysis", expanded=False):
+                        # Compact list styling for this section
+                        st.markdown(
+                            """
+                            <style>
+                            .failure-patterns ul, .failure-patterns ol { margin: 0 0 4px 1.25rem; padding-left: 1rem; }
+                            .failure-patterns li { margin: 0; }
+                            </style>
+                            """,
+                            unsafe_allow_html=True,
+                        )
+                        
+                        # Distribution of failures per row
+                        failure_counts = failed_records_df['Failed_Tests_Count'].value_counts().sort_index()
+                        
+                        col1, col2 = st.columns(2)
+                        
+                        with col1:
+                            st.markdown("**Failures per Row Distribution:**")
+                            dist_lines = []
+                            for count, freq in failure_counts.items():
+                                percentage = (freq / len(failed_records_df)) * 100
+                                dist_lines.append(f"- {count} test(s) failed: {freq} rows ({percentage:.1f}%)")
+                            st.markdown("\n".join(dist_lines), help=None)
+                        
+                        with col2:
+                            # Show most common failure combinations
+                            if 'All_Failed_Tests' in failed_records_df.columns:
+                                st.markdown("**Most Common Failure Patterns:**")
+                                top_patterns = failed_records_df['All_Failed_Tests'].value_counts().head(5)
+                                pattern_lines = []
+                                for i, (pattern, count) in enumerate(top_patterns.items(), 1):
+                                    pattern_lines.append(f"{i}. {count} rows: {pattern[:100]}...")
+                                st.markdown("\n".join(pattern_lines))
             else:
                 st.success("🎉 No failed records found! All data rows passed validation successfully.")
         else:
             st.warning("⚠️ Original dataset not available. Cannot create failed records dataset.")
         
-        # Compact data quality summary (minimal footprint, no duplicate KPIs)
-        st.markdown("#### 📊 Data Quality Assessment")
-        summary_metrics = self.report_generator.create_summary_metrics(validation_results)
-        
-        if summary_metrics:
-            success_rate = summary_metrics['success_rate']
-            
-            # Map success rate to a compact letter grade and brief assessment only
-            if success_rate >= 95:
-                grade, grade_color, assessment = "A", "#2ca02c", "Excellent quality"
-            elif success_rate >= 85:
-                grade, grade_color, assessment = "B", "#6fbf73", "Good quality"
-            elif success_rate >= 70:
-                grade, grade_color, assessment = "C", "#ff9800", "Needs improvement"
-            elif success_rate >= 50:
-                grade, grade_color, assessment = "D", "#e53935", "Poor quality"
-            else:
-                grade, grade_color, assessment = "F", "#8b0000", "Critical issues"
-            
-            # Small badge-style summary (no charts, no repeated counts)
-            st.markdown(
-                f"""
-                <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid #eee;border-radius:8px;background:#fafafa;">
-                    <div style="min-width:40px;height:40px;border-radius:8px;background:{grade_color};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;">{grade}</div>
-                    <div style="line-height:1.2;">
-                        <div style="font-weight:600;">Overall assessment</div>
-                        <div style="color:#555;">{assessment}</div>
-                    </div>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-        
-        # Compact recommendations (minimal vertical space)
-        if summary_metrics and summary_metrics['failed'] > 0:
-            with st.expander("💡 Recommendations", expanded=True):
-                # Compact next steps in minimal space
-                st.markdown("**Next steps:** Review failing rules in Detailed Results → fix source data → re-validate")
+        # Removed Data Quality Assessment and Recommendations blocks per UX simplification
     
     def _download_all_reports(self):
         """Download all report files currently available on screen"""
@@ -777,7 +666,7 @@ class ResultsDisplayComponent:
             
             # Provide download button
             st.download_button(
-                label=f"📦 Download ALL Reports ({file_count} files)",
+                label=f"📦 Download All Reports ({file_count} files)",
                 data=zip_buffer.getvalue(),
                 file_name=f"complete_validation_report_{timestamp}.zip",
                 mime="application/zip",

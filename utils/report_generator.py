@@ -108,6 +108,71 @@ class ReportGenerator:
             return go.Figure()
     
     @staticmethod
+    def create_failed_tests_rate_chart(summary_metrics: Dict) -> go.Figure:
+        """Create donut chart showing percentage of failed tests (expectations)"""
+        try:
+            failed = summary_metrics.get('failed', 0)
+            successful = summary_metrics.get('successful', 0)
+            total = failed + successful
+            percent_failed = (failed / total * 100) if total > 0 else 0.0
+
+            fig = go.Figure(data=[go.Pie(
+                labels=['Failed Tests', 'Passed Tests'],
+                values=[failed, successful],
+                hole=0.6,
+                marker_colors=['#d62728', '#2ca02c'],
+                textinfo='label+percent',
+                textposition='outside'
+            )])
+
+            fig.update_layout(
+                title=f"Failed Tests: {percent_failed:.1f}%",
+                font=dict(size=14),
+                height=400,
+                showlegend=True,
+                annotations=[dict(text=f"{failed}/{total}", x=0.5, y=0.5, font_size=20, showarrow=False)]
+            )
+
+            return fig
+        except Exception as e:
+            st.error(f"Error creating failed tests rate chart: {str(e)}")
+            return go.Figure()
+
+    @staticmethod
+    def create_failed_rows_rate_chart(validation_results: Dict, data: Optional[pd.DataFrame]) -> go.Figure:
+        """Create donut chart of percentage of rows that failed at least one test"""
+        try:
+            total_rows = 0 if data is None else len(data)
+            failed_rows = 0
+            if data is not None and total_rows > 0:
+                failed_df = ReportGenerator.create_failed_records_dataset(validation_results, data)
+                failed_rows = 0 if failed_df is None else len(failed_df)
+            passed_rows = max(total_rows - failed_rows, 0)
+
+            fig = go.Figure(data=[go.Pie(
+                labels=['Failed Rows', 'Passed Rows'],
+                values=[failed_rows, passed_rows],
+                hole=0.6,
+                marker_colors=['#d62728', '#2ca02c'],
+                textinfo='label+percent',
+                textposition='outside'
+            )])
+
+            percent_failed = (failed_rows / total_rows * 100) if total_rows > 0 else 0.0
+            fig.update_layout(
+                title=f"Rows Failing Any Test: {percent_failed:.1f}%",
+                font=dict(size=14),
+                height=400,
+                showlegend=True,
+                annotations=[dict(text=f"{failed_rows}/{total_rows}", x=0.5, y=0.5, font_size=20, showarrow=False)]
+            )
+
+            return fig
+        except Exception as e:
+            st.error(f"Error creating failed rows rate chart: {str(e)}")
+            return go.Figure()
+
+    @staticmethod
     def create_expectation_type_chart(summary_metrics: Dict) -> go.Figure:
         """Create chart showing results by expectation type"""
         try:
