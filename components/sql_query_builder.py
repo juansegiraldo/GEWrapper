@@ -17,7 +17,6 @@ class SQLQueryBuilderComponent:
     
     def render(self, data: pd.DataFrame) -> Optional[Dict[str, Any]]:
         """Render the SQL query builder interface"""
-        st.markdown("#### 🔍 Custom SQL Query Builder")
         st.markdown("Create complex validations using SQL queries for multi-column business rules.")
         
         # Template selection

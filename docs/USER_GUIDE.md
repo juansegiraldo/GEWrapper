@@ -45,10 +45,13 @@ Tip: For large datasets, prefer Parquet.
 ## 4) Configure expectations
 - Go to "⚙️ Configure Expectations"
 - Options:
-  - Apply Quick Start templates (e.g., Basic Data Quality)
+  - Use Quick Actions for templates or import existing suites
   - Build expectations for columns (nulls, ranges, regex, etc.)
-  - Use "🔍 Custom SQL Query Builder" for multi-column/business rules
+  - Use "🔍 Custom SQL Query Builder" popup for multi-column/business rules
+  - Review and manage expectations in the collapsible management section
 - Export or import expectation suites (JSON)
+
+**💡 Tip:** Quick Start templates are now in a collapsible section to reduce clutter. The SQL Query Builder opens in a dedicated popup for better focus.
 
 ![Configure expectations](assets/configure.gif)
 

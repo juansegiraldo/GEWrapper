@@ -22,7 +22,6 @@ class ResultsDisplayComponent:
     
     def render(self, validation_results: Dict):
         """Render the validation results interface"""
-        st.markdown("### 📋 Validation Results")
         
         if not validation_results:
             st.error("No validation results available!")
@@ -249,7 +248,13 @@ class ResultsDisplayComponent:
         st.markdown("#### 📋 Detailed Results")
         
         # Create detailed results table
-        detailed_table = self.report_generator.create_detailed_results_table(validation_results)
+        detailed_table, debug_messages = self.report_generator.create_detailed_results_table(validation_results)
+        
+        # Debug: Show detailed results processing debug messages
+        if debug_messages:
+            with st.expander("🔍 Debug: Detailed Results Processing", expanded=False):
+                for message in debug_messages:
+                    st.write(message)
         
         if detailed_table.empty:
             st.warning("No detailed results available!")
@@ -452,7 +457,7 @@ class ResultsDisplayComponent:
         with col3:
             # Export detailed table as CSV
             if st.button("📊 Export CSV", width='stretch', key="export_csv_btn"):
-                detailed_table = self.report_generator.create_detailed_results_table(validation_results)
+                detailed_table, _ = self.report_generator.create_detailed_results_table(validation_results)
                 if not detailed_table.empty:
                     csv_data = detailed_table.to_csv(index=False)
                     st.download_button(
@@ -713,7 +718,7 @@ class ResultsDisplayComponent:
                 # 3. Export CSV Report (validation_details_*.csv)
                 if st.session_state.get('validation_results'):
                     try:
-                        detailed_table = self.report_generator.create_detailed_results_table(st.session_state.validation_results)
+                        detailed_table, _ = self.report_generator.create_detailed_results_table(st.session_state.validation_results)
                         if not detailed_table.empty:
                             csv_data = detailed_table.to_csv(index=False)
                             zip_file.writestr(f'validation_details_{timestamp}.csv', csv_data)

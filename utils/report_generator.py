@@ -210,7 +210,7 @@ class ReportGenerator:
         return str(display_kwargs)
     
     @staticmethod
-    def create_detailed_results_table(validation_results: Dict) -> pd.DataFrame:
+    def create_detailed_results_table(validation_results: Dict) -> tuple[pd.DataFrame, list]:
         """Create detailed results table"""
         try:
             results = validation_results.get('results', [])
@@ -256,10 +256,11 @@ class ReportGenerator:
             
             # Standard results processing
             table_data = []
-            st.write(f"🔍 Debug: Processing {len(results)} results in report generator")
+            debug_messages = []
+            debug_messages.append(f"🔍 Debug: Processing {len(results)} results in report generator")
             for i, result in enumerate(results, 1):
                 exp_config = result.get('expectation_config', {})
-                st.write(f"🔍 Debug: Result {i}: exp_config keys={list(exp_config.keys()) if exp_config else 'None'}")
+                debug_messages.append(f"🔍 Debug: Result {i}: exp_config keys={list(exp_config.keys()) if exp_config else 'None'}")
                 
                 # Handle different result structures
                 observed_value = 'N/A'
@@ -326,7 +327,7 @@ class ReportGenerator:
                 
                 column = exp_config.get('kwargs', {}).get('column', 'N/A')
                 
-                st.write(f"🔍 Debug: Extracted expectation_type='{expectation_type}', column='{column}'")
+                debug_messages.append(f"🔍 Debug: Extracted expectation_type='{expectation_type}', column='{column}'")
                 
                 table_data.append({
                     'ID': i,
@@ -339,17 +340,17 @@ class ReportGenerator:
                     'Details': details
                 })
             
-            return pd.DataFrame(table_data)
+            return pd.DataFrame(table_data), debug_messages
         except Exception as e:
             st.error(f"Error creating detailed results table: {str(e)}")
-            return pd.DataFrame()
+            return pd.DataFrame(), []
     
     @staticmethod
     def generate_html_report(validation_results: Dict, data: pd.DataFrame, suite_name: str) -> str:
         """Generate comprehensive HTML report"""
         try:
             summary_metrics = ReportGenerator.create_summary_metrics(validation_results)
-            detailed_table = ReportGenerator.create_detailed_results_table(validation_results)
+            detailed_table, _ = ReportGenerator.create_detailed_results_table(validation_results)
             
             html_template = """
             <!DOCTYPE html>

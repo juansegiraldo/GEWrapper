@@ -23,6 +23,8 @@ class ExpectationBuilderComponent:
         if 'expectation_configs' not in st.session_state:
             st.session_state.expectation_configs = []
         
+        # (No SQL popup flag needed when using st.dialog)
+        
         # Generate suite name only if not already set or if we have a new uploaded file
         if ('current_suite_name' not in st.session_state or 
             (st.session_state.get('uploaded_filename') and 
@@ -38,20 +40,22 @@ class ExpectationBuilderComponent:
         """Render the expectation builder interface"""
         # Global layout/style tweaks so widgets consistently fill their columns
         self._inject_layout_css()
+        
         # Suite management
         self._render_suite_management()
         
-        # Template selection
-        self._render_template_selection(data)
+        # Quick actions row (import button and templates)
+        self._render_quick_actions(data)
         
-        # Expectation builder
+        # Main expectation builder
         self._render_expectation_builder(data)
         
-        # Current expectations display
+        # Current expectations display (collapsible)
         self._render_current_expectations()
         
         # Navigation buttons
         self._render_navigation_buttons()
+        
     
     def _render_suite_management(self):
         """Render suite management interface"""
@@ -62,7 +66,7 @@ class ExpectationBuilderComponent:
         if uploaded_filename != 'No dataset uploaded':
             st.info(f"📄 **Dataset:** {uploaded_filename}")
 
-        # Consistent two-column layout: controls left, actions right
+        # Use consistent 2:1 ratio across all sections
         col1, col2 = st.columns([2, 1])
 
         with col1:
@@ -91,111 +95,138 @@ class ExpectationBuilderComponent:
                         del st.session_state.last_imported_file
                     st.success("All expectations cleared!")
     
-    def _render_template_selection(self, data: pd.DataFrame):
-        """Render template selection interface"""
-        st.markdown("#### 📑 Quick Start Templates")
+    def _render_quick_actions(self, data: pd.DataFrame):
+        """Render quick actions row with import button and templates"""
+        st.markdown("#### ⚡ Quick Actions")
         
+        # Use consistent 2:1 ratio to align with other sections
         col1, col2 = st.columns([2, 1])
         
         with col1:
-            template_options = ["None"] + list(self.config.EXPECTATION_TEMPLATES.keys())
-            selected_template = st.selectbox(
-                "Choose a template to get started:",
-                options=template_options,
-                help="Templates provide pre-configured expectations for common scenarios"
-            )
-            
-            if selected_template != "None":
-                template_config = self.config.EXPECTATION_TEMPLATES[selected_template]
-                st.info(f"**{selected_template}**: {template_config['description']}")
-                
-                if st.button(f"Apply {selected_template} Template", key=f"apply_template_{selected_template}"):
-                    self._apply_template(selected_template, data)
+            # Quick Import Button
+            if st.button("📥 Import Expectations", type="secondary", help="Import a previously exported expectation suite"):
+                st.session_state.show_import_popup = True
         
         with col2:
-            st.markdown("**Quick Import**")
+            # Quick Start Templates (collapsible)
+            with st.expander("📑 Quick Start Templates", expanded=False):
+                template_options = ["None"] + list(self.config.EXPECTATION_TEMPLATES.keys())
+                selected_template = st.selectbox(
+                    "Choose a template to get started:",
+                    options=template_options,
+                    help="Templates provide pre-configured expectations for common scenarios"
+                )
+                
+                if selected_template != "None":
+                    template_config = self.config.EXPECTATION_TEMPLATES[selected_template]
+                    st.info(f"**{selected_template}**: {template_config['description']}")
+                    
+                    if st.button(f"Apply {selected_template} Template", key=f"apply_template_{selected_template}"):
+                        self._apply_template(selected_template, data)
+        
+        # Import popup
+        if st.session_state.get('show_import_popup', False):
+            self._render_import_popup()
+    
+    def _render_import_popup(self):
+        """Render import popup interface"""
+        with st.container():
+            st.markdown("---")
+            st.markdown("### 📥 Import Expectations")
+            
             uploaded_json = st.file_uploader(
                 "Upload expectation suite:",
                 type=['json'],
                 help="Upload a previously exported expectation suite",
-                key="quick_import_uploader"
+                key="import_uploader"
             )
             
-            # Check if we're already processing an import to prevent loops
-            if 'import_processing' in st.session_state and st.session_state.import_processing:
-                st.info("Processing import...")
+            col1, col2 = st.columns([1, 1])
+            
+            with col1:
+                if st.button("❌ Cancel", type="secondary"):
+                    st.session_state.show_import_popup = False
+                    st.rerun()
+            
+            with col2:
+                if st.button("✅ Import", type="primary", disabled=uploaded_json is None):
+                    if uploaded_json:
+                        self._process_import(uploaded_json)
+                        st.session_state.show_import_popup = False
+                        st.rerun()
+    
+    def _process_import(self, uploaded_json):
+        """Process imported expectation suite"""
+        # Check if we're already processing an import to prevent loops
+        if 'import_processing' in st.session_state and st.session_state.import_processing:
+            st.info("Processing import...")
+            return
+        
+        try:
+            # Set processing flag to prevent loops
+            st.session_state.import_processing = True
+            
+            import json
+            # Reset file pointer to beginning
+            uploaded_json.seek(0)
+            import_data = json.loads(uploaded_json.read())
+            
+            # Validate the imported data structure
+            if 'expectations' not in import_data:
+                st.error("Invalid file format: 'expectations' key not found")
                 return
             
-            if uploaded_json is not None:
-                # Check if we've already processed this file
-                if 'last_imported_file' in st.session_state and st.session_state.last_imported_file == uploaded_json.name:
-                    st.info("File already imported. Upload a different file to import again.")
-                    return
+            if not isinstance(import_data['expectations'], list):
+                st.error("Invalid file format: 'expectations' must be a list")
+                return
+            
+            # Validate each expectation has required fields
+            valid_expectations = []
+            for i, exp in enumerate(import_data['expectations']):
+                if not isinstance(exp, dict):
+                    st.warning(f"Expectation {i+1} is not a valid dictionary, skipping...")
+                    continue
                 
-                try:
-                    # Set processing flag to prevent loops
-                    st.session_state.import_processing = True
-                    
-                    import json
-                    # Reset file pointer to beginning
-                    uploaded_json.seek(0)
-                    import_data = json.loads(uploaded_json.read())
-                    
-                    # Validate the imported data structure
-                    if 'expectations' not in import_data:
-                        st.error("Invalid file format: 'expectations' key not found")
-                        return
-                    
-                    if not isinstance(import_data['expectations'], list):
-                        st.error("Invalid file format: 'expectations' must be a list")
-                        return
-                    
-                    # Validate each expectation has required fields
-                    valid_expectations = []
-                    for i, exp in enumerate(import_data['expectations']):
-                        if not isinstance(exp, dict):
-                            st.warning(f"Expectation {i+1} is not a valid dictionary, skipping...")
-                            continue
-                        
-                        if 'expectation_type' not in exp:
-                            st.warning(f"Expectation {i+1} missing 'expectation_type', skipping...")
-                            continue
-                        
-                        if 'kwargs' not in exp:
-                            st.warning(f"Expectation {i+1} missing 'kwargs', skipping...")
-                            continue
-                        
-                        valid_expectations.append(exp)
-                    
-                    if not valid_expectations:
-                        st.error("No valid expectations found in the file!")
-                        return
-                    
-                    # Update session state
-                    st.session_state.current_suite_name = import_data.get(
-                        'suite_name', 'imported_suite'
-                    )
-                    st.session_state.expectation_configs = valid_expectations
-                    
-                    # Clear any existing suite to force recreation
-                    if 'expectation_suite' in st.session_state:
-                        del st.session_state.expectation_suite
-                    
-                    # Mark this file as imported to prevent re-processing
-                    st.session_state.last_imported_file = uploaded_json.name
-                    
-                    st.success(f"✅ Successfully imported {len(valid_expectations)} expectations!")
-                    if len(valid_expectations) < len(import_data['expectations']):
-                        st.warning(f"⚠️ {len(import_data['expectations']) - len(valid_expectations)} expectations were skipped due to invalid format.")
-                    
-                except json.JSONDecodeError as e:
-                    st.error(f"Invalid JSON file: {str(e)}")
-                except Exception as e:
-                    st.error(f"Error importing expectations: {str(e)}")
-                    st.error("Please ensure the file is a valid expectation suite JSON file.")
-                finally:
-                    # Always clear the processing flag
-                    st.session_state.import_processing = False
+                if 'expectation_type' not in exp:
+                    st.warning(f"Expectation {i+1} missing 'expectation_type', skipping...")
+                    continue
+                
+                if 'kwargs' not in exp:
+                    st.warning(f"Expectation {i+1} missing 'kwargs', skipping...")
+                    continue
+                
+                valid_expectations.append(exp)
+            
+            if not valid_expectations:
+                st.error("No valid expectations found in the file!")
+                return
+            
+            # Update session state
+            st.session_state.current_suite_name = import_data.get(
+                'suite_name', 'imported_suite'
+            )
+            st.session_state.expectation_configs = valid_expectations
+            
+            # Clear any existing suite to force recreation
+            if 'expectation_suite' in st.session_state:
+                del st.session_state.expectation_suite
+            
+            # Mark this file as imported to prevent re-processing
+            st.session_state.last_imported_file = uploaded_json.name
+            
+            st.success(f"✅ Successfully imported {len(valid_expectations)} expectations!")
+            if len(valid_expectations) < len(import_data['expectations']):
+                st.warning(f"⚠️ {len(import_data['expectations']) - len(valid_expectations)} expectations were skipped due to invalid format.")
+            
+        except json.JSONDecodeError as e:
+            st.error(f"Invalid JSON file: {str(e)}")
+        except Exception as e:
+            st.error(f"Error importing expectations: {str(e)}")
+            st.error("Please ensure the file is a valid expectation suite JSON file.")
+        finally:
+            # Always clear the processing flag
+            st.session_state.import_processing = False
+    
     
     def _apply_template(self, template_name: str, data: pd.DataFrame):
         """Apply a template to the current suite"""
@@ -307,13 +338,28 @@ class ExpectationBuilderComponent:
             config['kwargs'] = {'column_list': expected_columns}
         
         elif expectation_type == "expect_custom_sql_query_to_return_expected_result":
-            # Custom SQL expectation
+            # Custom SQL expectation - decorator-based dialog
             st.markdown("**Custom SQL-based validation allows you to create complex business rules and multi-column checks.**")
-            custom_config = self.sql_query_builder.render(data)
-            if custom_config:
-                return custom_config
-            else:
-                return None
+
+            @st.dialog("🔍 Custom SQL Query Builder", width="large", dismissible=True, on_dismiss="ignore")
+            def open_sql_builder_dialog():
+                custom_config = self.sql_query_builder.render(data)
+                col1, col2 = st.columns(2)
+                with col1:
+                    if st.button("❌ Cancel", type="secondary"):
+                        # Close dialog by rerunning without calling the dialog again
+                        st.rerun()
+                with col2:
+                    if st.button("✅ Add SQL Expectation", type="primary", disabled=custom_config is None):
+                        if custom_config:
+                            st.session_state.expectation_configs.append(custom_config)
+                            st.success("SQL expectation added successfully!")
+                            st.rerun()
+
+            if st.button("🔍 Open SQL Query Builder", type="secondary"):
+                open_sql_builder_dialog()
+
+            return None
         
         elif "column" in expectation_type:
             # Column-based expectations
@@ -454,27 +500,40 @@ class ExpectationBuilderComponent:
                 })
     
     def _render_current_expectations(self):
-        """Render current expectations list"""
+        """Render current expectations list with better organization"""
         st.markdown("#### 📋 Current Expectations")
         
         if not st.session_state.expectation_configs:
             st.info("No expectations configured yet. Add some expectations above!")
             return
         
-        # Display expectations in a table format
-        expectations_data = []
-        for i, config in enumerate(st.session_state.expectation_configs):
-            expectations_data.append({
-                'ID': i + 1,
-                'Type': config['expectation_type'].replace('expect_', '').replace('_', ' ').title(),
-                'Column': config['kwargs'].get('column', 'N/A'),
-                'Parameters': str(config['kwargs'])
-            })
+        # Summary metrics
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Total Expectations", len(st.session_state.expectation_configs))
+        with col2:
+            column_expectations = sum(1 for config in st.session_state.expectation_configs 
+                                    if 'column' in config.get('kwargs', {}))
+            st.metric("Column Expectations", column_expectations)
+        with col3:
+            table_expectations = len(st.session_state.expectation_configs) - column_expectations
+            st.metric("Table Expectations", table_expectations)
         
-        expectations_df = pd.DataFrame(expectations_data)
-        
-        # Allow selection of expectations to remove
-        with st.expander("📋 Manage Expectations", expanded=True):
+        # Expectations management in collapsible section
+        with st.expander("📋 Manage Expectations", expanded=False):
+            # Display expectations in a table format
+            expectations_data = []
+            for i, config in enumerate(st.session_state.expectation_configs):
+                expectations_data.append({
+                    'ID': i + 1,
+                    'Type': config['expectation_type'].replace('expect_', '').replace('_', ' ').title(),
+                    'Column': config['kwargs'].get('column', 'N/A'),
+                    'Parameters': str(config['kwargs'])
+                })
+            
+            expectations_df = pd.DataFrame(expectations_data)
+            
+            # Allow selection of expectations to remove
             selected_expectations = st.multiselect(
                 "Select expectations to remove:",
                 options=range(len(st.session_state.expectation_configs)),
@@ -496,11 +555,30 @@ class ExpectationBuilderComponent:
                     st.rerun()
             
             with col2:
-                total_count = len(st.session_state.expectation_configs)
-                st.metric("Total Expectations", total_count)
-        
-        # Display the table
-        st.dataframe(expectations_df, use_container_width=True, hide_index=True)
+                # Export button
+                if st.button("💾 Export", type="secondary"):
+                    self._export_expectations()
+            
+            # Display the table
+            st.dataframe(expectations_df, use_container_width=True, hide_index=True)
+    
+    def _export_expectations(self):
+        """Export expectations to JSON"""
+        if st.session_state.expectation_configs:
+            import json
+            export_data = {
+                'suite_name': st.session_state.current_suite_name,
+                'expectations': st.session_state.expectation_configs
+            }
+            export_json = json.dumps(export_data, indent=2)
+            
+            st.download_button(
+                "Download JSON",
+                data=export_json,
+                file_name=f"{st.session_state.current_suite_name}.json",
+                mime="application/json",
+                key="export_expectations_btn"
+            )
     
     def _render_navigation_buttons(self):
         """Render navigation buttons"""
@@ -589,5 +667,40 @@ class ExpectationBuilderComponent:
                 st.warning("Sample file not found")
             except Exception as e:
                 st.error(f"Error loading sample file: {str(e)}")
+    
+    def _render_sql_dialog(self, data: pd.DataFrame):
+        """Render the SQL Query Builder dialog."""
+        # Create a modal-like popup using container and styling
+        with st.container():
+            # Add some visual separation
+            st.markdown("---")
+            
+            # Create a styled container that looks like a modal
+            with st.container():
+                st.markdown("### 🔍 Custom SQL Query Builder")
+                st.info("Use this tool to build complex SQL queries for data validation.")
+                
+                # Render the SQLQueryBuilderComponent within the dialog
+                custom_config = self.sql_query_builder.render(data)
+                
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    if st.button("❌ Cancel", type="secondary", key="cancel_sql_dialog_btn"):
+                        st.session_state.show_sql_popup = False
+                        st.rerun()
+                
+                with col2:
+                    if st.button("✅ Add SQL Expectation", type="primary", key="add_sql_expectation_btn", disabled=custom_config is None):
+                        if custom_config:
+                            st.session_state.expectation_configs.append(custom_config)
+                            st.success("SQL expectation added successfully!")
+                            st.session_state.show_sql_popup = False
+                            st.rerun()
+                        else:
+                            st.error("Please configure a valid SQL query first.")
+            
+            # Add visual separation at the end
+            st.markdown("---")
     
     
