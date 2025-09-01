@@ -272,15 +272,43 @@ FROM (
             
             elif "WHERE " in query_upper:
                 # For other WHERE patterns, try to extract the condition
-                where_start = query_upper.find("WHERE ")
-                where_clause = original_query[where_start + 6:].strip()
-                
-                # For COUNT(*) queries that find violations, the WHERE clause directly identifies the violating rows
-                # So we can use the same WHERE clause to get the actual failing rows
-                failing_rows_query = (
-                    "SELECT *\nFROM {table_name}\nWHERE " + where_clause
-                )
-                return failing_rows_query.strip()
+                # Find WHERE in the original query (case-insensitive)
+                import re
+                where_match = re.search(r'WHERE\s+', original_query, re.IGNORECASE)
+                if where_match:
+                    where_start = where_match.start()
+                    where_clause = original_query[where_start + 6:].strip()
+                    
+                    # Clean up the WHERE clause by removing trailing semicolons, comments, etc.
+                    # Find the end of the WHERE clause (before semicolon, comment, or end of string)
+                    where_end = len(where_clause)
+                    
+                    # Look for semicolon
+                    semicolon_pos = where_clause.find(';')
+                    if semicolon_pos != -1:
+                        where_end = min(where_end, semicolon_pos)
+                    
+                    # Look for comment markers
+                    comment_pos = where_clause.find('--')
+                    if comment_pos != -1:
+                        where_end = min(where_end, comment_pos)
+                    
+                    comment_pos = where_clause.find('/*')
+                    if comment_pos != -1:
+                        where_end = min(where_end, comment_pos)
+                    
+                    # Extract the clean WHERE condition and normalize whitespace
+                    clean_where_clause = where_clause[:where_end].strip()
+                    
+                    # Normalize whitespace: replace multiple spaces/newlines with single spaces
+                    clean_where_clause = re.sub(r'\s+', ' ', clean_where_clause).strip()
+                    
+                    # For COUNT(*) queries that find violations, the WHERE clause directly identifies the violating rows
+                    # So we can use the same WHERE clause to get the actual failing rows
+                    failing_rows_query = (
+                        "SELECT *\nFROM {table_name}\nWHERE " + clean_where_clause
+                    )
+                    return failing_rows_query.strip()
                 
         except Exception as e:
             # Log the error for debugging

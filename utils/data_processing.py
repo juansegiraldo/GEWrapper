@@ -7,10 +7,32 @@ from io import StringIO, BytesIO
 import base64
 from datetime import datetime
 import html
+import uuid
 
 class DataProcessor:
     """Utility class for data processing operations"""
     
+    ROW_UUID_COL = '__row_uuid'
+
+    @staticmethod
+    def _ensure_row_uuid(df: pd.DataFrame) -> pd.DataFrame:
+        """Attach a stable per-row UUID column to the dataset if missing.
+
+        - Column name: __row_uuid
+        - Type: string (UUID4)
+        - Guarantees uniqueness and avoids relying on user columns
+        """
+        try:
+            if df is None:
+                return df
+            if DataProcessor.ROW_UUID_COL not in df.columns:
+                df = df.copy()
+                df[DataProcessor.ROW_UUID_COL] = [str(uuid.uuid4()) for _ in range(len(df))]
+            return df
+        except Exception:
+            # Fail-safe: never block load on uuid; return original df
+            return df
+
     @staticmethod
     def load_file(uploaded_file) -> Optional[pd.DataFrame]:
         """Load uploaded file into pandas DataFrame"""
@@ -26,6 +48,7 @@ class DataProcessor:
                     df = pd.read_csv(StringIO(content.decode('utf-8')))
                     # Convert string booleans to actual booleans
                     df = DataProcessor._convert_string_booleans(df)
+                    df = DataProcessor._ensure_row_uuid(df)
                     return df
                 except UnicodeDecodeError:
                     # Try other encodings
@@ -34,6 +57,7 @@ class DataProcessor:
                             df = pd.read_csv(StringIO(content.decode(encoding)))
                             # Convert string booleans to actual booleans
                             df = DataProcessor._convert_string_booleans(df)
+                            df = DataProcessor._ensure_row_uuid(df)
                             return df
                         except:
                             continue
@@ -42,10 +66,12 @@ class DataProcessor:
                     df = pd.read_csv(StringIO(content.decode('utf-8', errors='ignore')))
                     # Convert string booleans to actual booleans
                     df = DataProcessor._convert_string_booleans(df)
+                    df = DataProcessor._ensure_row_uuid(df)
                     return df
                     
             elif file_extension in ['xlsx', 'xls']:
                 df = pd.read_excel(uploaded_file, engine='openpyxl')
+                df = DataProcessor._ensure_row_uuid(df)
                 return df
                 
             elif file_extension == 'json':
@@ -66,10 +92,12 @@ class DataProcessor:
                 else:
                     raise ValueError("Unsupported JSON structure")
                 
+                df = DataProcessor._ensure_row_uuid(df)
                 return df
                 
             elif file_extension == 'parquet':
                 df = pd.read_parquet(uploaded_file)
+                df = DataProcessor._ensure_row_uuid(df)
                 return df
                 
             else:

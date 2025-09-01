@@ -545,60 +545,140 @@ class ReportGenerator:
                         if unexpected_rows_data:
                             # Convert list of dicts to DataFrame for easier processing
                             unexpected_df = pd.DataFrame(unexpected_rows_data)
-                            
-                            # For each failing row, mark the failure
-                            for idx, row_data in enumerate(unexpected_rows_data):
-                                # Try to find matching row in original data by comparing values
-                                for orig_idx in range(len(data_copy)):
-                                    # Robust matching: compare common columns with tolerant equality
-                                    match = True
-                                    for col, val in row_data.items():
-                                        if col in data_copy.columns:
-                                            try:
-                                                orig_val = data_copy.iloc[orig_idx][col]
 
-                                                # 1) Treat NaN/None as equal
-                                                if pd.isna(orig_val) and pd.isna(val):
-                                                    continue
+                            # Identify best key(s) to match rows deterministically
+                            common_cols = [c for c in unexpected_df.columns if c in data_copy.columns]
 
-                                                # 2) Normalize boolean-like values (True/1/'true' etc.)
-                                                def to_bool_like(x):
-                                                    sx = str(x).strip().lower()
-                                                    if sx in ['true', '1', 'yes']:
-                                                        return True
-                                                    if sx in ['false', '0', 'no']:
-                                                        return False
-                                                    return None
+                            def is_good_key(df: pd.DataFrame, col: str) -> bool:
+                                try:
+                                    series = df[col]
+                                except Exception:
+                                    return False
+                                if series.isna().mean() > 0.1:
+                                    return False
+                                non_na = series.dropna()
+                                # High uniqueness indicates suitability as key
+                                return (len(non_na) > 0) and (non_na.nunique() / len(non_na) >= 0.95)
 
-                                                b1 = to_bool_like(orig_val)
-                                                b2 = to_bool_like(val)
-                                                if b1 is not None and b2 is not None:
-                                                    if b1 == b2:
-                                                        continue
-                                                    match = False
-                                                    break
+                            # Priority list of common identifier names
+                            priority_keys = [
+                                'Email Id', 'EmailID', 'Email_Id', 'Record ID', 'Record_Id', 'record_id',
+                                'ID', 'Id', 'id', 'Unnamed: 8'
+                            ]
 
-                                                # 3) Numeric comparison tolerant to int/float differences
+                            key_col = None
+                            for candidate in priority_keys:
+                                if candidate in common_cols and is_good_key(data_copy, candidate):
+                                    key_col = candidate
+                                    break
+
+                            # If no priority key found, fall back to most unique common column
+                            if key_col is None and common_cols:
+                                uniqueness_scores = []
+                                for c in common_cols:
+                                    try:
+                                        s = data_copy[c]
+                                        non_na = s.dropna()
+                                        score = 0.0 if len(non_na) == 0 else (non_na.nunique() / len(non_na))
+                                        uniqueness_scores.append((score, c))
+                                    except Exception:
+                                        continue
+                                if uniqueness_scores:
+                                    uniqueness_scores.sort(reverse=True)
+                                    # Pick the highest uniqueness candidate if reasonably unique
+                                    top_score, top_col = uniqueness_scores[0]
+                                    if top_score >= 0.8:
+                                        key_col = top_col
+
+                            matched_any = False
+
+                            # Always try UUID-based matching first
+                            row_uuid_col = '__row_uuid'
+                            if row_uuid_col in data_copy.columns and row_uuid_col in unexpected_df.columns:
+                                failing_keys = pd.Series(unexpected_df[row_uuid_col]).dropna().unique()
+                                if len(failing_keys) > 0:
+                                    mask = data_copy[row_uuid_col].isin(failing_keys)
+                                    if mask.any():
+                                        data_copy.loc[mask, failure_col_name] = f"Failed custom SQL rule: {exp_name}"
+                                        matched_any = True
+
+                            if (not matched_any) and key_col and key_col in unexpected_df.columns:
+                                # Fast, reliable matching using key column
+                                failing_keys = pd.Series(unexpected_df[key_col]).dropna().unique()
+                                if len(failing_keys) > 0:
+                                    mask = data_copy[key_col].isin(failing_keys)
+                                    if mask.any():
+                                        data_copy.loc[mask, failure_col_name] = f"Failed custom SQL rule: {exp_name}"
+                                        matched_any = True
+
+                            if not matched_any:
+                                # Fallback: attempt multi-column merge using top 2-3 most unique common columns
+                                if len(common_cols) >= 2:
+                                    # Rank by uniqueness
+                                    ranked = []
+                                    for c in common_cols:
+                                        try:
+                                            s = data_copy[c]
+                                            non_na = s.dropna()
+                                            score = 0.0 if len(non_na) == 0 else (non_na.nunique() / len(non_na))
+                                            ranked.append((score, c))
+                                        except Exception:
+                                            continue
+                                    ranked.sort(reverse=True)
+                                    multi_cols = [c for _, c in ranked[:3]]
+                                    try:
+                                        left = data_copy[multi_cols].copy()
+                                        right = pd.DataFrame(unexpected_df[multi_cols]).drop_duplicates()
+                                        merge_keys = [c for c in multi_cols if c in right.columns]
+                                        merged = left.merge(right, on=merge_keys, how='left', indicator=False)
+                                        # Rows that matched will have all columns equal after merge
+                                        # Build mask by re-merging indices
+                                        match_mask = merged.notna().all(axis=1)
+                                        if match_mask.any():
+                                            data_copy.loc[match_mask, failure_col_name] = f"Failed custom SQL rule: {exp_name}"
+                                            matched_any = True
+                                    except Exception:
+                                        pass
+
+                            if not matched_any:
+                                # Last-resort tolerant per-row comparison, but limit to a subset of columns
+                                subset_cols = []
+                                for preferred in ['Email Id', 'Name', 'Date / Time']:
+                                    if preferred in common_cols:
+                                        subset_cols.append(preferred)
+                                if not subset_cols:
+                                    subset_cols = common_cols[:3]
+
+                                for idx, row_data in enumerate(unexpected_rows_data):
+                                    for orig_idx in range(len(data_copy)):
+                                        match = True
+                                        for col in subset_cols:
+                                            if col in row_data and col in data_copy.columns:
                                                 try:
-                                                    n1 = float(orig_val)
-                                                    n2 = float(val)
-                                                    if pd.notna(n1) and pd.notna(n2):
-                                                        if abs(n1 - n2) <= 0.0:
-                                                            continue
-                                                except Exception:
-                                                    pass
+                                                    orig_val = data_copy.iloc[orig_idx][col]
+                                                    val = row_data[col]
 
-                                                # 4) Fallback to string comparison
-                                                if str(orig_val) != str(val):
+                                                    if pd.isna(orig_val) and pd.isna(val):
+                                                        continue
+
+                                                    # Numeric tolerant compare
+                                                    try:
+                                                        n1 = float(orig_val)
+                                                        n2 = float(val)
+                                                        if pd.notna(n1) and pd.notna(n2) and abs(n1 - n2) <= 0.0:
+                                                            continue
+                                                    except Exception:
+                                                        pass
+
+                                                    if str(orig_val) != str(val):
+                                                        match = False
+                                                        break
+                                                except Exception:
                                                     match = False
                                                     break
-                                            except Exception:
-                                                match = False
-                                                break
-                                    
-                                    if match:
-                                        data_copy.loc[orig_idx, failure_col_name] = f"Failed custom SQL rule: {exp_name}"
-                                        break
+                                        if match:
+                                            data_copy.loc[orig_idx, failure_col_name] = f"Failed custom SQL rule: {exp_name}"
+                                            break
                         
                         # Also handle using index list if provided
                         elif unexpected_index_list:
