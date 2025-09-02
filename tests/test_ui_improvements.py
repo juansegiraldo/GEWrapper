@@ -24,36 +24,36 @@ def test_expectation_builder_ui():
         'active': [True, False, True, False]
     })
     
-    print("✅ Sample data created successfully")
+    print("Sample data created successfully")
     print(f"   Shape: {data.shape}")
     print(f"   Columns: {list(data.columns)}")
     
     # Test expectation builder component initialization
     try:
         builder = ExpectationBuilderComponent()
-        print("✅ ExpectationBuilderComponent initialized successfully")
+        print("ExpectationBuilderComponent initialized successfully")
     except Exception as e:
-        print(f"❌ Failed to initialize ExpectationBuilderComponent: {e}")
+        print(f"Failed to initialize ExpectationBuilderComponent: {e}")
         return False
     
     # Test template application
     try:
         builder._apply_template("Basic Data Quality", data)
-        print("✅ Template application works correctly")
+        print("Template application works correctly")
     except Exception as e:
-        print(f"❌ Template application failed: {e}")
+        print(f"Template application failed: {e}")
         return False
     
     # Test expectation config building
     try:
         config = builder._build_expectation_config("expect_column_values_to_not_be_null", data)
         if config and config.get('expectation_type') == "expect_column_values_to_not_be_null":
-            print("✅ Expectation config building works correctly")
+            print("Expectation config building works correctly")
         else:
-            print("❌ Expectation config building failed")
+            print("Expectation config building failed")
             return False
     except Exception as e:
-        print(f"❌ Expectation config building failed: {e}")
+        print(f"Expectation config building failed: {e}")
         return False
     
     # Test import processing
@@ -84,12 +84,12 @@ def test_expectation_builder_ui():
         
         mock_file = MockUploadedFile(mock_import_data)
         builder._process_import(mock_file)
-        print("✅ Import processing works correctly")
+        print("Import processing works correctly")
     except Exception as e:
-        print(f"❌ Import processing failed: {e}")
+        print(f"Import processing failed: {e}")
         return False
     
-    print("\n🎉 All UI improvement tests passed!")
+    print("\nAll UI improvement tests passed!")
     return True
 
 if __name__ == "__main__":

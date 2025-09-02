@@ -62,9 +62,9 @@ def test_sales_salary_validation():
             print(f"Violation count: {violation_count}")
             
             if violation_count == 0:
-                print("✅ SUCCESS: No violations found - all active Sales employees have salary >= 40000")
+                print("SUCCESS: No violations found - all active Sales employees have salary >= 40000")
             else:
-                print(f"❌ FAILURE: Found {violation_count} violations")
+                print(f"FAILURE: Found {violation_count} violations")
                 
                 # Show the violating records
                 violating_records = data[
@@ -79,7 +79,7 @@ def test_sales_salary_validation():
             print("Query returned no results or unexpected format")
             
     except Exception as e:
-        print(f"❌ Error executing query: {str(e)}")
+        print(f"Error executing query: {str(e)}")
     
     # Test the full validation
     print(f"\nTesting full validation:")
@@ -88,13 +88,13 @@ def test_sales_salary_validation():
         print(f"Validation result: {validation_result}")
         
         if validation_result.get('success', False):
-            print("✅ Validation PASSED")
+            print("Validation PASSED")
         else:
-            print("❌ Validation FAILED")
+            print("Validation FAILED")
             print(f"Unexpected count: {validation_result.get('result', {}).get('unexpected_count', 'N/A')}")
             
     except Exception as e:
-        print(f"❌ Error in validation: {str(e)}")
+        print(f"Error in validation: {str(e)}")
 
 if __name__ == "__main__":
     test_sales_salary_validation()

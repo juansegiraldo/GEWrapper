@@ -1,4 +1,4 @@
-# 🚀 DataWash by Stratesys - Data Quality Made Simple
+# DataWash by Stratesys - Data Quality Made Simple
 
 <div align="center">
 
@@ -13,27 +13,27 @@
 
 <img src="docs/assets/hero.gif" alt="DataWash demo" width="720"/>
 
-[🚀 Quick Start](#-quick-start) • [📚 Documentation](#-documentation) • [🎯 Features](#-key-features) • [🛠️ Development](#-development)
+[Quick Start](#quick-start) • [Documentation](#documentation) • [Features](#key-features) • [Development](#development)
 
 </div>
 
 ---
 
-## 🌟 What is DataWash by Stratesys?
+## What is DataWash by Stratesys?
 
 **DataWash by Stratesys** is a comprehensive data validation and quality assurance platform that combines the power of Great Expectations with an intuitive Streamlit interface. It's designed for data engineers, analysts, and scientists who need robust data validation capabilities with the flexibility of custom SQL queries and automated reporting.
 
-### ✨ Why Choose DataWash by Stratesys?
+### Why Choose DataWash by Stratesys?
 
-- **🔍 Advanced Validation**: Custom SQL-based validation rules with Great Expectations
-- **📊 Interactive UI**: Beautiful Streamlit interface for seamless user experience
-- **📈 Comprehensive Reporting**: Automated validation reports and failure analysis
-- **🔄 Workflow Automation**: Streamlined data validation pipelines
-- **🎯 Enterprise Ready**: Production-grade architecture with proper error handling
+- **Advanced Validation**: Custom SQL-based validation rules with Great Expectations
+- **Interactive UI**: Beautiful Streamlit interface for seamless user experience
+- **Comprehensive Reporting**: Automated validation reports and failure analysis
+- **Workflow Automation**: Streamlined data validation pipelines
+- **Enterprise Ready**: Production-grade architecture with proper error handling
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 - Python 3.8 or higher
@@ -57,31 +57,31 @@ pip install -r requirements.txt
 streamlit run streamlit_app.py
 ```
 
-**🎉 That's it!** Your DataWash by Stratesys application will open in your default browser at `http://localhost:8501`
+**That's it!** Your DataWash by Stratesys application will open in your default browser at `http://localhost:8501`
 
 ---
 
-## 🎯 Key Features
+## Key Features
 
-### 🔍 **Data Validation Engine**
+### **Data Validation Engine**
 - **Custom SQL Expectations**: Create complex validation rules using SQL syntax
 - **Built-in Validators**: Pre-configured validators for common data quality checks
 - **Batch Processing**: Validate large datasets efficiently
 - **Real-time Validation**: Instant feedback on data quality
 
-### 📊 **Data Management**
+### **Data Management**
 - **Multi-format Support**: CSV, JSON, Excel, and more
 - **Data Upload Interface**: Drag-and-drop file uploads
 - **Data Preview**: Interactive data exploration before validation
 - **Processing Pipeline**: Automated data cleaning and transformation
 
-### 📈 **Results & Reporting**
+### **Results & Reporting**
 - **Interactive Dashboards**: Real-time validation results visualization
 - **Failed Records Analysis**: Detailed breakdown of validation failures
 - **Export Capabilities**: Generate reports in multiple formats
 - **Historical Tracking**: Maintain validation history and trends
 
-### 🛠️ **Developer Experience**
+### **Developer Experience**
 - **Modular Architecture**: Clean, maintainable codebase
 - **Comprehensive Testing**: Full test coverage with pytest
 - **Configuration Management**: Flexible configuration system
@@ -89,11 +89,11 @@ streamlit run streamlit_app.py
 
 ---
 
-## 📁 Project Architecture
+## Project Architecture
 
 ```
 GEWrapper/
-├── 🎨 components/          # Core application components
+├── components/          # Core application components
 │   ├── custom_sql_expectations.py    # SQL-based validation engine
 │   ├── data_upload.py               # File upload and processing
 │   ├── expectation_builder.py       # Validation rule builder
@@ -128,7 +128,7 @@ GEWrapper/
 
 ---
 
-## 📚 Documentation
+## Documentation
 
 Our comprehensive documentation covers every aspect of DataWash by Stratesys:
 
@@ -150,7 +150,7 @@ Our comprehensive documentation covers every aspect of DataWash by Stratesys:
 
 ---
 
-## 🛠️ Development
+## Development
 
 ### Running Tests
 
@@ -190,7 +190,7 @@ pre-commit install
 
 ---
 
-## 📊 Sample Data & Use Cases
+## Sample Data & Use Cases
 
 GEWrapper includes comprehensive sample datasets for testing and learning:
 
@@ -211,7 +211,7 @@ GEWrapper includes comprehensive sample datasets for testing and learning:
 
 ---
 
-## 🔧 Configuration & Customization
+## Configuration & Customization
 
 ### Application Settings
 
@@ -245,7 +245,7 @@ APP_CONFIG = {
 
 ---
 
-## 🚀 Deployment Options
+## Deployment Options
 
 ### Local Development
 ```powershell
@@ -270,7 +270,7 @@ docker run -p 8501:8501 gewrapper
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 We welcome contributions from the community! Here's how you can help:
 
@@ -289,7 +289,7 @@ We welcome contributions from the community! Here's how you can help:
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
@@ -297,7 +297,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - **Great Expectations Team** for the powerful validation framework
 - **Streamlit Team** for the amazing web app framework

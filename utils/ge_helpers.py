@@ -51,7 +51,7 @@ class GEHelpers:
             if hasattr(self.context, 'suites'):
                 self.context.suites.add(suite)
             
-            st.write(f"🔍 Debug: Created suite '{suite_name}' with {len(suite.expectations)} expectations")
+            st.write(f"Debug: Created suite '{suite_name}' with {len(suite.expectations)} expectations")
             return suite
         except Exception as e:
             st.error(f"Error creating expectation suite: {str(e)}")
@@ -76,10 +76,10 @@ class GEHelpers:
                     kwargs=kwargs,
                 )
                 suite.add_expectation_configuration(exp_config_obj)
-                st.write(f"✅ Added expectation '{expectation_type}' using add_expectation_configuration")
+                st.write(f"Added expectation '{expectation_type}' using add_expectation_configuration")
                 return True
             except Exception as e1:
-                st.write(f"🔍 Debug: Method 1 failed: {str(e1)}")
+                st.write(f"Debug: Method 1 failed: {str(e1)}")
                 
                 try:
                     # Method 2: Try using the new GE 0.18+ API with different parameter names
@@ -91,10 +91,10 @@ class GEHelpers:
                     if not hasattr(suite, 'expectations'):
                         suite.expectations = []
                     suite.expectations.append(exp_config_obj)
-                    st.write(f"✅ Added expectation '{expectation_type}' directly to expectations list")
+                    st.write(f"Added expectation '{expectation_type}' directly to expectations list")
                     return True
                 except Exception as e2:
-                    st.write(f"🔍 Debug: Method 2 failed: {str(e2)}")
+                    st.write(f"Debug: Method 2 failed: {str(e2)}")
                     
                     try:
                         # Method 3: Try using the new GE 0.18+ API with different constructor
@@ -105,27 +105,27 @@ class GEHelpers:
                         # Try to use the new add_expectation method if it exists
                         if hasattr(suite, 'add_expectation'):
                             suite.add_expectation(exp_config_obj)
-                            st.write(f"✅ Added expectation '{expectation_type}' using add_expectation")
+                            st.write(f"Added expectation '{expectation_type}' using add_expectation")
                             return True
                         else:
                             # Last resort: add to expectations list
                             if not hasattr(suite, 'expectations'):
                                 suite.expectations = []
                             suite.expectations.append(exp_config_obj)
-                            st.write(f"✅ Added expectation '{expectation_type}' to expectations list (fallback)")
+                            st.write(f"Added expectation '{expectation_type}' to expectations list (fallback)")
                             return True
                     except Exception as e3:
                         st.error("Failed to add expectation using any Great Expectations API method")
-                        st.write("🔍 Debug: All methods failed:")
+                        st.write("Debug: All methods failed:")
                         st.write(f"  Method 1 (add_expectation_configuration) -> {str(e1)}")
                         st.write(f"  Method 2 (direct list append) -> {str(e2)}")
                         st.write(f"  Method 3 (add_expectation/fallback) -> {str(e3)}")
-                        st.write(f"🔍 Debug: Config attempted: {{'expectation_type': '{expectation_type}', 'kwargs': {kwargs}}}")
+                        st.write(f"Debug: Config attempted: {{'expectation_type': '{expectation_type}', 'kwargs': {kwargs}}}")
                         return False
 
         except Exception as e:
             st.error(f"Error adding expectation to suite: {str(e)}")
-            st.write(f"🔍 Debug: Failed expectation config: {expectation_config}")
+            st.write(f"Debug: Failed expectation config: {expectation_config}")
             return False
     
     def validate_data(self, data: pd.DataFrame, suite: ExpectationSuite) -> Dict:
@@ -139,8 +139,8 @@ class GEHelpers:
             suite = self._normalize_suite(suite)
             
             # Debug: Check the suite before validation
-            st.write(f"🔍 Debug: Validating suite '{suite.name}' with {len(suite.expectations)} expectations")
-            st.write(f"🔍 Debug: Data shape: {data.shape}")
+            st.write(f"Debug: Validating suite '{suite.name}' with {len(suite.expectations)} expectations")
+            st.write(f"Debug: Data shape: {data.shape}")
             
             # Use the new GE 0.18+ validation approach
             try:
@@ -150,10 +150,10 @@ class GEHelpers:
                     assets_to_validate=[data],
                     expectation_suite=suite
                 )
-                st.write(f"✅ Validation completed using new GE 0.18+ API")
+                st.write(f"Validation completed using new GE 0.18+ API")
                 return validation_result.to_json_dict()
             except Exception as e1:
-                st.write(f"🔍 Debug: New API failed: {str(e1)}")
+                st.write(f"Debug: New API failed: {str(e1)}")
                 
                 try:
                     # Method 2: Try using the legacy validation approach
@@ -166,10 +166,10 @@ class GEHelpers:
                     
                     # Validate using the suite directly
                     validation_result = suite.validate(batch_data)
-                    st.write(f"✅ Validation completed using execution engine approach")
+                    st.write(f"Validation completed using execution engine approach")
                     return validation_result.to_json_dict()
                 except Exception as e2:
-                    st.write(f"🔍 Debug: Execution engine approach failed: {str(e2)}")
+                    st.write(f"Debug: Execution engine approach failed: {str(e2)}")
                     
                     try:
                         # Method 3: Try using the most basic validation approach
@@ -186,14 +186,14 @@ class GEHelpers:
                         }
                         
                         # Process each expectation manually
-                        st.write(f"🔍 Debug: Processing {len(suite.expectations)} expectations manually")
+                        st.write(f"Debug: Processing {len(suite.expectations)} expectations manually")
                         for i, expectation in enumerate(suite.expectations):
                             try:
                                 # Extract expectation information properly
                                 exp_type = getattr(expectation, 'expectation_type', None)
                                 exp_kwargs = getattr(expectation, 'kwargs', {})
                                 
-                                st.write(f"🔍 Debug: Expectation {i+1}: type={exp_type}, kwargs={exp_kwargs}")
+                                st.write(f"Debug: Expectation {i+1}: type={exp_type}, kwargs={exp_kwargs}")
                                 
                                 # Create expectation_config structure for proper display
                                 exp_config = {
@@ -406,7 +406,7 @@ class GEHelpers:
                                         else:
                                             validation_result["statistics"]["unsuccessful_expectations"] += 1
                                     except Exception as custom_e:
-                                        st.write(f"🔍 Debug: Custom SQL expectation failed: {str(custom_e)}")
+                                        st.write(f"Debug: Custom SQL expectation failed: {str(custom_e)}")
                                         validation_result["results"].append({
                                             "success": False,
                                             "expectation_config": exp_config,
@@ -434,7 +434,7 @@ class GEHelpers:
                                     validation_result["statistics"]["unsuccessful_expectations"] += 1
                                 
                             except Exception as exp_e:
-                                st.write(f"🔍 Debug: Failed to process expectation {exp_type}: {str(exp_e)}")
+                                st.write(f"Debug: Failed to process expectation {exp_type}: {str(exp_e)}")
                                 # Create proper structure even for failed expectations
                                 exp_config = {
                                     'type': exp_type,
@@ -455,8 +455,8 @@ class GEHelpers:
                                 validation_result["statistics"]["successful_expectations"] / total_expectations * 100
                             )
                         
-                        st.write(f"✅ Validation completed using manual approach")
-                        st.write(f"🔍 Debug: Final validation result structure:")
+                        st.write(f"Validation completed using manual approach")
+                        st.write(f"Debug: Final validation result structure:")
                         st.write(f"  - Results count: {len(validation_result['results'])}")
                         for i, result in enumerate(validation_result['results']):
                             exp_config = result.get('expectation_config', {})
@@ -467,7 +467,7 @@ class GEHelpers:
                         
                     except Exception as e3:
                         st.error("All validation methods failed")
-                        st.write(f"🔍 Debug: All validation methods failed:")
+                        st.write(f"Debug: All validation methods failed:")
                         st.write(f"  New API -> {str(e1)}")
                         st.write(f"  Execution Engine -> {str(e2)}")
                         st.write(f"  Manual -> {str(e3)}")
@@ -515,10 +515,10 @@ class GEHelpers:
                             'kwargs': getattr(exp, 'kwargs', {}) or {}
                         }
                 if cfg and cfg.get('expectation_type'):
-                    st.write(f"🔍 Debug: Adding expectation {cfg.get('expectation_type')} to normalized suite")
+                    st.write(f"Debug: Adding expectation {cfg.get('expectation_type')} to normalized suite")
                     self.add_expectation_to_suite(rebuilt_suite, cfg)
 
-            st.info("🔧 Normalized expectation suite to GE-native objects for validation")
+            st.info("Normalized expectation suite to GE-native objects for validation")
             return rebuilt_suite
         except Exception:
             # On any failure, return original suite

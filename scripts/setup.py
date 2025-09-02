@@ -11,32 +11,32 @@ from pathlib import Path
 def check_python_version():
     """Check if Python version is compatible"""
     if sys.version_info < (3, 8):
-        print("❌ Error: Python 3.8 or higher is required")
+        print("Error: Python 3.8 or higher is required")
         print(f"   Current version: {sys.version}")
         print("   Please upgrade Python and try again")
         return False
     
-    print(f"✅ Python {sys.version.split()[0]} detected")
+    print(f"Python {sys.version.split()[0]} detected")
     return True
 
 def install_requirements():
     """Install required packages"""
-    print("\n📦 Installing required packages...")
+    print("\nInstalling required packages...")
     
     try:
         subprocess.check_call([
             sys.executable, "-m", "pip", "install", "-r", "requirements.txt"
         ])
-        print("✅ All packages installed successfully")
+        print("All packages installed successfully")
         return True
     except subprocess.CalledProcessError as e:
-        print(f"❌ Error installing packages: {e}")
+        print(f"Error installing packages: {e}")
         print("   Try running: pip install -r requirements.txt")
         return False
 
 def verify_installation():
     """Verify that all required packages are installed"""
-    print("\n🔍 Verifying installation...")
+    print("\nVerifying installation...")
     
     required_packages = [
         "streamlit",
@@ -52,22 +52,22 @@ def verify_installation():
     for package in required_packages:
         try:
             __import__(package)
-            print(f"  ✅ {package}")
+            print(f"  {package}")
         except ImportError:
-            print(f"  ❌ {package}")
+            print(f"  {package}")
             failed_imports.append(package)
     
     if failed_imports:
-        print(f"\n❌ Failed to import: {', '.join(failed_imports)}")
+        print(f"\nFailed to import: {', '.join(failed_imports)}")
         print("   Try reinstalling with: pip install -r requirements.txt --force-reinstall")
         return False
     
-    print("✅ All packages verified successfully")
+    print("All packages verified successfully")
     return True
 
 def check_sample_data():
     """Check if sample data files exist"""
-    print("\n📁 Checking sample data...")
+    print("\nChecking sample data...")
     
     sample_files = [
         "sample_data/customers.csv",
@@ -78,21 +78,21 @@ def check_sample_data():
     all_exist = True
     for file_path in sample_files:
         if Path(file_path).exists():
-            print(f"  ✅ {file_path}")
+            print(f"  {file_path}")
         else:
-            print(f"  ❌ {file_path} (missing)")
+            print(f"  {file_path} (missing)")
             all_exist = False
     
     if all_exist:
-        print("✅ All sample data files found")
+        print("All sample data files found")
     else:
-        print("⚠️  Some sample data files are missing")
+        print("Some sample data files are missing")
     
     return all_exist
 
 def create_startup_script():
     """Create a startup script for easy launching"""
-    print("\n📝 Creating startup script...")
+    print("\nCreating startup script...")
     
     if os.name == 'nt':  # Windows
         script_content = """@echo off
@@ -115,10 +115,10 @@ streamlit run streamlit_app.py
         if os.name != 'nt':  # Make executable on Unix-like systems
             os.chmod(script_name, 0o755)
         
-        print(f"✅ Created {script_name}")
+        print(f"Created {script_name}")
         return True
     except Exception as e:
-        print(f"❌ Error creating startup script: {e}")
+        print(f"Error creating startup script: {e}")
         return False
 
 def main():
@@ -132,12 +132,12 @@ def main():
     
     # Install requirements
     if not install_requirements():
-        print("\n⚠️  Installation completed with errors")
+        print("\nInstallation completed with errors")
         print("   You may need to install packages manually")
     
     # Verify installation
     if not verify_installation():
-        print("\n❌ Setup failed - some packages could not be imported")
+        print("\nSetup failed - some packages could not be imported")
         sys.exit(1)
     
     # Check sample data
@@ -148,7 +148,7 @@ def main():
     
     # Final instructions
     print("\n" + "=" * 50)
-    print("🎉 Setup completed successfully!")
+    print("Setup completed successfully!")
     print("\nTo start the application:")
     print("  Option 1: streamlit run streamlit_app.py")
     if os.name == 'nt':
@@ -169,7 +169,7 @@ def main():
     print("  - README.md (user guide)")
     print("  - INSTALL_GUIDE.md (troubleshooting)")
     
-    print("\nHappy data validating! 🚀")
+    print("\nHappy data validating!")
 
 if __name__ == "__main__":
     main()

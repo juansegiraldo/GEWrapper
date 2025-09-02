@@ -514,39 +514,39 @@ class DataProcessor:
             <title>Data Profile Report</title>
             <style>
                 body {{ font-family: Arial, sans-serif; margin: 20px; }}
-                .header {{ background-color: #f0f0f0; padding: 20px; border-radius: 5px; margin-bottom: 20px; }}
-                .section {{ margin-bottom: 30px; }}
-                .metric {{ display: inline-block; margin: 10px; padding: 10px; background-color: #e8f4fd; border-radius: 5px; }}
+                h1 {{ color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }}
+                h2 {{ color: #34495e; margin-top: 30px; }}
+                h3 {{ color: #7f8c8d; }}
+                .metric {{ background: #ecf0f1; padding: 10px; margin: 5px 0; border-radius: 5px; }}
+                .warning {{ background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; margin: 10px 0; }}
+                .success {{ background: #d4edda; border: 1px solid #c3e6cb; padding: 15px; border-radius: 5px; margin: 10px 0; }}
                 table {{ border-collapse: collapse; width: 100%; margin: 10px 0; }}
                 th, td {{ border: 1px solid #ddd; padding: 8px; text-align: left; }}
                 th {{ background-color: #f2f2f2; }}
-                .warning {{ color: #856404; background-color: #fff3cd; padding: 10px; border-radius: 5px; }}
-                .success {{ color: #155724; background-color: #d4edda; padding: 10px; border-radius: 5px; }}
+                .column-info {{ background: #f8f9fa; padding: 15px; margin: 10px 0; border-radius: 5px; }}
             </style>
         </head>
         <body>
-            <div class="header">
-                <h1>📊 Data Profile Report</h1>
-                <p><strong>Generated:</strong> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
-                <p><strong>Dataset:</strong> {len(df):,} rows × {len(df.columns)} columns</p>
+            <h1>Data Profile Report</h1>
+            <p><strong>Generated:</strong> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+            <p><strong>Dataset:</strong> {getattr(df, 'name', 'unknown')}</p>
+            <p><strong>Shape:</strong> {df.shape[0]} rows × {df.shape[1]} columns</p>
+            
+            <h2>Dataset Overview</h2>
+            <div class="metric">
+                <strong>Total Rows:</strong> {df.shape[0]:,}<br>
+                <strong>Total Columns:</strong> {df.shape[1]}<br>
+                <strong>Memory Usage:</strong> {df.memory_usage(deep=True).sum() / 1024**2:.2f} MB<br>
+                <strong>Data Types:</strong> {len(df.dtypes.unique())} unique types
             </div>
             
-            <div class="section">
-                <h2>📋 Dataset Overview</h2>
-                <div class="metric"><strong>Total Rows:</strong> {profile['basic_info']['rows']:,}</div>
-                <div class="metric"><strong>Total Columns:</strong> {profile['basic_info']['columns']}</div>
-                <div class="metric"><strong>Memory Usage:</strong> {profile['basic_info']['memory_usage'] / (1024 * 1024):.1f} MB</div>
-                <div class="metric"><strong>Duplicate Rows:</strong> {profile['duplicates']['duplicate_rows']:,}</div>
-            </div>
-            
-            <div class="section">
-                <h2>🏷️ Data Types Distribution</h2>
-                <table>
-                    <tr><th>Data Type</th><th>Count</th></tr>
+            <h2>Data Types Distribution</h2>
+            <table>
+                <tr><th>Data Type</th><th>Count</th><th>Percentage</th></tr>
         """
         
         for dtype, count in profile['basic_info']['data_types'].items():
-            html_content += f"<tr><td>{html.escape(str(dtype))}</td><td>{count}</td></tr>"
+            html_content += f"<tr><td>{html.escape(str(dtype))}</td><td>{count}</td><td>{count / profile['basic_info']['rows'] * 100:.2f}%</td></tr>"
         
         html_content += """
                 </table>
@@ -556,10 +556,9 @@ class DataProcessor:
         # Missing data section
         if profile['missing_data']['columns_with_missing']:
             html_content += """
-            <div class="section">
-                <h2>🕳️ Missing Data Analysis</h2>
-                <table>
-                    <tr><th>Column</th><th>Missing Count</th><th>Missing Percentage</th></tr>
+            <h2>Missing Data Analysis</h2>
+            <table>
+                <tr><th>Column</th><th>Missing Count</th><th>Missing Percentage</th></tr>
             """
             
             for col, missing_count in profile['missing_data']['columns_with_missing'].items():
@@ -573,10 +572,9 @@ class DataProcessor:
         
         # Column details section
         html_content += """
-            <div class="section">
-                <h2>📊 Column Details</h2>
-                <table>
-                    <tr><th>Column</th><th>Data Type</th><th>Non-null</th><th>Null</th><th>Null %</th><th>Unique</th><th>Unique %</th></tr>
+            <h2>Column Details</h2>
+            <table>
+                <tr><th>Column</th><th>Data Type</th><th>Non-null</th><th>Null</th><th>Null %</th><th>Unique</th><th>Unique %</th></tr>
         """
         
         for col, col_info in profile['column_info'].items():
@@ -599,8 +597,7 @@ class DataProcessor:
         
         # Data quality insights
         html_content += """
-            <div class="section">
-                <h2>🎯 Data Quality Insights</h2>
+            <h2>Data Quality Insights</h2>
         """
         
         # Check for potential issues
@@ -612,12 +609,12 @@ class DataProcessor:
             issues.append(f"High duplicate rate: {profile['duplicates']['duplicate_percentage']:.1f}%")
         
         if issues:
-            html_content += '<div class="warning"><h3>⚠️ Potential Issues:</h3><ul>'
+            html_content += '<div class="warning"><h3>Potential Issues:</h3><ul>'
             for issue in issues:
                 html_content += f'<li>{issue}</li>'
             html_content += '</ul></div>'
         else:
-            html_content += '<div class="success"><h3>✅ Data Quality Assessment:</h3><p>No major data quality issues detected.</p></div>'
+            html_content += '<div class="success"><h3>Data Quality Assessment:</h3><p>No major data quality issues detected.</p></div>'
         
         html_content += """
             </div>

@@ -38,7 +38,7 @@ class DataUploadComponent:
                 return
             
             # Show file info
-            st.info(f"📄 **{uploaded_file.name}** ({uploaded_file.size / (1024*1024):.2f} MB)")
+            st.info(f"**{uploaded_file.name}** ({uploaded_file.size / (1024*1024):.2f} MB)")
             
             # Load data with progress
             with st.spinner("Loading data..."):
@@ -59,7 +59,7 @@ class DataUploadComponent:
                 st.session_state.current_suite_name = new_suite_name
                 
                 # Show success message
-                st.success(f"✅ Data loaded successfully! {len(df)} rows, {len(df.columns)} columns")
+                st.success(f"Data loaded successfully! {len(df)} rows, {len(df.columns)} columns")
                 
                 # Show preview
                 self.show_data_preview(df)
@@ -74,7 +74,7 @@ class DataUploadComponent:
     
     def show_data_preview(self, df: pd.DataFrame):
         """Show data preview"""
-        st.markdown("### 👁️ Data Preview")
+        st.markdown("### Data Preview")
         
         # Show first few rows
         preview_rows = min(self.config.PREVIEW_ROWS, len(df))
@@ -89,7 +89,7 @@ class DataUploadComponent:
     
     def show_basic_stats(self, df: pd.DataFrame):
         """Show basic statistics"""
-        st.markdown("### 📈 Basic Statistics")
+        st.markdown("### Basic Statistics")
         
         col1, col2, col3, col4 = st.columns(4)
         
@@ -122,7 +122,7 @@ class DataUploadComponent:
             return
         
         # Basic Information
-        st.markdown("### 📋 Dataset Overview")
+        st.markdown("### Dataset Overview")
         
         col1, col2, col3, col4 = st.columns(4)
         with col1:
@@ -139,7 +139,7 @@ class DataUploadComponent:
         col1, col2 = st.columns(2)
         
         with col1:
-            st.markdown("### 🏷️ Data Types Distribution")
+            st.markdown("### Data Types Distribution")
             dtype_df = pd.DataFrame(list(profile['basic_info']['data_types'].items()), 
                                    columns=['Data Type', 'Count'])
             
@@ -150,7 +150,7 @@ class DataUploadComponent:
         
         with col2:
             if profile['missing_data']['columns_with_missing']:
-                st.markdown("### 🕳️ Missing Data Analysis")
+                st.markdown("### Missing Data Analysis")
                 
                 missing_df = pd.DataFrame(list(profile['missing_data']['columns_with_missing'].items()),
                                         columns=['Column', 'Missing Count'])
@@ -167,12 +167,12 @@ class DataUploadComponent:
                 # Show table
                 st.dataframe(missing_df, use_container_width=True)
             else:
-                st.markdown("### 🕳️ Missing Data Analysis")
+                st.markdown("### Missing Data Analysis")
                 st.info("No missing data found in the dataset!")
-                st.markdown("🎉 **Perfect!** All columns have complete data.")
+                st.markdown("**Perfect!** All columns have complete data.")
         
         # Column details
-        st.markdown("### 📊 Column Details")
+        st.markdown("### Column Details")
         
         # Allow user to select columns to view
         selected_columns = st.multiselect(
@@ -183,7 +183,7 @@ class DataUploadComponent:
         
         if selected_columns:
             for col in selected_columns:
-                with st.expander(f"📊 {col} ({profile['column_info'][col]['dtype']})"):
+                with st.expander(f"{col} ({profile['column_info'][col]['dtype']})"):
                     col_info = profile['column_info'][col]
                     
                     # Basic metrics
@@ -209,7 +209,7 @@ class DataUploadComponent:
                         self._show_datetime_column_details(df[col], col_info)
         
         # Column type suggestions
-        st.markdown("### 🎯 Column Type Optimization Suggestions")
+        st.markdown("### Column Type Optimization Suggestions")
         suggestions = self.processor.detect_column_types(df)
         
         suggestion_data = []
@@ -230,12 +230,12 @@ class DataUploadComponent:
             st.info("All columns are already using optimal data types!")
         
         # Download section
-        st.markdown("### 💾 Download Data Profile")
+        st.markdown("### Download Data Profile")
         st.write("Export your data profile in various formats for reporting and analysis.")
         
         # Preview what will be included in the download
-        with st.expander("👁️ Preview Download Contents", expanded=False):
-            st.markdown("**📊 What's included in your download:**")
+        with st.expander("Preview Download Contents", expanded=False):
+            st.markdown("**What's included in your download:**")
             
             preview_col1, preview_col2 = st.columns(2)
             with preview_col1:
@@ -255,33 +255,33 @@ class DataUploadComponent:
                 st.write(f"• Sample data (Excel format)")
         
         # Show download options with descriptions
-        with st.expander("📋 Download Options", expanded=False):
+        with st.expander("Download Options", expanded=False):
             col1, col2 = st.columns(2)
             
             with col1:
-                st.markdown("**📄 JSON Format**")
+                st.markdown("**JSON Format**")
                 st.write("Complete profile data in JSON format. Best for programmatic analysis and integration.")
                 if st.button("Download JSON", key="download_json_btn", type="secondary"):
                     self._download_profile(df, profile, 'json')
                 
-                st.markdown("**📊 Excel Format**")
+                st.markdown("**Excel Format**")
                 st.write("Multi-sheet Excel file with summary, column details, and sample data. Best for business users.")
                 if st.button("Download Excel", key="download_excel_btn", type="secondary"):
                     self._download_profile(df, profile, 'excel')
             
             with col2:
-                st.markdown("**🌐 HTML Format**")
+                st.markdown("**HTML Format**")
                 st.write("Formatted HTML report with styling. Best for web viewing and sharing.")
                 if st.button("Download HTML", key="download_html_btn", type="secondary"):
                     self._download_profile(df, profile, 'html')
                 
-                st.markdown("**📋 CSV Format**")
+                st.markdown("**CSV Format**")
                 st.write("Summary data in CSV format. Best for spreadsheet analysis.")
                 if st.button("Download CSV", key="download_csv_btn", type="secondary"):
                     self._download_profile(df, profile, 'csv')
         
         # Quick download all formats
-        st.markdown("**🚀 Quick Download All Formats**")
+        st.markdown("**Quick Download All Formats**")
         if st.button("Download All Formats", key="download_all_btn", type="primary"):
             self._download_all_formats(df, profile)
         
@@ -445,7 +445,7 @@ class DataUploadComponent:
             )
             
             # Show success message
-            st.success(f"✅ {format_type.upper()} profile ready for download!")
+            st.success(f"{format_type.upper()} profile ready for download!")
             
         except Exception as e:
             st.error(f"Error creating download: {str(e)}")
@@ -493,7 +493,7 @@ class DataUploadComponent:
                 key=f"download_all_{timestamp}"
             )
             
-            st.success("✅ All formats packaged and ready for download!")
+            st.success("All formats packaged and ready for download!")
             
         except Exception as e:
             st.error(f"Error creating multi-format download: {str(e)}")

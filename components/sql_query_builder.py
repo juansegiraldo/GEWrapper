@@ -89,14 +89,14 @@ class SQLQueryBuilderComponent:
     
     def _render_template_builder(self, template_config: Dict[str, Any], data: pd.DataFrame) -> Optional[Dict[str, Any]]:
         """Render template-based query builder"""
-        st.markdown("##### 🔧 Configure Template Parameters")
+        st.markdown("##### Configure Template Parameters")
         
         template_name = template_config["name"]
         template_sql = template_config["template"]
         parameters = template_config.get("parameters", [])
         
         # Show template preview
-        with st.expander("📋 Template SQL Preview", expanded=False):
+        with st.expander("Template SQL Preview", expanded=False):
             st.code(template_sql, language="sql")
         
         # Parameter configuration
@@ -261,8 +261,8 @@ SELECT COUNT(*) as violation_count
 FROM {table_name}
 WHERE email IS NULL OR email NOT LIKE '%@%.%'
 
-💡 Tip: Use True/False for boolean columns, not 1/0
-💡 The app automatically converts active = 1 to active = True
+Tip: Use True/False for boolean columns, not 1/0
+The app automatically converts active = 1 to active = True
 """
             )
             
@@ -282,10 +282,10 @@ WHERE email IS NULL OR email NOT LIKE '%@%.%'
                 
                 if not validation_result["is_valid"]:
                     for error in validation_result["errors"]:
-                        st.error(f"❌ {error}")
+                        st.error(f"{error}")
                 
                 for warning in validation_result["warnings"]:
-                    st.warning(f"⚠️ {warning}")
+                    st.warning(f"{warning}")
                 
                 for security_issue in validation_result["security_issues"]:
                     st.error(f"🔒 Security Issue: {security_issue}")
@@ -322,11 +322,11 @@ WHERE email IS NULL OR email NOT LIKE '%@%.%'
                 st.markdown("**Boolean Column Syntax**")
                 st.info(
                     """
-✅ Recommended: `active = True` / `active = False`, `status = 'active'` / `status = 'inactive'`
+Recommended: `active = True` / `active = False`, `status = 'active'` / `status = 'inactive'`
 
-⚠️ Works but discouraged: `active = 1` / `active = 0`, `active = 'true'` / `active = 'false'`
+Works but discouraged: `active = 1` / `active = 0`, `active = 'true'` / `active = 'false'`
 
-❌ Won't work: `active = '1'` / `active = '0'`
+Won't work: `active = '1'` / `active = '0'`
                     """
                 )
 
@@ -433,9 +433,9 @@ WHERE [your_condition_here]"""
                         if 'sql_query' in st.session_state and st.session_state['sql_query']:
                             validation_result = self.custom_sql_expectation.validate_sql_query(st.session_state['sql_query'])
                             if validation_result["is_valid"]:
-                                st.success("✅ Query is valid!")
+                                st.success("Query is valid!")
                             else:
-                                st.error("❌ Query has issues")
+                                st.error("Query has issues")
                                 for error in validation_result["errors"]:
                                     st.write(f"• {error}")
 
@@ -443,15 +443,15 @@ WHERE [your_condition_here]"""
                 if st.button("🧪 Test Query", key="test_query_btn"):
                     try:
                         fixed_sql_query = self._fix_boolean_conditions(st.session_state.get('sql_query', ''), data)
-                        st.markdown("**🔍 Testing Query:**")
+                        st.markdown("**Testing Query:**")
                         st.code(fixed_sql_query, language="sql")
-                        st.write("**📊 Data Info:**")
+                        st.write("**Data Info:**")
                         st.write(f"Data shape: {data.shape}")
                         st.write(f"Data columns: {list(data.columns)}")
                         st.write(f"Data types: {dict(data.dtypes)}")
                         
                         # Show sample data for debugging
-                        st.write("**📋 Sample Data (first 3 rows):**")
+                        st.write("**Sample Data (first 3 rows):**")
                         sample_data = data.head(3)
                         for idx, row in sample_data.iterrows():
                             display_values = [f"{col}={row[col]}" for col in row.index]
@@ -459,7 +459,7 @@ WHERE [your_condition_here]"""
                         
                         result = self.custom_sql_expectation.execute_sql_query(data, fixed_sql_query)
                         if not result.empty:
-                            st.success("✅ Query executed successfully!")
+                            st.success("Query executed successfully!")
                             st.dataframe(result.head(), use_container_width=True)
                             if 'violation_count' in result.columns:
                                 violation_count = result['violation_count'].iloc[0]
@@ -467,8 +467,8 @@ WHERE [your_condition_here]"""
                                 
                                 # Add more debugging for the specific case
                                 if violation_count == 0:
-                                    st.warning("⚠️ Query returned 0 violations. This means no data quality issues were found.")
-                                    st.info("ℹ️ Your data appears to be clean according to this validation rule.")
+                                    st.warning("Query returned 0 violations. This means no data quality issues were found.")
+                                    st.info("Your data appears to be clean according to this validation rule.")
                         else:
                             st.warning("Query returned no results")
                     except Exception as e:
@@ -497,7 +497,7 @@ WHERE [your_condition_here]"""
         default_name: str
     ) -> Optional[Dict[str, Any]]:
         """Render query configuration options"""
-        st.markdown("##### ⚙️ Query Configuration")
+        st.markdown("##### Query Configuration")
         
         # Fix boolean conditions in the SQL query
         fixed_sql_query = self._fix_boolean_conditions(sql_query, data)
@@ -559,24 +559,24 @@ WHERE [your_condition_here]"""
                     max_value = st.number_input("Max Count:", min_value=0, value=10)
         
         # Query preview
-        with st.expander("📋 Final SQL Query Preview", expanded=False):
+        with st.expander("Final SQL Query Preview", expanded=False):
             st.code(fixed_sql_query, language="sql")
         
         # Test query option
         if st.button("🧪 Test Query", help="Test the query against current data"):
             try:
                 # Show the query being tested
-                st.markdown("**🔍 Testing Query:**")
+                st.markdown("**Testing Query:**")
                 st.code(fixed_sql_query, language="sql")
                 
                 # Add debugging information
-                st.write("**📊 Data Info:**")
+                st.write("**Data Info:**")
                 st.write(f"Data shape: {data.shape}")
                 st.write(f"Data columns: {list(data.columns)}")
                 st.write(f"Data types: {dict(data.dtypes)}")
                 
                 # Show sample data for debugging
-                st.write("**📋 Sample Data (first 3 rows):**")
+                st.write("**Sample Data (first 3 rows):**")
                 sample_data = data.head(3)
                 for idx, row in sample_data.iterrows():
                     display_values = [f"{col}={row[col]}" for col in row.index]
@@ -584,7 +584,7 @@ WHERE [your_condition_here]"""
                 
                 result = self.custom_sql_expectation.execute_sql_query(data, fixed_sql_query)
                 if not result.empty:
-                    st.success("✅ Query executed successfully!")
+                    st.success("Query executed successfully!")
                     st.dataframe(result.head(), use_container_width=True)
                     
                     if 'violation_count' in result.columns:
@@ -593,8 +593,8 @@ WHERE [your_condition_here]"""
                         
                         # Add more debugging for the specific case
                         if violation_count == 0:
-                            st.warning("⚠️ Query returned 0 violations. This means no data quality issues were found.")
-                            st.info("ℹ️ Your data appears to be clean according to this validation rule.")
+                            st.warning("Query returned 0 violations. This means no data quality issues were found.")
+                            st.info("Your data appears to be clean according to this validation rule.")
                 else:
                     st.warning("Query returned no results")
             except Exception as e:

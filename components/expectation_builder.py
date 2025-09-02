@@ -61,12 +61,12 @@ class ExpectationBuilderComponent:
     
     def _render_suite_management(self):
         """Render suite management interface"""
-        st.markdown("#### 📋 Expectation Suite")
+        st.markdown("#### Expectation Suite")
         
         # Show current dataset info
         uploaded_filename = st.session_state.get('uploaded_filename', 'No dataset uploaded')
         if uploaded_filename != 'No dataset uploaded':
-            st.info(f"📄 **Dataset:** {uploaded_filename}")
+            st.info(f"**Dataset:** {uploaded_filename}")
 
         # Use consistent 2:1 ratio across all sections
         col1, col2 = st.columns([2, 1])
@@ -99,7 +99,7 @@ class ExpectationBuilderComponent:
     
     def _render_quick_actions(self, data: pd.DataFrame):
         """Render quick actions row with import button and templates"""
-        st.markdown("#### ⚡ Quick Actions")
+        st.markdown("#### Quick Actions")
         
         # Use consistent 2:1 ratio to align with other sections
         col1, col2 = st.columns([2, 1])
@@ -111,7 +111,7 @@ class ExpectationBuilderComponent:
         
         with col2:
             # Quick Start Templates (collapsible)
-            with st.expander("📑 Quick Start Templates", expanded=False):
+            with st.expander("Quick Start Templates", expanded=False):
                 template_options = ["None"] + list(self.config.EXPECTATION_TEMPLATES.keys())
                 selected_template = st.selectbox(
                     "Choose a template to get started:",
@@ -134,7 +134,7 @@ class ExpectationBuilderComponent:
         """Render import popup interface"""
         with st.container():
             st.markdown("---")
-            st.markdown("### 📥 Import Expectations")
+            st.markdown("### Import Expectations")
             
             uploaded_json = st.file_uploader(
                 "Upload expectation suite:",
@@ -216,9 +216,9 @@ class ExpectationBuilderComponent:
             # Mark this file as imported to prevent re-processing
             st.session_state.last_imported_file = uploaded_json.name
             
-            st.success(f"✅ Successfully imported {len(valid_expectations)} expectations!")
+            st.success(f"Successfully imported {len(valid_expectations)} expectations!")
             if len(valid_expectations) < len(import_data['expectations']):
-                st.warning(f"⚠️ {len(import_data['expectations']) - len(valid_expectations)} expectations were skipped due to invalid format.")
+                st.warning(f"{len(import_data['expectations']) - len(valid_expectations)} expectations were skipped due to invalid format.")
             
         except json.JSONDecodeError as e:
             st.error(f"Invalid JSON file: {str(e)}")
@@ -316,7 +316,7 @@ class ExpectationBuilderComponent:
     
     def _render_expectation_builder(self, data: pd.DataFrame):
         """Render the main expectation builder"""
-        st.markdown("#### 🛠️ Build Custom Expectations")
+        st.markdown("#### Build Custom Expectations")
         
         # Expectation type selection
         available_expectations = self.ge_helpers.get_available_expectations()
@@ -390,7 +390,7 @@ class ExpectationBuilderComponent:
             # Custom SQL expectation - decorator-based dialog
             st.markdown("**Custom SQL-based validation allows you to create complex business rules and multi-column checks.**")
 
-            @st.dialog("🔍 Custom SQL Query Builder", width="large", dismissible=True, on_dismiss="ignore")
+            @st.dialog("Custom SQL Query Builder", width="large", dismissible=True, on_dismiss="ignore")
             def open_sql_builder_dialog():
                 custom_config = self.sql_query_builder.render(data)
                 col1, col2 = st.columns(2)
@@ -550,7 +550,7 @@ class ExpectationBuilderComponent:
     
     def _render_current_expectations(self):
         """Render current expectations list with better organization"""
-        st.markdown("#### 📋 Current Expectations")
+        st.markdown("#### Current Expectations")
         
         if not st.session_state.expectation_configs:
             st.info("No expectations configured yet. Add some expectations above!")
@@ -569,7 +569,7 @@ class ExpectationBuilderComponent:
             st.metric("Table Expectations", table_expectations)
         
         # Expectations management in collapsible section
-        with st.expander("📋 Manage Expectations", expanded=False):
+        with st.expander("Manage Expectations", expanded=False):
             # Display expectations in a table format
             expectations_data = []
             for i, config in enumerate(st.session_state.expectation_configs):
@@ -669,7 +669,7 @@ class ExpectationBuilderComponent:
                             except Exception:
                                 st.session_state.expectation_suite_json = None
                             st.session_state.current_step = 'validate'
-                            st.success(f"✅ Expectation suite created with {success_count} expectations! Ready for validation.")
+                            st.success(f"Expectation suite created with {success_count} expectations! Ready for validation.")
                             st.rerun()
                         else:
                             st.error("Failed to add any expectations to the suite!")
@@ -726,7 +726,7 @@ class ExpectationBuilderComponent:
             
             # Create a styled container that looks like a modal
             with st.container():
-                st.markdown("### 🔍 Custom SQL Query Builder")
+                st.markdown("### Custom SQL Query Builder")
                 st.info("Use this tool to build complex SQL queries for data validation.")
                 
                 # Render the SQLQueryBuilderComponent within the dialog

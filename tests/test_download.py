@@ -41,10 +41,10 @@ def test_download_functionality():
     profile = processor.get_data_profile(df)
     
     if not profile:
-        print("❌ Failed to generate profile!")
+        print("Failed to generate profile!")
         return False
     
-    print("✅ Profile generated successfully!")
+    print("Profile generated successfully!")
     
     # Test each download format
     formats = ['json', 'excel', 'html', 'csv']
@@ -54,7 +54,7 @@ def test_download_functionality():
         try:
             content = processor.generate_downloadable_profile(df, profile, format_type)
             if content:
-                print(f"✅ {format_type.upper()} format generated successfully!")
+                print(f"{format_type.upper()} format generated successfully!")
                 print(f"   Size: {len(content)} bytes")
                 
                 # Save to file for inspection
@@ -71,11 +71,12 @@ def test_download_functionality():
                     f.write(content)
                 print(f"   Saved to: {filename}")
             else:
-                print(f"❌ Failed to generate {format_type.upper()} format!")
+                print(f"Failed to generate {format_type.upper()} format!")
+                return False
         except Exception as e:
-            print(f"❌ Error generating {format_type.upper()} format: {str(e)}")
+            print(f"Error generating {format_type.upper()} format: {str(e)}")
     
-    print("\n🎉 Download functionality test completed!")
+    print("\nDownload functionality test completed!")
     return True
 
 if __name__ == "__main__":

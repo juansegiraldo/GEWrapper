@@ -51,7 +51,8 @@ def main():
     """Main application function"""
     initialize_session_state()
     
-    st.title("🧹 DataWash by Stratesys")
+    # Display DataWash logo
+    st.image("docs/assets/Logo DataWash.png", width=800)
     st.markdown("### Data Quality made simple")
     st.markdown("---")
     
@@ -84,7 +85,7 @@ def main():
     
     # Copyright and attribution
     st.sidebar.markdown("---")
-    st.sidebar.markdown("### 📝 About")
+    st.sidebar.markdown("### About")
     st.sidebar.markdown("**Developed by**  \n*[Juan Giraldo](https://www.linkedin.com/in/juan-sebastian-giraldo/)*")
     st.sidebar.markdown("**Product**  \n*DataWash by [Stratesys](https://www.stratesys-ts.com/)*  \n*v 0.2*")
     st.sidebar.markdown("**© 2025 All Rights Reserved**  \n*Data Quality Made Simple*")
@@ -103,13 +104,13 @@ def main():
 
 def render_upload_step():
     """Render the data upload step"""
-    st.header("📁 Upload Your Data")
+    st.header("Upload Your Data")
     data_upload = DataUploadComponent()
     data_upload.render()
 
 def render_profile_step():
     """Render the data profiling step"""
-    st.header("📊 Data Profiling")
+    st.header("Data Profiling")
     
     if st.session_state.uploaded_data is None:
         st.warning("Please upload data first!")
@@ -120,7 +121,7 @@ def render_profile_step():
 
 def render_expectations_step():
     """Render the expectations configuration step"""
-    st.header("⚙️ Configure Data Expectations")
+    st.header("Configure Data Expectations")
     
     if st.session_state.uploaded_data is None:
         st.warning("Please upload data first!")
@@ -149,7 +150,7 @@ def render_validation_step():
 
 def render_results_step():
     """Render the results display step"""
-    st.header("📋 Validation Results")
+    st.header("Validation Results")
     
     if st.session_state.validation_results is None:
         st.warning("Please run validation first!")

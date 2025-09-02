@@ -19,7 +19,7 @@ class ValidationRunnerComponent:
     
     def render(self, data: pd.DataFrame, expectation_suite):
         """Render the validation execution interface"""
-        st.markdown("### ✅ Run Data Validation")
+        st.markdown("### Run Data Validation")
         
         # Ensure we have a usable expectation suite; rebuild from configs if needed
         if expectation_suite is None or not hasattr(expectation_suite, 'expectations') or len(getattr(expectation_suite, 'expectations', []) or []) == 0:
@@ -33,11 +33,11 @@ class ValidationRunnerComponent:
                 for cfg in configs:
                     if self.ge_helpers.add_expectation_to_suite(rebuilt_suite, cfg):
                         success_count += 1
-                st.write(f"🔍 Debug: Rebuilt suite with {success_count}/{len(configs)} expectations")
+                st.write(f"Debug: Rebuilt suite with {success_count}/{len(configs)} expectations")
                 st.session_state.expectation_suite = rebuilt_suite
                 expectation_suite = rebuilt_suite
             else:
-                st.error("❌ Expectation suite has no expectations! Please go back and add some expectations.")
+                st.error("Expectation suite has no expectations! Please go back and add some expectations.")
                 if st.button("← Back to Expectations", type="secondary", key="back_to_expectations_btn1"):
                     st.session_state.current_step = 'expectations'
                     st.rerun()
@@ -57,7 +57,7 @@ class ValidationRunnerComponent:
     
     def _render_validation_summary(self, data: pd.DataFrame, expectation_suite):
         """Render validation summary information"""
-        st.markdown("#### 📋 Validation Summary")
+        st.markdown("#### Validation Summary")
         
         # First row with main metrics
         col1, col2, col3 = st.columns(3)
@@ -75,11 +75,11 @@ class ValidationRunnerComponent:
         # Second row with suite name in full width for better readability
         st.markdown("---")
         suite_name = expectation_suite.name if expectation_suite else "Unknown"
-        st.markdown(f"**📋 Suite Name:** `{suite_name}`")
+        st.markdown(f"**Suite Name:** `{suite_name}`")
         
         # Show expectation details
         if expectation_suite and hasattr(expectation_suite, 'expectations'):
-            with st.expander("📋 View Expectations to be Validated"):
+            with st.expander("View Expectations to be Validated"):
                 for i, expectation in enumerate(expectation_suite.expectations, 1):
                     # Support both GE ExpectationConfiguration objects and dicts
                     if isinstance(expectation, dict):
@@ -93,19 +93,19 @@ class ValidationRunnerComponent:
                     
                     st.write(f"**{i}.** {exp_type.replace('expect_', '').replace('_', ' ').title()}")
                     if column != 'N/A':
-                        st.write(f"   📊 Column: `{column}`")
+                        st.write(f"   Column: `{column}`")
                     
                     # Show key parameters
                     key_params = {k: v for k, v in kwargs.items() 
                                 if k not in ['column'] and not k.startswith('result_format')}
                     if key_params:
-                        st.write(f"   ⚙️ Parameters: {key_params}")
+                        st.write(f"   Parameters: {key_params}")
                     
                     st.write("---")
     
     def _render_execution_options(self, data: pd.DataFrame):
         """Render validation execution options"""
-        st.markdown("#### ⚙️ Execution Options")
+        st.markdown("#### Execution Options")
         
         col1, col2 = st.columns(2)
         
@@ -150,11 +150,11 @@ class ValidationRunnerComponent:
     
     def _render_validation_execution(self, data: pd.DataFrame, expectation_suite):
         """Render validation execution interface"""
-        st.markdown("#### 🚀 Execute Validation")
+        st.markdown("#### Execute Validation")
         
         # Check if validation has already been run
         if 'validation_completed' in st.session_state and st.session_state.validation_completed:
-            st.success("✅ Validation completed! Check the Results tab to view detailed results.")
+            st.success("Validation completed! Check the Results tab to view detailed results.")
             
             # Show quick summary
             if st.session_state.validation_results:
@@ -214,7 +214,7 @@ class ValidationRunnerComponent:
             
             # Debug: Check expectations before validation
             if hasattr(expectation_suite, 'expectations'):
-                st.write(f"🔍 Debug: Suite has {len(expectation_suite.expectations)} expectations")
+                st.write(f"Debug: Suite has {len(expectation_suite.expectations)} expectations")
                 for i, exp in enumerate(expectation_suite.expectations[:3]):  # Show first 3
                     if isinstance(exp, dict):
                         exp_type = exp.get('expectation_type', exp.get('type', 'Unknown'))
@@ -227,11 +227,11 @@ class ValidationRunnerComponent:
                         column = exp_kwargs.get('column', 'N/A')
                         st.write(f"  {i+1}. {exp_type} (Column: {column})")
             else:
-                st.write("🔍 Debug: Suite has no expectations attribute")
+                st.write("Debug: Suite has no expectations attribute")
             
             # Additional debug info
-            st.write(f"🔍 Debug: Expectation suite type: {type(expectation_suite)}")
-            st.write(f"🔍 Debug: Expectation suite name: {getattr(expectation_suite, 'name', 'Unknown')}")
+            st.write(f"Debug: Expectation suite type: {type(expectation_suite)}")
+            st.write(f"Debug: Expectation suite name: {getattr(expectation_suite, 'name', 'Unknown')}")
             
             # Run validation
             status_text.text("Executing expectations...")
@@ -250,9 +250,9 @@ class ValidationRunnerComponent:
             
             if validation_result:
                 # Debug: Show validation result structure
-                st.write("🔍 Debug: Validation result keys:", list(validation_result.keys()))
+                st.write("Debug: Validation result keys:", list(validation_result.keys()))
                 if 'statistics' in validation_result:
-                    st.write("🔍 Debug: Statistics:", validation_result['statistics'])
+                    st.write("Debug: Statistics:", validation_result['statistics'])
                 
                 st.session_state.validation_results = validation_result
                 st.session_state.validation_completed = True
@@ -268,7 +268,7 @@ class ValidationRunnerComponent:
     
     def _run_step_by_step_validation(self, data: pd.DataFrame, expectation_suite, total_expectations: int):
         """Run expectations one by one with detailed progress"""
-        st.markdown("#### 📊 Step-by-Step Validation Progress")
+        st.markdown("#### Step-by-Step Validation Progress")
         
         # Create containers for dynamic updates
         progress_container = st.container()
@@ -363,9 +363,9 @@ class ValidationRunnerComponent:
                             display_label += f" ({exp_column})"
                         
                         if expectation_result.get('success', False):
-                            st.success(f"✅ Step {current_step}: {display_label}")
+                            st.success(f"Step {current_step}: {display_label}")
                         else:
-                            st.error(f"❌ Step {current_step}: {display_label}")
+                            st.error(f"Step {current_step}: {display_label}")
                             st.write(f"   Details: {expectation_result.get('result', {}).get('details', 'No details available')}")
                 
                 # Small delay to make progress visible
@@ -373,7 +373,7 @@ class ValidationRunnerComponent:
                 
             except Exception as e:
                 failed_count += 1
-                st.error(f"❌ Step {current_step} failed: {str(e)}")
+                st.error(f"Step {current_step} failed: {str(e)}")
         
         # Complete validation
         end_time = time.time()
@@ -427,14 +427,14 @@ class ValidationRunnerComponent:
         
         if success_rate == 100:
             st.balloons()
-            st.success(f"🎉 Perfect! All {total_expectations} expectations passed in {execution_time:.2f} seconds!")
+            st.success(f"Perfect! All {total_expectations} expectations passed in {execution_time:.2f} seconds!")
         elif success_rate >= 80:
-            st.success(f"✅ Good! {passed}/{total_expectations} expectations passed ({success_rate:.1f}% success rate)")
+            st.success(f"Good! {passed}/{total_expectations} expectations passed ({success_rate:.1f}% success rate)")
         else:
-            st.warning(f"⚠️ {passed}/{total_expectations} expectations passed ({success_rate:.1f}% success rate)")
+            st.warning(f"{passed}/{total_expectations} expectations passed ({success_rate:.1f}% success rate)")
         
         if failed > 0:
-            st.error(f"❌ {failed} expectations failed. Check the detailed results for more information.")
+            st.error(f"{failed} expectations failed. Check the detailed results for more information.")
     
     def _show_quick_results_summary(self):
         """Show a quick summary of validation results"""
@@ -444,7 +444,7 @@ class ValidationRunnerComponent:
         results = st.session_state.validation_results
         stats = results.get('statistics', {})
         
-        st.markdown("#### 📊 Quick Results Summary")
+        st.markdown("#### Quick Results Summary")
         
         col1, col2, col3, col4, col5 = st.columns(5)
         

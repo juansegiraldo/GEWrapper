@@ -46,7 +46,7 @@ class ResultsDisplayComponent:
     
     def _render_results_overview(self, validation_results: Dict):
         """Render high-level results overview"""
-        st.markdown("#### 📊 Results Overview")
+        st.markdown("#### Results Overview")
         
         # Get summary metrics
         summary_metrics = self.report_generator.create_summary_metrics(validation_results)
@@ -104,7 +104,7 @@ class ResultsDisplayComponent:
         
         # Failure rate summary
         if 'results' in validation_results and validation_results['results']:
-            st.markdown("#### 📉 Data Quality Failure Rates")
+            st.markdown("#### Data Quality Failure Rates")
             
             # Create a summary of failure rates by expectation
             failure_summary = []
@@ -167,7 +167,7 @@ class ResultsDisplayComponent:
     
     def _render_visualizations(self, validation_results: Dict):
         """Render simplified visual analysis with two pie charts"""
-        st.markdown("#### 📈 Visual Analysis")
+        st.markdown("#### Visual Analysis")
         
         summary_metrics = self.report_generator.create_summary_metrics(validation_results)
         if not summary_metrics:
@@ -185,7 +185,7 @@ class ResultsDisplayComponent:
     
     def _render_detailed_results(self, validation_results: Dict):
         """Render detailed results table"""
-        st.markdown("#### 📋 Detailed Results")
+        st.markdown("#### Detailed Results")
         
         # Create detailed results table
         detailed_table, debug_messages = self.report_generator.create_detailed_results_table(validation_results)
@@ -393,7 +393,7 @@ class ResultsDisplayComponent:
                 st.info("No detailed results available for CSV export")
         
         # Failed Records Dataset Export
-        st.markdown("#### ❌ Failed Records Dataset")
+        st.markdown("#### Failed Records Dataset")
         st.markdown("*Original data rows that failed validation tests*")
         
         if st.session_state.uploaded_data is not None:
@@ -468,7 +468,7 @@ class ResultsDisplayComponent:
                         )
                 
                 # Preview of failed records
-                with st.expander("🔍 Preview Failed Records", expanded=True):
+                with st.expander("Preview Failed Records", expanded=True):
                     if show_original_only:
                         # Show original columns plus summary columns
                         display_cols = original_cols + ['Failed_Tests_Count', 'All_Failed_Tests']
@@ -532,7 +532,7 @@ class ResultsDisplayComponent:
                 
                 # Additional insights
                 if 'Failed_Tests_Count' in failed_records_df.columns:
-                    with st.expander("🔍 Failure Pattern Analysis", expanded=False):
+                    with st.expander("Failure Pattern Analysis", expanded=False):
                         # Compact list styling for this section
                         st.markdown(
                             """
@@ -567,9 +567,9 @@ class ResultsDisplayComponent:
                                     pattern_lines.append(f"{i}. {count} rows: {pattern[:100]}...")
                                 st.markdown("\n".join(pattern_lines))
             else:
-                st.success("🎉 No failed records found! All data rows passed validation successfully.")
+                st.success("No failed records found! All data rows passed validation successfully.")
         else:
-            st.warning("⚠️ Original dataset not available. Cannot create failed records dataset.")
+            st.warning("Original dataset not available. Cannot create failed records dataset.")
         
         # Removed Data Quality Assessment and Recommendations blocks per UX simplification
     
@@ -674,10 +674,10 @@ class ResultsDisplayComponent:
                 help=f"Download all {file_count} available reports including validation results, failed records, and summary metrics"
             )
             
-            st.success(f"✅ All {file_count} reports packaged and ready for download!")
+            st.success(f"All {file_count} reports packaged and ready for download!")
             
         except Exception as e:
-            st.error(f"❌ Error creating download package: {str(e)}")
+            st.error(f"Error creating download package: {str(e)}")
             st.exception(e)
     
     def _restart_app(self):
@@ -702,11 +702,11 @@ class ResultsDisplayComponent:
             st.cache_data.clear()
             st.cache_resource.clear()
             
-            st.success("✅ Application restarted successfully! All data and cache cleared.")
+            st.success("Application restarted successfully! All data and cache cleared.")
             st.rerun()
             
         except Exception as e:
-            st.error(f"❌ Error restarting application: {str(e)}")
+            st.error(f"Error restarting application: {str(e)}")
             st.exception(e)
 
     def _render_navigation_buttons(self):

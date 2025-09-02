@@ -20,7 +20,7 @@ class FailedRecordsGenerator:
     
     def render(self, validation_results: Dict, original_data: pd.DataFrame):
         """Render the failed records generator interface"""
-        st.markdown("### 📊 Failed Records Report Generator")
+        st.markdown("### Failed Records Report Generator")
         st.markdown("Generate a comprehensive report of all records that failed validation expectations.")
         
         if not validation_results:
@@ -46,7 +46,7 @@ class FailedRecordsGenerator:
     
     def _render_generation_summary(self, validation_results: Dict, original_data: pd.DataFrame):
         """Render summary of what will be generated"""
-        st.markdown("#### 📋 What You'll Get")
+        st.markdown("#### What You'll Get")
         
         # Calculate failed records statistics
         failed_stats = self._calculate_failed_records_stats(validation_results, original_data)
@@ -85,7 +85,7 @@ class FailedRecordsGenerator:
     
     def _render_generation_options(self):
         """Render generation options"""
-        st.markdown("#### ⚙️ Report Options")
+        st.markdown("#### Report Options")
         
         col1, col2 = st.columns(2)
         
@@ -160,7 +160,7 @@ class FailedRecordsGenerator:
     
     def _render_generate_button(self, validation_results: Dict, original_data: pd.DataFrame):
         """Render the generate button and handle generation"""
-        st.markdown("#### 🚀 Generate Report")
+        st.markdown("#### Generate Report")
         
         col1, col2 = st.columns([2, 1])
         
@@ -174,12 +174,12 @@ class FailedRecordsGenerator:
                         
                         if failed_records_data:
                             st.session_state.failed_records_data = failed_records_data
-                            st.success("✅ Failed records report generated successfully!")
+                            st.success("Failed records report generated successfully!")
                             st.rerun()
                         else:
-                            st.error("❌ Failed to generate report. No failed records found.")
+                            st.error("Failed to generate report. No failed records found.")
                     except Exception as e:
-                        st.error(f"❌ Error generating report: {str(e)}")
+                        st.error(f"Error generating report: {str(e)}")
                         st.exception(e)
         
         with col2:

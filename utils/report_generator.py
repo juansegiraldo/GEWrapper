@@ -291,10 +291,10 @@ class ReportGenerator:
                 table_data = []
                 for i in range(total):
                     if i < passed:
-                        status = '✅ Pass'
+                        status = 'Pass'
                         details = 'Expectation passed successfully'
                     else:
-                        status = '❌ Fail'
+                        status = 'Fail'
                         details = 'Expectation failed validation'
                     
                     # Try to get actual expectation info from results if available
@@ -322,10 +322,10 @@ class ReportGenerator:
             # Standard results processing
             table_data = []
             debug_messages = []
-            debug_messages.append(f"🔍 Debug: Processing {len(results)} results in report generator")
+            debug_messages.append(f"Debug: Processing {len(results)} results in report generator")
             for i, result in enumerate(results, 1):
                 exp_config = result.get('expectation_config', {})
-                debug_messages.append(f"🔍 Debug: Result {i}: exp_config keys={list(exp_config.keys()) if exp_config else 'None'}")
+                debug_messages.append(f"Debug: Result {i}: exp_config keys={list(exp_config.keys()) if exp_config else 'None'}")
                 
                 # Handle different result structures
                 observed_value = 'N/A'
@@ -392,13 +392,13 @@ class ReportGenerator:
                 
                 column = exp_config.get('kwargs', {}).get('column', 'N/A')
                 
-                debug_messages.append(f"🔍 Debug: Extracted expectation_type='{expectation_type}', column='{column}'")
+                debug_messages.append(f"Debug: Extracted expectation_type='{expectation_type}', column='{column}'")
                 
                 table_data.append({
                     'ID': i,
                     'Expectation Type': expectation_type,
                     'Column': column,
-                    'Status': '✅ Pass' if result.get('success', False) else '❌ Fail',
+                    'Status': 'Pass' if result.get('success', False) else 'Fail',
                     'Failure Rate': failure_rate,
                     'Observed Value': observed_value,
                     'Expected': ReportGenerator._format_expected_value(exp_config.get('kwargs', {})),
