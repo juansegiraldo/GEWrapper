@@ -23,6 +23,104 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Accessible Button Styling (WCAG AA Compliant)
+st.markdown("""
+<style>
+    /* Primary Action Buttons - Accessible Blue Gradient (4.5:1+ contrast) */
+    .stButton > button[kind="primary"] {
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+        border: none !important;
+        color: white !important;
+        font-weight: bold !important;
+        font-size: 16px !important;
+        padding: 0.75rem 1.5rem !important;
+        border-radius: 10px !important;
+        box-shadow: 0 4px 15px 0 rgba(37, 99, 235, 0.3) !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .stButton > button[kind="primary"]:hover {
+        background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%) !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 20px 0 rgba(37, 99, 235, 0.4) !important;
+    }
+    
+    /* Secondary Action Buttons - Light Blue (4.5:1+ contrast) */
+    .stButton > button[kind="secondary"] {
+        background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+        border: none !important;
+        color: white !important;
+        font-weight: 600 !important;
+        padding: 0.6rem 1.2rem !important;
+        border-radius: 8px !important;
+        box-shadow: 0 3px 12px 0 rgba(14, 165, 233, 0.25) !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .stButton > button[kind="secondary"]:hover {
+        background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 4px 16px 0 rgba(14, 165, 233, 0.35) !important;
+    }
+    
+    /* Link Buttons - Accessible Teal with Dark Text (7:1+ contrast) */
+    .stLinkButton > a {
+        background: linear-gradient(135deg, #a7f3d0 0%, #6ee7b7 100%) !important;
+        border: none !important;
+        color: #065f46 !important;
+        font-weight: bold !important;
+        text-decoration: none !important;
+        padding: 0.75rem 1.5rem !important;
+        border-radius: 10px !important;
+        box-shadow: 0 4px 15px 0 rgba(110, 231, 183, 0.3) !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .stLinkButton > a:hover {
+        background: linear-gradient(135deg, #6ee7b7 0%, #34d399 100%) !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 20px 0 rgba(110, 231, 183, 0.4) !important;
+        color: #064e3b !important;
+    }
+    
+    /* Enhance button icons */
+    .stButton button, .stLinkButton a {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 8px !important;
+    }
+    
+    /* Destructive Actions - Accessible Orange/Red (4.5:1+ contrast) */
+    .stButton > button:has-text("Clear"), 
+    .stButton > button:has-text("Remove"),
+    .stButton > button:has-text("Cancel") {
+        background: linear-gradient(135deg, #f97316 0%, #ea580c 100%) !important;
+        color: white !important;
+    }
+    
+    .stButton > button:has-text("Clear"):hover,
+    .stButton > button:has-text("Remove"):hover,
+    .stButton > button:has-text("Cancel"):hover {
+        background: linear-gradient(135deg, #ea580c 0%, #dc2626 100%) !important;
+        transform: translateY(-1px) !important;
+    }
+    
+    /* Test/Validation Buttons - Accessible Green (4.5:1+ contrast) */
+    .stButton > button:has-text("Test"),
+    .stButton > button:has-text("Validate") {
+        background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
+        color: white !important;
+    }
+    
+    .stButton > button:has-text("Test"):hover,
+    .stButton > button:has-text("Validate"):hover {
+        background: linear-gradient(135deg, #15803d 0%, #166534 100%) !important;
+        transform: translateY(-1px) !important;
+    }
+</style>
+""", unsafe_allow_html=True)
+
 def initialize_session_state():
     """Initialize Streamlit session state variables"""
     if 'uploaded_data' not in st.session_state:

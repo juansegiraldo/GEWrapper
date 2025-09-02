@@ -165,7 +165,7 @@ class FailedRecordsGenerator:
         col1, col2 = st.columns([2, 1])
         
         with col1:
-            if st.button("🔍 Generate Failed Records Report", type="primary", use_container_width=True):
+            if st.button("✨ Generate Failed Records Report", type="primary", use_container_width=True):
                 with st.spinner("Generating failed records report..."):
                     try:
                         failed_records_data = self._generate_failed_records_report(

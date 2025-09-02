@@ -269,7 +269,7 @@ The app automatically converts active = 1 to active = True
             # Native link button to custom GPT for SQL help
             gpt_url = "https://chatgpt.com/g/g-68b1ee414c4081919498f880f3ee5993-datawash-custom-sql-generator"
             if hasattr(st, "link_button"):
-                st.link_button("🚀 Open DataWash SQL Generator GPT", gpt_url, use_container_width=True)
+                st.link_button("🌐 Open SQL Generator GPT", gpt_url, use_container_width=True)
             else:
                 st.markdown(f"[🚀 Open DataWash SQL Generator GPT]({gpt_url})")
             
@@ -419,17 +419,17 @@ Context: [Describe your validation rule here]
             with tools_tab:
                 col_a, col_b, col_c = st.columns(3)
                 with col_a:
-                    if st.button("🧹 Clear Query", key="clear_query"):
+                    if st.button("🗑️ Clear Query", key="clear_query", type="secondary"):
                         st.session_state['sql_query'] = ""
                         st.rerun()
                 with col_b:
-                    if st.button("📋 Copy Template", key="copy_template"):
+                    if st.button("📝 Copy Template", key="copy_template", type="secondary"):
                         template = """SELECT COUNT(*) as violation_count
 FROM {table_name}
 WHERE [your_condition_here]"""
                         st.code(template, language="sql")
                 with col_c:
-                    if st.button("🔍 Validate Current Query", key="validate_query"):
+                    if st.button("✅ Validate Query", key="validate_query", type="secondary"):
                         if 'sql_query' in st.session_state and st.session_state['sql_query']:
                             validation_result = self.custom_sql_expectation.validate_sql_query(st.session_state['sql_query'])
                             if validation_result["is_valid"]:
@@ -440,7 +440,7 @@ WHERE [your_condition_here]"""
                                     st.write(f"• {error}")
 
                 # Test query action and debugging output
-                if st.button("🧪 Test Query", key="test_query_btn"):
+                if st.button("🧪 Test Query", key="test_query_btn", type="secondary"):
                     try:
                         fixed_sql_query = self._fix_boolean_conditions(st.session_state.get('sql_query', ''), data)
                         st.markdown("**Testing Query:**")
@@ -563,7 +563,7 @@ WHERE [your_condition_here]"""
             st.code(fixed_sql_query, language="sql")
         
         # Test query option
-        if st.button("🧪 Test Query", help="Test the query against current data"):
+        if st.button("🧪 Test Query", help="Test the query against current data", type="secondary"):
             try:
                 # Show the query being tested
                 st.markdown("**Testing Query:**")

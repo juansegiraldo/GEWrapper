@@ -38,7 +38,7 @@ class ValidationRunnerComponent:
                 expectation_suite = rebuilt_suite
             else:
                 st.error("Expectation suite has no expectations! Please go back and add some expectations.")
-                if st.button("← Back to Expectations", type="secondary", key="back_to_expectations_btn1"):
+                if st.button("⬅️ Back to Expectations", type="secondary", key="back_to_expectations_btn1"):
                     st.session_state.current_step = 'expectations'
                     st.rerun()
                 return
@@ -160,14 +160,14 @@ class ValidationRunnerComponent:
             if st.session_state.validation_results:
                 self._show_quick_results_summary()
             
-            if st.button("Run Validation Again", type="secondary", key="run_validation_again_btn", use_container_width=True):
+            if st.button("♾️ Run Validation Again", type="secondary", key="run_validation_again_btn", use_container_width=True):
                 st.session_state.validation_completed = False
                 st.session_state.validation_results = None
                 st.rerun()
         
         else:
             # Run validation button
-            if st.button("🚀 Start Validation", type="primary", use_container_width=True):
+            if st.button("⚡ Execute Validation", type="primary", use_container_width=True):
                 self._execute_validation(data, expectation_suite)
     
     def _execute_validation(self, data: pd.DataFrame, expectation_suite):
@@ -506,13 +506,13 @@ class ValidationRunnerComponent:
         col1, col2 = st.columns(2)
         
         with col1:
-            if st.button("← Back to Expectations", type="secondary", key="back_to_expectations_btn2"):
+            if st.button("⬅️ Back to Expectations", type="secondary", key="back_to_expectations_btn2"):
                 st.session_state.current_step = 'expectations'
                 st.rerun()
         
         with col2:
             if st.session_state.get('validation_completed', False):
-                if st.button("View Results →", type="primary", key="view_results_btn"):
+                if st.button("🚀 View Results →", type="primary", key="view_results_btn"):
                     st.session_state.current_step = 'results'
                     st.rerun()
             else:

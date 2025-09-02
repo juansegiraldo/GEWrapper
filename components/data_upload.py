@@ -68,7 +68,7 @@ class DataUploadComponent:
                 self.show_basic_stats(df)
                 
                 # Advance to next step button
-                if st.button("Continue to Data Profiling →", type="primary", key="continue_to_profiling_btn"):
+                if st.button("🚀 Continue to Data Profiling →", type="primary", key="continue_to_profiling_btn"):
                     st.session_state.current_step = 'profile'
                     st.rerun()
     
@@ -261,39 +261,39 @@ class DataUploadComponent:
             with col1:
                 st.markdown("**JSON Format**")
                 st.write("Complete profile data in JSON format. Best for programmatic analysis and integration.")
-                if st.button("Download JSON", key="download_json_btn", type="secondary"):
+                if st.button("⬇️ Download JSON", key="download_json_btn", type="secondary"):
                     self._download_profile(df, profile, 'json')
                 
                 st.markdown("**Excel Format**")
                 st.write("Multi-sheet Excel file with summary, column details, and sample data. Best for business users.")
-                if st.button("Download Excel", key="download_excel_btn", type="secondary"):
+                if st.button("⬇️ Download Excel", key="download_excel_btn", type="secondary"):
                     self._download_profile(df, profile, 'excel')
             
             with col2:
                 st.markdown("**HTML Format**")
                 st.write("Formatted HTML report with styling. Best for web viewing and sharing.")
-                if st.button("Download HTML", key="download_html_btn", type="secondary"):
+                if st.button("⬇️ Download HTML", key="download_html_btn", type="secondary"):
                     self._download_profile(df, profile, 'html')
                 
                 st.markdown("**CSV Format**")
                 st.write("Summary data in CSV format. Best for spreadsheet analysis.")
-                if st.button("Download CSV", key="download_csv_btn", type="secondary"):
+                if st.button("⬇️ Download CSV", key="download_csv_btn", type="secondary"):
                     self._download_profile(df, profile, 'csv')
         
         # Quick download all formats
         st.markdown("**Quick Download All Formats**")
-        if st.button("Download All Formats", key="download_all_btn", type="primary"):
+        if st.button("📤 Download All Formats", key="download_all_btn", type="primary"):
             self._download_all_formats(df, profile)
         
         # Action buttons
         col1, col2 = st.columns(2)
         with col1:
-            if st.button("← Back to Upload", type="secondary", key="back_to_upload_btn"):
+            if st.button("⬅️ Back to Upload", type="secondary", key="back_to_upload_btn"):
                 st.session_state.current_step = 'upload'
                 st.rerun()
         
         with col2:
-            if st.button("Configure Expectations →", type="primary", key="configure_expectations_btn"):
+            if st.button("🚀 Configure Expectations →", type="primary", key="configure_expectations_btn"):
                 st.session_state.current_step = 'expectations'
                 st.rerun()
     

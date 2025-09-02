@@ -82,13 +82,13 @@ class ExpectationBuilderComponent:
         with col2:
             btn_col1, btn_col2 = st.columns(2)
             with btn_col1:
-                if st.button("🔄 Regenerate", type="secondary", help="Generate new suite name with current timestamp"):
+                if st.button("🔄 Regenerate Name", type="secondary", help="Generate new suite name with current timestamp"):
                     new_suite_name = generate_suite_name()
                     st.session_state.current_suite_name = new_suite_name
                     st.success(f"Generated new suite name: {new_suite_name}")
                     st.rerun()
             with btn_col2:
-                if st.button("Clear All", type="secondary"):
+                if st.button("🗑️ Clear All", type="secondary"):
                     st.session_state.expectation_configs = []
                     # Clear any processing flags
                     if 'import_processing' in st.session_state:
@@ -123,7 +123,7 @@ class ExpectationBuilderComponent:
                     template_config = self.config.EXPECTATION_TEMPLATES[selected_template]
                     st.info(f"**{selected_template}**: {template_config['description']}")
                     
-                    if st.button(f"Apply {selected_template} Template", key=f"apply_template_{selected_template}"):
+                    if st.button(f"🎯 Apply {selected_template} Template", key=f"apply_template_{selected_template}", type="primary"):
                         self._apply_template(selected_template, data)
         
         # Import popup
@@ -340,7 +340,7 @@ class ExpectationBuilderComponent:
         expectation_config = self._build_expectation_config(expectation_type, data)
         
         # Add expectation button
-        if st.button("Add Expectation", type="primary", key="add_expectation_btn"):
+        if st.button("✨ Add Expectation", type="primary", key="add_expectation_btn"):
             if expectation_config:
                 st.session_state.expectation_configs.append(expectation_config)
                 st.success("Expectation added successfully!")
@@ -591,21 +591,21 @@ class ExpectationBuilderComponent:
             
             col1, col2 = st.columns(2)
             with col1:
-                if st.button("Remove Selected", type="secondary", key="remove_selected_btn"):
+                if st.button("🗑️ Remove Selected", type="secondary", key="remove_selected_btn"):
                     # Remove in reverse order to maintain indices
                     for idx in sorted(selected_expectations, reverse=True):
                         st.session_state.expectation_configs.pop(idx)
                     st.success("Selected expectations removed!")
                     st.rerun()
                 
-                if st.button("Clear All", type="secondary", key="clear_all_btn"):
+                if st.button("🗑️ Clear All", type="secondary", key="clear_all_btn"):
                     st.session_state.expectation_configs = []
                     st.success("All expectations cleared!")
                     st.rerun()
             
             with col2:
                 # Export button
-                if st.button("💾 Export", type="secondary"):
+                if st.button("📤 Export Suite", type="secondary"):
                     self._export_expectations()
             
             # Display the table
@@ -636,7 +636,7 @@ class ExpectationBuilderComponent:
         col1, col2, col3 = st.columns(3)
         
         with col1:
-            if st.button("← Back to Profiling", type="secondary", key="back_to_profiling_btn"):
+            if st.button("⬅️ Back to Profiling", type="secondary", key="back_to_profiling_btn"):
                 st.session_state.current_step = 'profile'
                 st.rerun()
         
@@ -646,7 +646,7 @@ class ExpectationBuilderComponent:
         
         with col3:
             if len(st.session_state.expectation_configs) > 0:
-                if st.button("Configure Suite →", type="primary", key="configure_suite_btn"):
+                if st.button("⚙️ Configure Suite →", type="primary", key="configure_suite_btn"):
                     # Create the expectation suite and store it
                     suite = self.ge_helpers.create_expectation_suite(
                         st.session_state.current_suite_name
@@ -700,22 +700,7 @@ class ExpectationBuilderComponent:
             else:
                 st.info("No expectations to export")
             
-            # Add sample file download
-            st.markdown("*Download a sample file:*")
-            try:
-                with open("sample_expectations.json", "r", encoding="utf-8") as f:
-                    sample_data = f.read()
-                st.download_button(
-                    "📥 Download Sample",
-                    data=sample_data,
-                    file_name=f"{st.session_state.current_suite_name}_sample.json",
-                    mime="application/json",
-                    key="download_sample_btn"
-                )
-            except FileNotFoundError:
-                st.warning("Sample file not found")
-            except Exception as e:
-                st.error(f"Error loading sample file: {str(e)}")
+
     
     def _render_sql_dialog(self, data: pd.DataFrame):
         """Render the SQL Query Builder dialog."""

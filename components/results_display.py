@@ -716,16 +716,16 @@ class ResultsDisplayComponent:
         col1, col2, col3 = st.columns(3)
         
         with col1:
-            if st.button("← Back to Validation", type="secondary", key="back_to_validation_btn"):
+            if st.button("⬅️ Back to Validation", type="secondary", key="back_to_validation_btn"):
                 st.session_state.current_step = 'validate'
                 st.rerun()
         
         with col2:
-            if st.button("📥 Download ALL", type="secondary", key="download_all_btn"):
+            if st.button("📤 Download All Reports", type="secondary", key="download_all_btn"):
                 # Download all report files currently available on screen
                 self._download_all_reports()
         
         with col3:
-            if st.button("🔄 Restart", type="primary", key="restart_btn"):
+            if st.button("🔄 Start New Validation", type="primary", key="restart_btn"):
                 # Clear all cache and rerun the app
                 self._restart_app()
