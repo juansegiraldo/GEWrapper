@@ -604,30 +604,37 @@ class ExpectationBuilderComponent:
                     st.rerun()
             
             with col2:
-                # Export button
-                if st.button("📤 Export Suite", type="secondary"):
-                    self._export_expectations()
+                # Export button - using consistent popover approach
+                self._render_export_button()
             
             # Display the table
             st.dataframe(expectations_df, use_container_width=True, hide_index=True)
     
-    def _export_expectations(self):
-        """Export expectations to JSON"""
-        if st.session_state.expectation_configs:
-            import json
-            export_data = {
-                'suite_name': st.session_state.current_suite_name,
-                'expectations': st.session_state.expectation_configs
-            }
-            export_json = json.dumps(export_data, indent=2)
-            
-            st.download_button(
-                "Download JSON",
-                data=export_json,
-                file_name=f"{st.session_state.current_suite_name}.json",
-                mime="application/json",
-                key="export_expectations_btn"
-            )
+    def _render_export_button(self):
+        """Render export button in the manage expectations section"""
+        with st.popover("📤 Export Suite"):
+            st.markdown("**Export Expectations**")
+            if st.session_state.expectation_configs:
+                import json
+                export_data = {
+                    'suite_name': st.session_state.current_suite_name,
+                    'expectations': st.session_state.expectation_configs,
+                    'created_date': str(pd.Timestamp.now()),
+                    'total_expectations': len(st.session_state.expectation_configs)
+                }
+                export_json = json.dumps(export_data, indent=2)
+                
+                st.download_button(
+                    "⬇️ Download JSON",
+                    data=export_json,
+                    file_name=f"{st.session_state.current_suite_name}.json",
+                    mime="application/json",
+                    key="export_expectations_list_btn",
+                    type="primary"
+                )
+                st.info(f"Exporting {len(st.session_state.expectation_configs)} expectations")
+            else:
+                st.info("No expectations to export")
     
     def _render_navigation_buttons(self):
         """Render navigation buttons"""
@@ -679,24 +686,28 @@ class ExpectationBuilderComponent:
                 st.warning("Add some expectations before proceeding!")
     
     def _render_export(self):
-        """Render export functionality"""
-        with st.popover("💾 Export"):
+        """Render export functionality in navigation section"""
+        with st.popover("📤 Export Suite"):
             st.markdown("**Export Expectations**")
             if st.session_state.expectation_configs:
                 import json
                 export_data = {
                     'suite_name': st.session_state.current_suite_name,
-                    'expectations': st.session_state.expectation_configs
+                    'expectations': st.session_state.expectation_configs,
+                    'created_date': str(pd.Timestamp.now()),
+                    'total_expectations': len(st.session_state.expectation_configs)
                 }
                 export_json = json.dumps(export_data, indent=2)
                 
                 st.download_button(
-                    "Download JSON",
+                    "⬇️ Download JSON",
                     data=export_json,
                     file_name=f"{st.session_state.current_suite_name}.json",
                     mime="application/json",
-                    key="export_expectations_btn"
+                    key="export_expectations_nav_btn",
+                    type="primary"
                 )
+                st.info(f"Exporting {len(st.session_state.expectation_configs)} expectations")
             else:
                 st.info("No expectations to export")
             
