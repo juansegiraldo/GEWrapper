@@ -28,35 +28,37 @@ class AppConfig:
     
     # Expectation templates
     EXPECTATION_TEMPLATES = {
-        "Basic Data Quality": {
-            "description": "Essential checks for data completeness and consistency",
+        "Smart Basic Quality": {
+            "description": "Intelligent data quality checks based on your actual data patterns",
             "expectations": [
                 "expect_table_row_count_to_be_between",
                 "expect_table_columns_to_match_ordered_list",
-                "expect_column_values_to_not_be_null"
+                "expect_column_values_to_not_be_null",
+                "expect_column_values_to_be_unique"
             ]
         },
-        "Numeric Data Validation": {
-            "description": "Validation for numeric columns",
+        "Smart Numeric Validation": {
+            "description": "Adaptive numeric validation using statistical analysis of your data",
             "expectations": [
                 "expect_column_values_to_be_between",
                 "expect_column_mean_to_be_between",
                 "expect_column_values_to_be_of_type"
             ]
         },
-        "Text Data Validation": {
-            "description": "Validation for text and categorical columns",
+        "Smart Text Validation": {
+            "description": "Context-aware text validation with pattern detection and length analysis",
             "expectations": [
                 "expect_column_values_to_match_regex",
                 "expect_column_values_to_be_in_set",
                 "expect_column_value_lengths_to_be_between"
             ]
         },
-        "Date and Time Validation": {
-            "description": "Validation for datetime columns",
+        "Smart Business Rules": {
+            "description": "Business logic validation detecting common patterns like emails, ages, amounts",
             "expectations": [
-                "expect_column_values_to_be_dateutil_parseable",
-                "expect_column_values_to_be_between"
+                "expect_column_values_to_be_between",
+                "expect_column_values_to_match_regex",
+                "expect_table_row_count_to_equal"
             ]
         }
     }

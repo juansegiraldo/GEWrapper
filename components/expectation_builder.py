@@ -8,6 +8,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from utils.ge_helpers import GEHelpers
 from utils.suite_helpers import generate_suite_name
+from utils.smart_template_engine import SmartTemplateEngine
 from config.app_config import AppConfig
 from components.sql_query_builder import SQLQueryBuilderComponent
 
@@ -18,6 +19,7 @@ class ExpectationBuilderComponent:
         self.ge_helpers = GEHelpers()
         self.config = AppConfig()
         self.sql_query_builder = SQLQueryBuilderComponent()
+        self.smart_engine = SmartTemplateEngine()
         
         # Initialize session state for expectations
         if 'expectation_configs' not in st.session_state:
@@ -229,8 +231,40 @@ class ExpectationBuilderComponent:
     
     
     def _apply_template(self, template_name: str, data: pd.DataFrame):
-        """Apply a template to the current suite"""
+        """Apply a smart template to the current suite"""
+        try:
+            # Use SmartTemplateEngine to generate intelligent expectations
+            smart_expectations = self.smart_engine.analyze_data_for_template(data, template_name)
+            
+            if not smart_expectations:
+                # Fallback to basic template logic if smart engine returns nothing
+                st.warning(f"Smart template '{template_name}' didn't generate expectations. Using basic fallback.")
+                self._apply_basic_template_fallback(template_name, data)
+                return
+            
+            # Add the generated expectations to session state
+            added_count = 0
+            for expectation in smart_expectations:
+                if self._is_valid_expectation_config(expectation):
+                    st.session_state.expectation_configs.append(expectation)
+                    added_count += 1
+                else:
+                    st.warning(f"Skipped invalid expectation: {expectation.get('expectation_type', 'unknown')}")
+            
+            if added_count > 0:
+                st.success(f"Applied {template_name} with {added_count} intelligent expectations based on your data!")
+            else:
+                st.error(f"No valid expectations were generated from {template_name} template.")
+                
+        except Exception as e:
+            st.error(f"Error applying smart template: {str(e)}")
+            # Fallback to basic template
+            self._apply_basic_template_fallback(template_name, data)
+    
+    def _apply_basic_template_fallback(self, template_name: str, data: pd.DataFrame):
+        """Fallback to basic template logic if smart template fails"""
         template_config = self.config.EXPECTATION_TEMPLATES[template_name]
+        added_count = 0
         
         for expectation_type in template_config['expectations']:
             if expectation_type == "expect_table_row_count_to_be_between":
@@ -242,6 +276,7 @@ class ExpectationBuilderComponent:
                     }
                 }
                 st.session_state.expectation_configs.append(config)
+                added_count += 1
             
             elif expectation_type == "expect_table_columns_to_match_ordered_list":
                 config = {
@@ -251,19 +286,33 @@ class ExpectationBuilderComponent:
                     }
                 }
                 st.session_state.expectation_configs.append(config)
+                added_count += 1
             
             elif expectation_type == "expect_column_values_to_not_be_null":
-                # Add for all columns with < 10% null values
                 for col in data.columns:
                     null_pct = (data[col].isnull().sum() / len(data)) * 100
-                    if null_pct < 10:  # Only for columns with low null percentage
+                    if null_pct < 10:
                         config = {
                             'expectation_type': expectation_type,
                             'kwargs': {'column': col}
                         }
                         st.session_state.expectation_configs.append(config)
+                        added_count += 1
         
-        st.success(f"Applied {template_name} template with {len(template_config['expectations'])} expectation types!")
+        st.success(f"Applied {template_name} fallback template with {added_count} expectations!")
+    
+    def _is_valid_expectation_config(self, config: Dict[str, Any]) -> bool:
+        """Validate an expectation configuration"""
+        if not isinstance(config, dict):
+            return False
+        
+        if 'expectation_type' not in config:
+            return False
+        
+        if 'kwargs' not in config or not isinstance(config['kwargs'], dict):
+            return False
+        
+        return True
     
     def _render_expectation_builder(self, data: pd.DataFrame):
         """Render the main expectation builder"""
