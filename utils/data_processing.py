@@ -49,6 +49,8 @@ class DataProcessor:
                     # Convert string booleans to actual booleans
                     df = DataProcessor._convert_string_booleans(df)
                     df = DataProcessor._ensure_row_uuid(df)
+                    # Clean column names for SQL compatibility
+                    df = DataProcessor.clean_column_names(df)
                     return df
                 except UnicodeDecodeError:
                     # Try other encodings
@@ -58,6 +60,8 @@ class DataProcessor:
                             # Convert string booleans to actual booleans
                             df = DataProcessor._convert_string_booleans(df)
                             df = DataProcessor._ensure_row_uuid(df)
+                            # Clean column names for SQL compatibility
+                            df = DataProcessor.clean_column_names(df)
                             return df
                         except:
                             continue
@@ -67,11 +71,15 @@ class DataProcessor:
                     # Convert string booleans to actual booleans
                     df = DataProcessor._convert_string_booleans(df)
                     df = DataProcessor._ensure_row_uuid(df)
+                    # Clean column names for SQL compatibility
+                    df = DataProcessor.clean_column_names(df)
                     return df
                     
             elif file_extension in ['xlsx', 'xls']:
                 df = pd.read_excel(uploaded_file, engine='openpyxl')
                 df = DataProcessor._ensure_row_uuid(df)
+                # Clean column names for SQL compatibility
+                df = DataProcessor.clean_column_names(df)
                 return df
                 
             elif file_extension == 'json':
@@ -93,11 +101,15 @@ class DataProcessor:
                     raise ValueError("Unsupported JSON structure")
                 
                 df = DataProcessor._ensure_row_uuid(df)
+                # Clean column names for SQL compatibility
+                df = DataProcessor.clean_column_names(df)
                 return df
                 
             elif file_extension == 'parquet':
                 df = pd.read_parquet(uploaded_file)
                 df = DataProcessor._ensure_row_uuid(df)
+                # Clean column names for SQL compatibility
+                df = DataProcessor.clean_column_names(df)
                 return df
                 
             else:
@@ -283,8 +295,9 @@ class DataProcessor:
     
     @staticmethod
     def clean_column_names(df: pd.DataFrame) -> pd.DataFrame:
-        """Clean column names for better compatibility"""
+        """Clean column names for better SQL compatibility"""
         df_clean = df.copy()
+        original_columns = df_clean.columns.copy()
         
         # Replace spaces and special characters
         df_clean.columns = df_clean.columns.str.replace(' ', '_')
@@ -296,6 +309,20 @@ class DataProcessor:
         for dup in cols[cols.duplicated()].unique():
             cols[cols == dup] = [f"{dup}_{i}" for i in range(sum(cols == dup))]
         df_clean.columns = cols
+        
+        # Store column mapping for user reference
+        column_mapping = dict(zip(original_columns, df_clean.columns))
+        changed_columns = {orig: new for orig, new in column_mapping.items() if orig != new}
+        
+        # Store mapping in session state for user reference
+        if hasattr(st, 'session_state') and 'column_mapping' not in st.session_state:
+            st.session_state.column_mapping = column_mapping
+        
+        # Show user notification if columns were changed
+        if changed_columns and hasattr(st, 'info'):
+            st.info("**Column names have been cleaned for SQL compatibility:**")
+            for orig, new in changed_columns.items():
+                st.write(f"• `{orig}` → `{new}`")
         
         return df_clean
     
