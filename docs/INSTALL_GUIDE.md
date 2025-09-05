@@ -100,6 +100,65 @@ The application should automatically open in your default web browser at:
 
 ### Common Installation Issues
 
+#### Dependency Conflicts (Most Common)
+
+**⚠️ Important**: Due to dependency conflicts between numpy, streamlit, and great-expectations, follow the specific installation order in this guide.
+
+**Issue 1: Numpy Compilation Errors**
+```
+ERROR: Unknown compiler(s): [['icl'], ['cl'], ['cc'], ['gcc'], ['clang'], ['clang-cl'], ['pgcc']]
+```
+**Cause**: Numpy is trying to compile from source but no C compiler is available.
+
+**Solution**: Install streamlit first, which will pull in pre-compiled numpy wheels.
+```powershell
+pip install streamlit
+```
+
+**Issue 2: Great Expectations Import Errors**
+```
+ModuleNotFoundError: No module named 'marshmallow.warnings'
+```
+**Cause**: Version conflicts between great-expectations and its dependencies.
+
+**Solution**: Install great-expectations without dependencies, then install compatible versions manually.
+```powershell
+# Install great-expectations without dependencies
+pip install great-expectations --no-deps
+
+# Install compatible dependencies
+pip install "marshmallow<4.0.0,>=3.7.1"
+pip install "altair<5.0.0,>=4.2.1"
+```
+
+**Issue 3: Version Resolution Conflicts**
+```
+ERROR: ResolutionImpossible: for help visit https://pip.pypa.io/en/latest/topics/dependency-resolution/
+```
+**Cause**: Conflicting version requirements between packages.
+
+**Solution**: Use the tested requirements file or follow the manual installation order above.
+
+#### Known Working Versions
+
+The following versions have been tested and work together:
+- **Python**: 3.13
+- **Streamlit**: 1.49.1
+- **Numpy**: 2.3.2
+- **Pandas**: 2.3.2
+- **Great Expectations**: 0.18.22
+- **Marshmallow**: 3.26.1
+- **Altair**: 4.2.2
+
+#### Alternative Installation Method
+
+If the manual installation doesn't work, use the tested requirements file:
+```powershell
+pip install -r requirements_venv.txt
+```
+
+#### General Installation Issues
+
 **Python Version Error**
 ```
 Error: Python 3.8+ required
@@ -161,6 +220,51 @@ streamlit run streamlit_app.py --server.port 8502
 - Ensure stable internet connection (for some Plotly features)
 - Try refreshing the browser page
 - Clear browser cache if charts don't load
+
+### Validation Issues
+
+**"Expectation suite has no expectations" Error**
+- Go back to Configure and add expectations or import a suite
+- See the [User Guide](USER_GUIDE.md) for step-by-step instructions
+
+**Custom SQL Query Errors**
+- Use `{table_name}` placeholder
+- Return `COUNT(*) as violation_count`
+- For booleans, use `column = True/False`; avoid `'1'/'0'` strings
+- See [Custom SQL Guide](CUSTOM_SQL_GUIDE.md) for detailed examples
+
+**Excel Export Fails**
+- Ensure `openpyxl` is installed: `pip install openpyxl`
+- Try restarting the application
+
+### Getting Help
+
+**Installation Verification**
+To verify the installation is working:
+```powershell
+# Test great-expectations import
+python -c "import great_expectations as gx; print('Great Expectations imported successfully!')"
+
+# Test streamlit
+python -c "import streamlit as st; print('Streamlit imported successfully!')"
+
+# Launch the app
+streamlit run streamlit_app.py
+```
+
+**Additional Support**
+If you continue to have issues:
+1. Check the [FAQ](FAQ.md) for common questions
+2. Review the [User Guide](USER_GUIDE.md) for usage instructions
+3. See [Installation Troubleshooting](INSTALLATION_TROUBLESHOOTING.md) for detailed troubleshooting
+4. Open an issue on GitHub with your error messages and system information
+
+### System Requirements
+
+- **OS**: Windows 10/11 (tested), Linux/macOS (should work)
+- **Python**: 3.8+ (tested with 3.13)
+- **Memory**: 4GB RAM minimum, 8GB recommended
+- **Disk**: 2GB free space for dependencies
 
 ## Advanced Configuration
 

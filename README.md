@@ -168,24 +168,33 @@ GEWrapper/
 
 ## Documentation
 
-Our comprehensive documentation covers every aspect of DataWash by Stratesys:
+Our comprehensive documentation has been consolidated and organized for easy navigation:
 
+### 🚀 Essential Guides
 | Guide | Description | Use Case |
 |-------|-------------|----------|
-| 📚 [Docs Index](docs/INDEX.md) | Navigation for all docs | Find the right guide fast |
-| 📖 [Installation Guide](docs/INSTALL_GUIDE.md) | Setup and configuration | Getting started |
-| ⚠️ [Installation Troubleshooting](docs/INSTALLATION_TROUBLESHOOTING.md) | Fix dependency conflicts | Resolve install issues |
-| 🚀 [User Guide](docs/USER_GUIDE.md) | End-to-end app workflow | Everyday usage |
-| 📘 [Tutorials](docs/TUTORIALS.md) | Hands-on walkthroughs | Learn by example |
-| ❓ [FAQ](docs/FAQ.md) | Common questions | Quick answers |
-| 🔧 [Configuration](docs/CONFIGURATION.md) | Settings and env vars | Tune defaults |
-| 🔍 [Custom SQL Guide](docs/CUSTOM_SQL_GUIDE.md) | SQL-based validations | Business rules |
-| 🗃️ [SQL Quick Reference](docs/SQL_QUICK_REFERENCE.md) | SQL syntax & examples | Write queries |
-| ❌ [Failed Records Guide](docs/FAILED_RECORDS_GUIDE.md) | Failure analysis | Troubleshooting data |
-| 📋 [Project Summary](docs/PROJECT_SUMMARY.md) | Technical overview | Understand platform |
-| 🧪 [VENV Setup](docs/VENV_SETUP.md) | Virtual env usage | Local dev |
-| 🧭 [Roadmap](docs/roadmap.md) | Milestones | What's next |
-| 🛠️ [Developer Guide](docs/DEVELOPER_GUIDE.md) | For contributors | Extend the app |
+| 📚 [**Docs Index**](docs/INDEX.md) | Complete documentation navigation | Find any guide quickly |
+| 📖 [**Installation Guide**](docs/INSTALL_GUIDE.md) | Complete setup with troubleshooting | Getting started, resolving issues |
+| 🚀 [**User Guide**](docs/USER_GUIDE.md) | End-to-end workflow walkthrough | Daily usage and operations |
+| 🔧 [**Troubleshooting Guide**](docs/TROUBLESHOOTING.md) | Comprehensive problem resolution | When anything goes wrong |
+
+### 📘 Learning Resources
+| Guide | Description | Use Case |
+|-------|-------------|----------|
+| 📘 [**Tutorials**](docs/TUTORIALS.md) | Hands-on walkthroughs | Learn by example |
+| 🔍 [**Custom SQL Guide**](docs/CUSTOM_SQL_GUIDE.md) | Advanced SQL validation patterns | Complex business rules |
+| 🗃️ [**SQL Quick Reference**](docs/SQL_QUICK_REFERENCE.md) | Copy-paste SQL examples | Quick SQL queries |
+| ❓ [**FAQ**](docs/FAQ.md) | Quick answers to common questions | Instant help |
+
+### 🛠️ Technical Documentation
+| Guide | Description | Use Case |
+|-------|-------------|----------|
+| 🛠️ [**Developer Guide**](docs/DEVELOPER_GUIDE.md) | For contributors and developers | Extend and contribute |
+| 🔧 [**Configuration**](docs/CONFIGURATION.md) | Settings and customization | Advanced configuration |
+| 📋 [**Project Summary**](docs/PROJECT_SUMMARY.md) | Technical architecture overview | Understand the platform |
+| 🧭 [**Roadmap**](docs/roadmap.md) | Feature development milestones | What's coming next |
+
+**📝 All documentation is now cross-referenced and consolidated to eliminate duplication while ensuring comprehensive coverage.**
 
 ---
 
