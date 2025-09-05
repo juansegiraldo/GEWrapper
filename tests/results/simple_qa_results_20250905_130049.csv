@@ -1,0 +1,16 @@
+expectation_type,test_scenario,test_passed,data_rows,data_columns
+expect_column_values_to_not_be_null,clean_data,True,100,6
+expect_column_values_to_not_be_null,with_nulls,False,100,6
+expect_column_values_to_not_be_null,with_duplicates,True,100,6
+expect_column_values_to_be_unique,clean_data,True,100,6
+expect_column_values_to_be_unique,with_nulls,True,100,6
+expect_column_values_to_be_unique,with_duplicates,False,100,6
+expect_table_row_count_to_be_between,clean_data,True,100,6
+expect_table_row_count_to_be_between,with_nulls,True,100,6
+expect_table_row_count_to_be_between,with_duplicates,True,100,6
+expect_column_values_to_be_in_set,clean_data,True,100,6
+expect_column_values_to_be_in_set,with_nulls,True,100,6
+expect_column_values_to_be_in_set,with_duplicates,True,100,6
+expect_column_values_to_be_between,clean_data,True,100,6
+expect_column_values_to_be_between,with_nulls,True,100,6
+expect_column_values_to_be_between,with_duplicates,True,100,6

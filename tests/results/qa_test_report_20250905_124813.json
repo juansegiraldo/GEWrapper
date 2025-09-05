@@ -1,0 +1,1423 @@
+{
+  "timestamp": "20250905_124813",
+  "summary": {
+    "total_tests": 43,
+    "passed_tests": 41,
+    "failed_tests": 2,
+    "success_rate": 95.34883720930233,
+    "total_execution_time": 0,
+    "expectation_coverage": {
+      "expect_table_row_count_to_be_between": 2,
+      "expect_table_columns_to_match_ordered_list": 2,
+      "expect_column_values_to_not_be_null": 3,
+      "expect_column_values_to_be_unique": 3,
+      "expect_column_values_to_be_of_type": 3,
+      "expect_column_values_to_be_in_set": 2,
+      "expect_column_values_to_be_between": 3,
+      "expect_column_value_lengths_to_be_between": 3,
+      "expect_column_values_to_match_regex": 3,
+      "expect_column_mean_to_be_between": 3,
+      "expect_column_median_to_be_between": 3,
+      "expect_column_stdev_to_be_between": 3,
+      "expect_column_sum_to_be_between": 3,
+      "expect_column_values_to_be_dateutil_parseable": 2,
+      "expect_column_values_to_match_strftime_format": 3,
+      "expect_custom_sql_query_to_return_expected_result": 2
+    }
+  },
+  "detailed_results": [
+    {
+      "expectation_type": "expect_table_row_count_to_be_between",
+      "test_scenario": "clean_data_pass",
+      "expected_outcome": "Expected pass: True",
+      "actual_outcome": "Actually passed: True",
+      "success": true,
+      "error_message": null,
+      "execution_time": 0.002522,
+      "data_shape": [
+        100,
+        10
+      ],
+      "additional_info": {
+        "validation_result": {
+          "success": true,
+          "result": {
+            "element_count": 100,
+            "unexpected_count": 0,
+            "unexpected_percent": 0
+          }
+        },
+        "expectation_config": {
+          "expectation_type": "expect_table_row_count_to_be_between",
+          "kwargs": {
+            "min_value": 90,
+            "max_value": 110
+          }
+        }
+      }
+    },
+    {
+      "expectation_type": "expect_table_row_count_to_be_between",
+      "test_scenario": "edge_cases",
+      "expected_outcome": "Expected pass: False",
+      "actual_outcome": "Actually passed: True",
+      "success": false,
+      "error_message": null,
+      "execution_time": 0.000636,
+      "data_shape": [
+        4,
+        10
+      ],
+      "additional_info": {
+        "validation_result": {
+          "success": true,
+          "result": {
+            "element_count": 4,
+            "unexpected_count": 0,
+            "unexpected_percent": 0
+          }
+        },
+        "expectation_config": {
+          "expectation_type": "expect_table_row_count_to_be_between",
+          "kwargs": {
+            "min_value": 1,
+            "max_value": 14
+          }
+        }
+      }
+    },
+    {
+      "expectation_type": "expect_table_columns_to_match_ordered_list",
+      "test_scenario": "clean_data_pass",
+      "expected_outcome": "Expected pass: True",
+      "actual_outcome": "Actually passed: True",
+      "success": true,
+      "error_message": null,
+      "execution_time": 0.006203,
+      "data_shape": [
+        100,
+        10
+      ],
+      "additional_info": {
+        "validation_result": {
+          "success": true,
+          "result": {
+            "element_count": 100,
+            "unexpected_count": 0,
+            "unexpected_percent": 0
+          }
+        },
+        "expectation_config": {
+          "expectation_type": "expect_table_columns_to_match_ordered_list",
+          "kwargs": {
+            "column_list": [
+              "id",
+              "name",
+              "email",
+              "age",
+              "salary",
+              "score",
+              "category",
+              "is_active",
+              "start_date",
+              "description"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "expectation_type": "expect_table_columns_to_match_ordered_list",
+      "test_scenario": "edge_cases",
+      "expected_outcome": "Expected pass: False",
+      "actual_outcome": "Actually passed: False",
+      "success": true,
+      "error_message": null,
+      "execution_time": 0.001485,
+      "data_shape": [
+        4,
+        10
+      ],
+      "additional_info": {
+        "validation_result": {
+          "success": false,
+          "result": {
+            "element_count": 4,
+            "unexpected_count": 10,
+            "unexpected_percent": 10
+          }
+        },
+        "expectation_config": {
+          "expectation_type": "expect_table_columns_to_match_ordered_list",
+          "kwargs": {
+            "column_list": [
+              "id",
+              "name",
+              "email",
+              "age",
+              "salary",
+              "score",
+              "category",
+              "is_active",
+              "start_date",
+              "description"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "test_scenario": "clean_data_pass",
+      "expected_outcome": "Expected pass: True",
+      "actual_outcome": "Actually passed: True",
+      "success": "True",
+      "error_message": null,
+      "execution_time": 0.001362,
+      "data_shape": [
+        100,
+        10
+      ],
+      "additional_info": {
+        "validation_result": {
+          "success": "True",
+          "result": {
+            "element_count": 100,
+            "unexpected_count": 0,
+            "unexpected_percent": 0
+          }
+        },
+        "expectation_config": {
+          "expectation_type": "expect_column_values_to_not_be_null",
+          "kwargs": {
+            "column": "name"
+          }
+        }
+      }
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "test_scenario": "edge_cases",
+      "expected_outcome": "Expected pass: False",
+      "actual_outcome": "Actually passed: False",
+      "success": "True",
+      "error_message": null,
+      "execution_time": 0.000757,
+      "data_shape": [
+        4,
+        10
+      ],
+      "additional_info": {
+        "validation_result": {
+          "success": "False",
+          "result": {
+            "element_count": 4,
+            "unexpected_count": 10,
+            "unexpected_percent": 10
+          }
+        },
+        "expectation_config": {
+          "expectation_type": "expect_column_values_to_not_be_null",
+          "kwargs": {
+            "column": "name"
+          }
+        }
+      }
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "test_scenario": "with_nulls_fail",
+      "expected_outcome": "Expected pass: False",
+      "actual_outcome": "Actually passed: False",
+      "success": "True",
+      "error_message": null,
+      "execution_time": 0.004302,
+      "data_shape": [
+        100,
+        10
+      ],
+      "additional_info": {
+        "validation_result": {
+          "success": "False",
+          "result": {
+            "element_count": 100,
+            "unexpected_count": 10,
+            "unexpected_percent": 10
+          }
+        },
+        "expectation_config": {
+          "expectation_type": "expect_column_values_to_not_be_null",
+          "kwargs": {
+            "column": "name"
+          }
+        }
+      }
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_unique",
+      "test_scenario": "clean_data_pass",
+      "expected_outcome": "Expected pass: True",
+      "actual_outcome": "Actually passed: True",
+      "success": true,
+      "error_message": null,
+      "execution_time": 0.001399,
+      "data_shape": [
+        100,
+        10
+      ],
+      "additional_info": {
+        "validation_result": {
+          "success": true,
+          "result": {
+            "element_count": 100,
+            "unexpected_count": 0,
+            "unexpected_percent": 0
+          }
+        },
+        "expectation_config": {
+          "expectation_type": "expect_column_values_to_be_unique",
+          "kwargs": {
+            "column": "id"
+          }
+        }
+      }
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_unique",
+      "test_scenario": "edge_cases",
+      "expected_outcome": "Expected pass: False",
+      "actual_outcome": "Actually passed: True",
+      "success": false,
+      "error_message": null,
+      "execution_time": 0.000877,
+      "data_shape": [
+        4,
+        10
+      ],
+      "additional_info": {
+        "validation_result": {
+          "success": true,
+          "result": {
+            "element_count": 4,
+            "unexpected_count": 0,
+            "unexpected_percent": 0
+          }
+        },
+        "expectation_config": {
+          "expectation_type": "expect_column_values_to_be_unique",
+          "kwargs": {
+            "column": "id"
+          }
+        }
+      }
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_unique",
+      "test_scenario": "with_duplicates_fail",
+      "expected_outcome": "Expected pass: False",
+      "actual_outcome": "Actually passed: False",
+      "success": true,
+      "error_message": null,
+      "execution_time": 0.001974,
+      "data_shape": [
+        100,
+        10
+      ],
+      "additional_info": {
+        "validation_result": {
+          "success": false,
+          "result": {
+            "element_count": 100,
+            "unexpected_count": 10,
+            "unexpected_percent": 10
+          }
+        },
+        "expectation_config": {
+          "expectation_type": "expect_column_values_to_be_unique",
+          "kwargs": {
+            "column": "id"
+          }
+        }
+      }
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_of_type",
+      "test_scenario": "clean_data_pass",
+      "expected_outcome": "Expected pass: True",
+      "actual_outcome": "Actually passed: True",
+      "success": true,
+      "error_message": null,
+      "execution_time": 0.005082,
+      "data_shape": [
+        100,
+        10
+      ],
+      "additional_info": {
+        "validation_result": {
+          "success": true,
+          "result": {
+            "element_count": 100,
+            "unexpected_count": 0,
+            "unexpected_percent": 0
+          }
+        },
+        "expectation_config": {
+          "expectation_type": "expect_column_values_to_be_of_type",
+          "kwargs": {
+            "column": "age",
+            "type_": "int"
+          }
+        }
+      }
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_of_type",
+      "test_scenario": "edge_cases",
+      "expected_outcome": "Expected pass: False",
+      "actual_outcome": "Actually passed: False",
+      "success": true,
+      "error_message": null,
+      "execution_time": 0.001433,
+      "data_shape": [
+        4,
+        10
+      ],
+      "additional_info": {
+        "validation_result": {
+          "success": false,
+          "result": {
+            "element_count": 4,
+            "unexpected_count": 10,
+            "unexpected_percent": 10
+          }
+        },
+        "expectation_config": {
+          "expectation_type": "expect_column_values_to_be_of_type",
+          "kwargs": {
+            "column": "age",
+            "type_": "int"
+          }
+        }
+      }
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_of_type",
+      "test_scenario": "type_violations_fail",
+      "expected_outcome": "Expected pass: False",
+      "actual_outcome": "Actually passed: False",
+      "success": true,
+      "error_message": null,
+      "execution_time": 0.00517,
+      "data_shape": [
+        100,
+        10
+      ],
+      "additional_info": {
+        "validation_result": {
+          "success": false,
+          "result": {
+            "element_count": 100,
+            "unexpected_count": 10,
+            "unexpected_percent": 10
+          }
+        },
+        "expectation_config": {
+          "expectation_type": "expect_column_values_to_be_of_type",
+          "kwargs": {
+            "column": "age",
+            "type_": "int"
+          }
+        }
+      }
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_in_set",
+      "test_scenario": "clean_data_pass",
+      "expected_outcome": "Expected pass: True",
+      "actual_outcome": "Actually passed: True",
+      "success": true,
+      "error_message": null,
+      "execution_time": 0.013241,
+      "data_shape": [
+        100,
+        10
+      ],
+      "additional_info": {
+        "validation_result": {
+          "success": true,
+          "result": {
+            "element_count": 100,
+            "unexpected_count": 0,
+            "unexpected_percent": 0
+          }
+        },
+        "expectation_config": {
+          "expectation_type": "expect_column_values_to_be_in_set",
+          "kwargs": {
+            "column": "category",
+            "value_set": [
+              "A",
+              "B",
+              "C",
+              "D"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_in_set",
+      "test_scenario": "edge_cases",
+      "expected_outcome": "Expected pass: False",
+      "actual_outcome": "Actually passed: False",
+      "success": true,
+      "error_message": null,
+      "execution_time": 0.001405,
+      "data_shape": [
+        4,
+        10
+      ],
+      "additional_info": {
+        "validation_result": {
+          "success": false,
+          "result": {
+            "element_count": 4,
+            "unexpected_count": 10,
+            "unexpected_percent": 10
+          }
+        },
+        "expectation_config": {
+          "expectation_type": "expect_column_values_to_be_in_set",
+          "kwargs": {
+            "column": "category",
+            "value_set": [
+              "A",
+              "B",
+              "C",
+              "D"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_between",
+      "test_scenario": "clean_data_pass",
+      "expected_outcome": "Expected pass: True",
+      "actual_outcome": "Actually passed: True",
+      "success": true,
+      "error_message": null,
+      "execution_time": 0.004876,
+      "data_shape": [
+        100,
+        10
+      ],
+      "additional_info": {
+        "validation_result": {
+          "success": true,
+          "result": {
+            "element_count": 100,
+            "unexpected_count": 0,
+            "unexpected_percent": 0
+          }
+        },
+        "expectation_config": {
+          "expectation_type": "expect_column_values_to_be_between",
+          "kwargs": {
+            "column": "age",
+            "min_value": 0,
+            "max_value": 120
+          }
+        }
+      }
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_between",
+      "test_scenario": "edge_cases",
+      "expected_outcome": "Expected pass: False",
+      "actual_outcome": "Actually passed: False",
+      "success": true,
+      "error_message": null,
+      "execution_time": 0.001418,
+      "data_shape": [
+        4,
+        10
+      ],
+      "additional_info": {
+        "validation_result": {
+          "success": false,
+          "result": {
+            "element_count": 4,
+            "unexpected_count": 10,
+            "unexpected_percent": 10
+          }
+        },
+        "expectation_config": {
+          "expectation_type": "expect_column_values_to_be_between",
+          "kwargs": {
+            "column": "age",
+            "min_value": 0,
+            "max_value": 120
+          }
+        }
+      }
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_between",
+      "test_scenario": "range_violations_fail",
+      "expected_outcome": "Expected pass: False",
+      "actual_outcome": "Actually passed: False",
+      "success": true,
+      "error_message": null,
+      "execution_time": 0.006282,
+      "data_shape": [
+        100,
+        10
+      ],
+      "additional_info": {
+        "validation_result": {
+          "success": false,
+          "result": {
+            "element_count": 100,
+            "unexpected_count": 10,
+            "unexpected_percent": 10
+          }
+        },
+        "expectation_config": {
+          "expectation_type": "expect_column_values_to_be_between",
+          "kwargs": {
+            "column": "age",
+            "min_value": 0,
+            "max_value": 120
+          }
+        }
+      }
+    },
+    {
+      "expectation_type": "expect_column_value_lengths_to_be_between",
+      "test_scenario": "clean_data_pass",
+      "expected_outcome": "Expected pass: True",
+      "actual_outcome": "Actually passed: True",
+      "success": true,
+      "error_message": null,
+      "execution_time": 0.005226,
+      "data_shape": [
+        100,
+        10
+      ],
+      "additional_info": {
+        "validation_result": {
+          "success": true,
+          "result": {
+            "element_count": 100,
+            "unexpected_count": 0,
+            "unexpected_percent": 0
+          }
+        },
+        "expectation_config": {
+          "expectation_type": "expect_column_value_lengths_to_be_between",
+          "kwargs": {
+            "column": "name",
+            "min_value": 1,
+            "max_value": 50
+          }
+        }
+      }
+    },
+    {
+      "expectation_type": "expect_column_value_lengths_to_be_between",
+      "test_scenario": "edge_cases",
+      "expected_outcome": "Expected pass: False",
+      "actual_outcome": "Actually passed: False",
+      "success": true,
+      "error_message": null,
+      "execution_time": 0.001448,
+      "data_shape": [
+        4,
+        10
+      ],
+      "additional_info": {
+        "validation_result": {
+          "success": false,
+          "result": {
+            "element_count": 4,
+            "unexpected_count": 10,
+            "unexpected_percent": 10
+          }
+        },
+        "expectation_config": {
+          "expectation_type": "expect_column_value_lengths_to_be_between",
+          "kwargs": {
+            "column": "name",
+            "min_value": 1,
+            "max_value": 50
+          }
+        }
+      }
+    },
+    {
+      "expectation_type": "expect_column_value_lengths_to_be_between",
+      "test_scenario": "range_violations_fail",
+      "expected_outcome": "Expected pass: False",
+      "actual_outcome": "Actually passed: False",
+      "success": true,
+      "error_message": null,
+      "execution_time": 0.00659,
+      "data_shape": [
+        100,
+        10
+      ],
+      "additional_info": {
+        "validation_result": {
+          "success": false,
+          "result": {
+            "element_count": 100,
+            "unexpected_count": 10,
+            "unexpected_percent": 10
+          }
+        },
+        "expectation_config": {
+          "expectation_type": "expect_column_value_lengths_to_be_between",
+          "kwargs": {
+            "column": "name",
+            "min_value": 1,
+            "max_value": 50
+          }
+        }
+      }
+    },
+    {
+      "expectation_type": "expect_column_values_to_match_regex",
+      "test_scenario": "clean_data_pass",
+      "expected_outcome": "Expected pass: True",
+      "actual_outcome": "Actually passed: True",
+      "success": true,
+      "error_message": null,
+      "execution_time": 0.006013,
+      "data_shape": [
+        100,
+        10
+      ],
+      "additional_info": {
+        "validation_result": {
+          "success": true,
+          "result": {
+            "element_count": 100,
+            "unexpected_count": 0,
+            "unexpected_percent": 0
+          }
+        },
+        "expectation_config": {
+          "expectation_type": "expect_column_values_to_match_regex",
+          "kwargs": {
+            "column": "email",
+            "regex": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+          }
+        }
+      }
+    },
+    {
+      "expectation_type": "expect_column_values_to_match_regex",
+      "test_scenario": "edge_cases",
+      "expected_outcome": "Expected pass: False",
+      "actual_outcome": "Actually passed: False",
+      "success": true,
+      "error_message": null,
+      "execution_time": 0.001495,
+      "data_shape": [
+        4,
+        10
+      ],
+      "additional_info": {
+        "validation_result": {
+          "success": false,
+          "result": {
+            "element_count": 4,
+            "unexpected_count": 10,
+            "unexpected_percent": 10
+          }
+        },
+        "expectation_config": {
+          "expectation_type": "expect_column_values_to_match_regex",
+          "kwargs": {
+            "column": "email",
+            "regex": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+          }
+        }
+      }
+    },
+    {
+      "expectation_type": "expect_column_values_to_match_regex",
+      "test_scenario": "format_violations_fail",
+      "expected_outcome": "Expected pass: False",
+      "actual_outcome": "Actually passed: False",
+      "success": true,
+      "error_message": null,
+      "execution_time": 0.005123,
+      "data_shape": [
+        100,
+        10
+      ],
+      "additional_info": {
+        "validation_result": {
+          "success": false,
+          "result": {
+            "element_count": 100,
+            "unexpected_count": 10,
+            "unexpected_percent": 10
+          }
+        },
+        "expectation_config": {
+          "expectation_type": "expect_column_values_to_match_regex",
+          "kwargs": {
+            "column": "email",
+            "regex": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+          }
+        }
+      }
+    },
+    {
+      "expectation_type": "expect_column_mean_to_be_between",
+      "test_scenario": "clean_data_pass",
+      "expected_outcome": "Expected pass: True",
+      "actual_outcome": "Actually passed: True",
+      "success": true,
+      "error_message": null,
+      "execution_time": 0.005926,
+      "data_shape": [
+        100,
+        10
+      ],
+      "additional_info": {
+        "validation_result": {
+          "success": true,
+          "result": {
+            "element_count": 100,
+            "unexpected_count": 0,
+            "unexpected_percent": 0
+          }
+        },
+        "expectation_config": {
+          "expectation_type": "expect_column_mean_to_be_between",
+          "kwargs": {
+            "column": "age",
+            "min_value": 36.68,
+            "max_value": 56.68
+          }
+        }
+      }
+    },
+    {
+      "expectation_type": "expect_column_mean_to_be_between",
+      "test_scenario": "edge_cases",
+      "expected_outcome": "Expected pass: False",
+      "actual_outcome": "Actually passed: False",
+      "success": true,
+      "error_message": null,
+      "execution_time": 0.001625,
+      "data_shape": [
+        4,
+        10
+      ],
+      "additional_info": {
+        "validation_result": {
+          "success": false,
+          "result": {
+            "element_count": 4,
+            "unexpected_count": 10,
+            "unexpected_percent": 10
+          }
+        },
+        "expectation_config": {
+          "expectation_type": "expect_column_mean_to_be_between",
+          "kwargs": {
+            "column": "age",
+            "min_value": 56.33333333333333,
+            "max_value": 76.33333333333333
+          }
+        }
+      }
+    },
+    {
+      "expectation_type": "expect_column_mean_to_be_between",
+      "test_scenario": "range_violations_fail",
+      "expected_outcome": "Expected pass: False",
+      "actual_outcome": "Actually passed: False",
+      "success": true,
+      "error_message": null,
+      "execution_time": 0.006688,
+      "data_shape": [
+        100,
+        10
+      ],
+      "additional_info": {
+        "validation_result": {
+          "success": false,
+          "result": {
+            "element_count": 100,
+            "unexpected_count": 10,
+            "unexpected_percent": 10
+          }
+        },
+        "expectation_config": {
+          "expectation_type": "expect_column_mean_to_be_between",
+          "kwargs": {
+            "column": "age",
+            "min_value": 41.7,
+            "max_value": 61.7
+          }
+        }
+      }
+    },
+    {
+      "expectation_type": "expect_column_median_to_be_between",
+      "test_scenario": "clean_data_pass",
+      "expected_outcome": "Expected pass: True",
+      "actual_outcome": "Actually passed: True",
+      "success": true,
+      "error_message": null,
+      "execution_time": 0.137897,
+      "data_shape": [
+        100,
+        10
+      ],
+      "additional_info": {
+        "validation_result": {
+          "success": true,
+          "result": {
+            "element_count": 100,
+            "unexpected_count": 0,
+            "unexpected_percent": 0
+          }
+        },
+        "expectation_config": {
+          "expectation_type": "expect_column_median_to_be_between",
+          "kwargs": {
+            "column": "age",
+            "min_value": 40.0,
+            "max_value": 60.0
+          }
+        }
+      }
+    },
+    {
+      "expectation_type": "expect_column_median_to_be_between",
+      "test_scenario": "edge_cases",
+      "expected_outcome": "Expected pass: False",
+      "actual_outcome": "Actually passed: False",
+      "success": true,
+      "error_message": null,
+      "execution_time": 0.001915,
+      "data_shape": [
+        4,
+        10
+      ],
+      "additional_info": {
+        "validation_result": {
+          "success": false,
+          "result": {
+            "element_count": 4,
+            "unexpected_count": 10,
+            "unexpected_percent": 10
+          }
+        },
+        "expectation_config": {
+          "expectation_type": "expect_column_median_to_be_between",
+          "kwargs": {
+            "column": "age",
+            "min_value": -10.0,
+            "max_value": 10.0
+          }
+        }
+      }
+    },
+    {
+      "expectation_type": "expect_column_median_to_be_between",
+      "test_scenario": "range_violations_fail",
+      "expected_outcome": "Expected pass: False",
+      "actual_outcome": "Actually passed: False",
+      "success": true,
+      "error_message": null,
+      "execution_time": 0.006481,
+      "data_shape": [
+        100,
+        10
+      ],
+      "additional_info": {
+        "validation_result": {
+          "success": false,
+          "result": {
+            "element_count": 100,
+            "unexpected_count": 10,
+            "unexpected_percent": 10
+          }
+        },
+        "expectation_config": {
+          "expectation_type": "expect_column_median_to_be_between",
+          "kwargs": {
+            "column": "age",
+            "min_value": 43.5,
+            "max_value": 63.5
+          }
+        }
+      }
+    },
+    {
+      "expectation_type": "expect_column_stdev_to_be_between",
+      "test_scenario": "clean_data_pass",
+      "expected_outcome": "Expected pass: True",
+      "actual_outcome": "Actually passed: True",
+      "success": true,
+      "error_message": null,
+      "execution_time": 0.005512,
+      "data_shape": [
+        100,
+        10
+      ],
+      "additional_info": {
+        "validation_result": {
+          "success": true,
+          "result": {
+            "element_count": 100,
+            "unexpected_count": 0,
+            "unexpected_percent": 0
+          }
+        },
+        "expectation_config": {
+          "expectation_type": "expect_column_stdev_to_be_between",
+          "kwargs": {
+            "column": "age",
+            "min_value": 11.776230780241406,
+            "max_value": 21.776230780241406
+          }
+        }
+      }
+    },
+    {
+      "expectation_type": "expect_column_stdev_to_be_between",
+      "test_scenario": "edge_cases",
+      "expected_outcome": "Expected pass: False",
+      "actual_outcome": "Actually passed: False",
+      "success": true,
+      "error_message": null,
+      "execution_time": 0.00185,
+      "data_shape": [
+        4,
+        10
+      ],
+      "additional_info": {
+        "validation_result": {
+          "success": false,
+          "result": {
+            "element_count": 4,
+            "unexpected_count": 10,
+            "unexpected_percent": 10
+          }
+        },
+        "expectation_config": {
+          "expectation_type": "expect_column_stdev_to_be_between",
+          "kwargs": {
+            "column": "age",
+            "min_value": 110.75980879965782,
+            "max_value": 120.75980879965782
+          }
+        }
+      }
+    },
+    {
+      "expectation_type": "expect_column_stdev_to_be_between",
+      "test_scenario": "range_violations_fail",
+      "expected_outcome": "Expected pass: False",
+      "actual_outcome": "Actually passed: False",
+      "success": true,
+      "error_message": null,
+      "execution_time": 0.006337,
+      "data_shape": [
+        100,
+        10
+      ],
+      "additional_info": {
+        "validation_result": {
+          "success": false,
+          "result": {
+            "element_count": 100,
+            "unexpected_count": 10,
+            "unexpected_percent": 10
+          }
+        },
+        "expectation_config": {
+          "expectation_type": "expect_column_stdev_to_be_between",
+          "kwargs": {
+            "column": "age",
+            "min_value": 16.999669419003883,
+            "max_value": 26.999669419003883
+          }
+        }
+      }
+    },
+    {
+      "expectation_type": "expect_column_sum_to_be_between",
+      "test_scenario": "clean_data_pass",
+      "expected_outcome": "Expected pass: True",
+      "actual_outcome": "Actually passed: True",
+      "success": true,
+      "error_message": null,
+      "execution_time": 0.005409,
+      "data_shape": [
+        100,
+        10
+      ],
+      "additional_info": {
+        "validation_result": {
+          "success": true,
+          "result": {
+            "element_count": 100,
+            "unexpected_count": 0,
+            "unexpected_percent": 0
+          }
+        },
+        "expectation_config": {
+          "expectation_type": "expect_column_sum_to_be_between",
+          "kwargs": {
+            "column": "salary",
+            "min_value": 4032200.9840000006,
+            "max_value": 6048301.476000001
+          }
+        }
+      }
+    },
+    {
+      "expectation_type": "expect_column_sum_to_be_between",
+      "test_scenario": "edge_cases",
+      "expected_outcome": "Expected pass: False",
+      "actual_outcome": "Actually passed: False",
+      "success": true,
+      "error_message": null,
+      "execution_time": 0.001613,
+      "data_shape": [
+        4,
+        10
+      ],
+      "additional_info": {
+        "validation_result": {
+          "success": false,
+          "result": {
+            "element_count": 4,
+            "unexpected_count": 10,
+            "unexpected_percent": 10
+          }
+        },
+        "expectation_config": {
+          "expectation_type": "expect_column_sum_to_be_between",
+          "kwargs": {
+            "column": "salary",
+            "min_value": 799959999.9920001,
+            "max_value": 1199939999.988
+          }
+        }
+      }
+    },
+    {
+      "expectation_type": "expect_column_sum_to_be_between",
+      "test_scenario": "range_violations_fail",
+      "expected_outcome": "Expected pass: False",
+      "actual_outcome": "Actually passed: False",
+      "success": true,
+      "error_message": null,
+      "execution_time": 0.006355,
+      "data_shape": [
+        100,
+        10
+      ],
+      "additional_info": {
+        "validation_result": {
+          "success": false,
+          "result": {
+            "element_count": 100,
+            "unexpected_count": 10,
+            "unexpected_percent": 10
+          }
+        },
+        "expectation_config": {
+          "expectation_type": "expect_column_sum_to_be_between",
+          "kwargs": {
+            "column": "salary",
+            "min_value": 4238041.72,
+            "max_value": 6357062.579999999
+          }
+        }
+      }
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_dateutil_parseable",
+      "test_scenario": "clean_data_pass",
+      "expected_outcome": "Expected pass: True",
+      "actual_outcome": "Actually passed: True",
+      "success": true,
+      "error_message": null,
+      "execution_time": 0.005788,
+      "data_shape": [
+        100,
+        10
+      ],
+      "additional_info": {
+        "validation_result": {
+          "success": true,
+          "result": {
+            "element_count": 100,
+            "unexpected_count": 0,
+            "unexpected_percent": 0
+          }
+        },
+        "expectation_config": {
+          "expectation_type": "expect_column_values_to_be_dateutil_parseable",
+          "kwargs": {
+            "column": "start_date"
+          }
+        }
+      }
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_dateutil_parseable",
+      "test_scenario": "edge_cases",
+      "expected_outcome": "Expected pass: False",
+      "actual_outcome": "Actually passed: False",
+      "success": true,
+      "error_message": null,
+      "execution_time": 0.002071,
+      "data_shape": [
+        4,
+        10
+      ],
+      "additional_info": {
+        "validation_result": {
+          "success": false,
+          "result": {
+            "element_count": 4,
+            "unexpected_count": 10,
+            "unexpected_percent": 10
+          }
+        },
+        "expectation_config": {
+          "expectation_type": "expect_column_values_to_be_dateutil_parseable",
+          "kwargs": {
+            "column": "start_date"
+          }
+        }
+      }
+    },
+    {
+      "expectation_type": "expect_column_values_to_match_strftime_format",
+      "test_scenario": "clean_data_pass",
+      "expected_outcome": "Expected pass: True",
+      "actual_outcome": "Actually passed: True",
+      "success": true,
+      "error_message": null,
+      "execution_time": 0.00532,
+      "data_shape": [
+        100,
+        10
+      ],
+      "additional_info": {
+        "validation_result": {
+          "success": true,
+          "result": {
+            "element_count": 100,
+            "unexpected_count": 0,
+            "unexpected_percent": 0
+          }
+        },
+        "expectation_config": {
+          "expectation_type": "expect_column_values_to_match_strftime_format",
+          "kwargs": {
+            "column": "start_date",
+            "strftime_format": "%Y-%m-%d"
+          }
+        }
+      }
+    },
+    {
+      "expectation_type": "expect_column_values_to_match_strftime_format",
+      "test_scenario": "edge_cases",
+      "expected_outcome": "Expected pass: False",
+      "actual_outcome": "Actually passed: False",
+      "success": true,
+      "error_message": null,
+      "execution_time": 0.001376,
+      "data_shape": [
+        4,
+        10
+      ],
+      "additional_info": {
+        "validation_result": {
+          "success": false,
+          "result": {
+            "element_count": 4,
+            "unexpected_count": 10,
+            "unexpected_percent": 10
+          }
+        },
+        "expectation_config": {
+          "expectation_type": "expect_column_values_to_match_strftime_format",
+          "kwargs": {
+            "column": "start_date",
+            "strftime_format": "%Y-%m-%d"
+          }
+        }
+      }
+    },
+    {
+      "expectation_type": "expect_column_values_to_match_strftime_format",
+      "test_scenario": "format_violations_fail",
+      "expected_outcome": "Expected pass: False",
+      "actual_outcome": "Actually passed: False",
+      "success": true,
+      "error_message": null,
+      "execution_time": 0.003891,
+      "data_shape": [
+        100,
+        10
+      ],
+      "additional_info": {
+        "validation_result": {
+          "success": false,
+          "result": {
+            "element_count": 100,
+            "unexpected_count": 10,
+            "unexpected_percent": 10
+          }
+        },
+        "expectation_config": {
+          "expectation_type": "expect_column_values_to_match_strftime_format",
+          "kwargs": {
+            "column": "start_date",
+            "strftime_format": "%Y-%m-%d"
+          }
+        }
+      }
+    },
+    {
+      "expectation_type": "expect_custom_sql_query_to_return_expected_result",
+      "test_scenario": "clean_data_pass",
+      "expected_outcome": "Expected pass: True",
+      "actual_outcome": "Actually passed: True",
+      "success": true,
+      "error_message": null,
+      "execution_time": 0.027708,
+      "data_shape": [
+        100,
+        10
+      ],
+      "additional_info": {
+        "validation_result": {
+          "success": true,
+          "expectation_config": {
+            "expectation_type": "expect_custom_sql_query_to_return_expected_result",
+            "kwargs": {
+              "name": "Test Custom SQL",
+              "query": "SELECT COUNT(*) as violation_count FROM {table_name} WHERE age < 0",
+              "expected_result_type": "empty",
+              "description": "Check for negative ages"
+            }
+          },
+          "result": {
+            "element_count": 100,
+            "unexpected_count": 0,
+            "unexpected_percent": 0.0,
+            "partial_unexpected_list": [],
+            "unexpected_index_list": [],
+            "query_result": [
+              {
+                "violation_count": 0
+              }
+            ]
+          }
+        },
+        "expectation_config": {
+          "expectation_type": "expect_custom_sql_query_to_return_expected_result",
+          "kwargs": {
+            "name": "Test Custom SQL",
+            "query": "SELECT COUNT(*) as violation_count FROM {table_name} WHERE age < 0",
+            "expected_result_type": "empty",
+            "description": "Check for negative ages"
+          }
+        }
+      }
+    },
+    {
+      "expectation_type": "expect_custom_sql_query_to_return_expected_result",
+      "test_scenario": "edge_cases",
+      "expected_outcome": "Expected pass: False",
+      "actual_outcome": "Actually passed: False",
+      "success": true,
+      "error_message": null,
+      "execution_time": 0.013298,
+      "data_shape": [
+        4,
+        10
+      ],
+      "additional_info": {
+        "validation_result": {
+          "success": false,
+          "expectation_config": {
+            "expectation_type": "expect_custom_sql_query_to_return_expected_result",
+            "kwargs": {
+              "name": "Test Custom SQL",
+              "query": "SELECT COUNT(*) as violation_count FROM {table_name} WHERE age < 0",
+              "expected_result_type": "empty",
+              "description": "Check for negative ages"
+            }
+          },
+          "result": {
+            "element_count": 4,
+            "unexpected_count": 1,
+            "unexpected_percent": 25.0,
+            "partial_unexpected_list": [
+              {
+                "id": -1.0,
+                "name": " ",
+                "email": "no-at-sign",
+                "age": -1.0,
+                "salary": -50000.0,
+                "score": 100,
+                "category": null,
+                "is_active": "yes",
+                "start_date": "1900-01-01",
+                "description": null
+              }
+            ],
+            "unexpected_index_list": [],
+            "query_result": [
+              {
+                "violation_count": 1
+              }
+            ],
+            "unexpected_rows_data": [
+              {
+                "id": -1.0,
+                "name": " ",
+                "email": "no-at-sign",
+                "age": -1.0,
+                "salary": -50000.0,
+                "score": 100,
+                "category": null,
+                "is_active": "yes",
+                "start_date": "1900-01-01",
+                "description": null
+              }
+            ]
+          }
+        },
+        "expectation_config": {
+          "expectation_type": "expect_custom_sql_query_to_return_expected_result",
+          "kwargs": {
+            "name": "Test Custom SQL",
+            "query": "SELECT COUNT(*) as violation_count FROM {table_name} WHERE age < 0",
+            "expected_result_type": "empty",
+            "description": "Check for negative ages"
+          }
+        }
+      }
+    }
+  ]
+}
