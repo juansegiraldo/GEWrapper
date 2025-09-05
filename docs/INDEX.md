@@ -4,6 +4,7 @@ This folder contains guides for installing, using, configuring, and troubleshoot
 
 ## Start here
 - Installation: `docs/INSTALL_GUIDE.md`
+- **Installation Troubleshooting**: `docs/INSTALLATION_TROUBLESHOOTING.md` ⚠️
 - User Guide (workflow): `docs/USER_GUIDE.md`
 
 ## Core docs

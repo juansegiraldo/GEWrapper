@@ -36,28 +36,66 @@
 ## Quick Start
 
 ### Prerequisites
-- Python 3.8 or higher
+- Python 3.8 or higher (tested with Python 3.13)
 - Git
 - Windows PowerShell (for Windows users)
 
 ### Installation
+
+⚠️ **Important**: Due to dependency conflicts between numpy, streamlit, and great-expectations, we need to follow a specific installation order.
 
 ```powershell
 # Clone the repository
 git clone https://github.com/juansegiraldo/GEWrapper.git
 cd GEWrapper
 
-# Activate virtual environment
-.\scripts\activate_env.ps1
+# Create virtual environment
+python -m venv venv
 
-# Install dependencies
-pip install -r requirements.txt
+# Activate virtual environment
+venv\Scripts\Activate.ps1
+
+# Upgrade pip and install build tools
+python -m pip install --upgrade pip
+pip install setuptools wheel
+
+# Install streamlit first (this will install compatible numpy)
+pip install streamlit
+
+# Install other core dependencies
+pip install plotly openpyxl xlrd sqlalchemy pydantic pandasql sqlparse
+
+# Install great-expectations without dependencies (to avoid conflicts)
+pip install great-expectations --no-deps
+
+# Install great-expectations dependencies manually
+pip install cryptography ipython ipywidgets jsonpatch makefun mistune nbformat notebook pyparsing scipy tqdm tzlocal
+
+# Fix version conflicts
+pip install "marshmallow<4.0.0,>=3.7.1"
+pip install "altair<5.0.0,>=4.2.1"
 
 # Launch the application
 streamlit run streamlit_app.py
 ```
 
+**Alternative**: Use the pre-configured requirements file (if the above doesn't work):
+```powershell
+# Use the working requirements file
+pip install -r requirements_venv.txt
+```
+
 **That's it!** Your DataWash by Stratesys application will open in your default browser at `http://localhost:8501`
+
+### Troubleshooting Installation Issues
+
+If you encounter dependency conflicts:
+
+1. **Numpy compilation errors**: The installation above uses pre-compiled wheels
+2. **Great Expectations import errors**: Make sure marshmallow and altair are the correct versions
+3. **Streamlit not starting**: Check that all dependencies are installed in the correct order
+
+For a complete working environment, use the `requirements_venv.txt` file which contains tested, compatible versions.
 
 ---
 
@@ -136,6 +174,7 @@ Our comprehensive documentation covers every aspect of DataWash by Stratesys:
 |-------|-------------|----------|
 | 📚 [Docs Index](docs/INDEX.md) | Navigation for all docs | Find the right guide fast |
 | 📖 [Installation Guide](docs/INSTALL_GUIDE.md) | Setup and configuration | Getting started |
+| ⚠️ [Installation Troubleshooting](docs/INSTALLATION_TROUBLESHOOTING.md) | Fix dependency conflicts | Resolve install issues |
 | 🚀 [User Guide](docs/USER_GUIDE.md) | End-to-end app workflow | Everyday usage |
 | 📘 [Tutorials](docs/TUTORIALS.md) | Hands-on walkthroughs | Learn by example |
 | ❓ [FAQ](docs/FAQ.md) | Common questions | Quick answers |
@@ -174,12 +213,13 @@ python -m venv gewrapper_dev
 # Activate environment
 .\gewrapper_dev\Scripts\Activate.ps1
 
-# Install development dependencies
+# Install development dependencies (use the working requirements file)
 pip install -r requirements_venv.txt
 
-# Install pre-commit hooks
-pre-commit install
+# Or follow the manual installation procedure above for troubleshooting
 ```
+
+**Note**: The `requirements_venv.txt` file contains tested, compatible versions that work together. If you encounter issues, follow the manual installation steps in the Quick Start section.
 
 ### Code Quality
 

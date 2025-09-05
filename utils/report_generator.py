@@ -775,15 +775,30 @@ class ReportGenerator:
                             min_val = kwargs.get('min_value')
                             max_val = kwargs.get('max_value')
                             
-                            if min_val is not None and max_val is not None:
-                                mask = ~data_copy[column].between(min_val, max_val)
-                                data_copy.loc[mask, failure_col_name] = f"Column '{column}' out of range ({min_val}-{max_val}): {expectation_type}"
-                            elif min_val is not None:
-                                mask = data_copy[column] < min_val
-                                data_copy.loc[mask, failure_col_name] = f"Column '{column}' below minimum ({min_val}): {expectation_type}"
-                            elif max_val is not None:
-                                mask = data_copy[column] > max_val
-                                data_copy.loc[mask, failure_col_name] = f"Column '{column}' above maximum ({max_val}): {expectation_type}"
+                            # Convert column to numeric, coercing errors to NaN
+                            try:
+                                numeric_column = pd.to_numeric(data_copy[column], errors='coerce')
+                                
+                                if min_val is not None and max_val is not None:
+                                    # Only check rows that could be converted to numeric
+                                    numeric_mask = numeric_column.notna()
+                                    range_mask = ~numeric_column.between(min_val, max_val)
+                                    mask = numeric_mask & range_mask
+                                    data_copy.loc[mask, failure_col_name] = f"Column '{column}' out of range ({min_val}-{max_val}): {expectation_type}"
+                                elif min_val is not None:
+                                    numeric_mask = numeric_column.notna()
+                                    below_mask = numeric_column < min_val
+                                    mask = numeric_mask & below_mask
+                                    data_copy.loc[mask, failure_col_name] = f"Column '{column}' below minimum ({min_val}): {expectation_type}"
+                                elif max_val is not None:
+                                    numeric_mask = numeric_column.notna()
+                                    above_mask = numeric_column > max_val
+                                    mask = numeric_mask & above_mask
+                                    data_copy.loc[mask, failure_col_name] = f"Column '{column}' above maximum ({max_val}): {expectation_type}"
+                            except Exception as e:
+                                # If conversion fails completely, skip range checking for this column
+                                st.warning(f"Could not perform range validation on column '{column}': {str(e)}")
+                                pass
                         
                         # For value set expectations
                         if 'value_set' in kwargs:
