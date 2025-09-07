@@ -3,6 +3,9 @@
 ## Overview
 This guide helps you write effective SQL queries for data validation using the GEWrapper application. The queries should identify data quality violations and return a count of problematic records.
 
+## 🤖 AI-Powered SQL Generation (New!)
+**DataWash now features AI-powered SQL generation using OpenAI GPT-5!** Simply describe your validation rule in plain English, and the AI will generate the SQL query for you. See [OpenAI Integration Guide](../OPENAI_INTEGRATION.md) for setup instructions.
+
 ## 🎯 Basic Query Structure
 
 All custom SQL queries should follow this pattern:
@@ -206,11 +209,12 @@ WHERE department = 'Sales' AND active = True AND salary < 40000
 ## 🆘 Getting Help
 
 If you're stuck:
-1. Use the LLM prompt above with ChatGPT/Claude
-2. Check the "Common Validation Patterns" section
-3. Use the "🧪 Test Query" button to debug
-4. Review the "Common Mistakes" section
-5. Start with a simple query and build up complexity
+1. **Try the AI Generator**: Use the built-in OpenAI integration for instant query generation
+2. Use the LLM prompt above with ChatGPT/Claude as a fallback
+3. Check the "Common Validation Patterns" section
+4. Use the "🧪 Test Query" button to debug
+5. Review the "Common Mistakes" section
+6. Start with a simple query and build up complexity
 
 ---
 

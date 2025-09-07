@@ -65,6 +65,9 @@ pip install streamlit
 # Install other core dependencies
 pip install plotly openpyxl xlrd sqlalchemy pydantic pandasql sqlparse
 
+# Install OpenAI integration dependencies
+pip install openai python-dotenv
+
 # Install great-expectations without dependencies (to avoid conflicts)
 pip install great-expectations --no-deps
 
@@ -102,6 +105,7 @@ For a complete working environment, use the `requirements_venv.txt` file which c
 ## Key Features
 
 ### **Data Validation Engine**
+- **AI-Powered SQL Generation**: Generate validation queries using OpenAI GPT-5
 - **Custom SQL Expectations**: Create complex validation rules using SQL syntax
 - **Built-in Validators**: Pre-configured validators for common data quality checks
 - **Batch Processing**: Validate large datasets efficiently
@@ -136,6 +140,7 @@ GEWrapper/
 │   ├── data_upload.py               # File upload and processing
 │   ├── expectation_builder.py       # Validation rule builder
 │   ├── failed_records_generator.py  # Failure analysis
+│   ├── openai_sql_generator.py      # AI-powered SQL query generation
 │   ├── results_display.py           # Results visualization
 │   ├── sql_query_builder.py         # SQL query interface
 │   └── validation_runner.py         # Validation execution engine
@@ -161,8 +166,130 @@ GEWrapper/
 │   └── roadmap.md                # Milestones
 ├── 🧪 tests/               # Test suite and validation
 ├── 🛠️ utils/               # Utility functions and helpers
+│   ├── data_processing.py         # Data loading, profiling, and export utilities
+│   ├── ge_helpers.py             # Great Expectations integration and validation
+│   ├── report_generator.py       # Report generation and visualization
+│   ├── smart_template_engine.py  # Intelligent validation template generation
+│   └── suite_helpers.py          # Suite management and naming utilities
 └── 🚀 scripts/             # Automation and utility scripts
 ```
+
+---
+
+## 🛠️ Utils Directory - Utility Functions & Helpers
+
+The `utils/` directory contains essential utility functions and helpers that power the core functionality of DataWash by Stratesys. These utilities work together to provide a robust, enterprise-grade data validation platform.
+
+### 📊 **data_processing.py** - Data Processing Engine
+**The backbone of data operations** - handles all data loading, processing, and analysis:
+
+**🔧 Core Features:**
+- **Multi-format File Loading**: Supports CSV, Excel, JSON, and Parquet with intelligent encoding detection
+- **Comprehensive Data Profiling**: Generates detailed data quality metrics, statistics, and insights
+- **Smart Data Cleaning**: Automatically cleans column names, converts data types, and handles missing values
+- **Intelligent Sampling**: Preserves data characteristics while reducing processing time
+- **Export Capabilities**: Multiple format support (CSV, JSON, Excel, HTML, Parquet)
+- **Row UUID Management**: Adds stable identifiers for reliable data tracking
+
+**🎯 Key Methods:**
+```python
+DataProcessor.load_file()           # Load files with encoding fallbacks
+DataProcessor.get_data_profile()    # Generate comprehensive data profiles
+DataProcessor.clean_column_names()  # SQL-compatible column naming
+DataProcessor.sample_data_smart()   # Intelligent data sampling
+DataProcessor.export_to_format()    # Multi-format data export
+```
+
+### 🎯 **ge_helpers.py** - Great Expectations Integration
+**The validation engine** - manages all Great Expectations operations with robust error handling:
+
+**🔧 Core Features:**
+- **Context Management**: Initializes and manages GE contexts across versions
+- **Expectation Suite Creation**: Creates and manages validation suites
+- **Robust Validation Engine**: Multiple fallback methods for reliable validation
+- **Manual Validation System**: Custom validation when GE APIs fail
+- **Expectation Management**: Adds expectations with comprehensive error handling
+- **Data Documentation**: Generates data docs and exports suites
+
+**🎯 Key Methods:**
+```python
+GEHelpers.initialize_context()      # Set up GE context
+GEHelpers.create_expectation_suite() # Create validation suites
+GEHelpers.validate_data()           # Execute validation with fallbacks
+GEHelpers.add_expectation_to_suite() # Add validation rules
+GEHelpers.get_available_expectations() # List supported validations
+```
+
+### 📈 **report_generator.py** - Reporting & Visualization
+**The reporting powerhouse** - creates comprehensive reports and interactive visualizations:
+
+**🔧 Core Features:**
+- **Interactive Charts**: Plotly-based success rates, failure analysis, and data quality metrics
+- **Comprehensive Reports**: HTML reports with detailed validation results
+- **Failed Records Analysis**: Identifies and analyzes problematic data rows
+- **Data Distribution Charts**: Visualizes data patterns and distributions
+- **Multiple Chart Types**: Donut charts, bar charts, histograms, and more
+- **Export Capabilities**: Generate reports in multiple formats
+
+**🎯 Key Methods:**
+```python
+ReportGenerator.create_summary_metrics()     # Generate validation statistics
+ReportGenerator.create_success_rate_chart()  # Interactive success rate visualization
+ReportGenerator.create_failed_records_dataset() # Analyze failed data rows
+ReportGenerator.generate_html_report()       # Comprehensive HTML reports
+ReportGenerator.create_data_distribution_charts() # Data visualization
+```
+
+### 🧠 **smart_template_engine.py** - Intelligent Template Generation
+**The AI-powered analyzer** - automatically generates intelligent validation templates:
+
+**🔧 Core Features:**
+- **Smart Basic Quality**: Generates intelligent quality checks based on data characteristics
+- **Numeric Validation**: Creates statistical-based range validations using IQR and outlier analysis
+- **Text Validation**: Detects email columns, creates length validations, and categorical checks
+- **Business Rules**: Identifies common patterns (age, percentages, currency, phone numbers)
+- **Pattern Recognition**: Automatically detects data types and applies appropriate validations
+- **Adaptive Thresholds**: Uses data-driven thresholds rather than fixed values
+
+**🎯 Key Methods:**
+```python
+SmartTemplateEngine.analyze_data_for_template() # Main analysis entry point
+SmartTemplateEngine._generate_smart_basic_quality() # Basic quality checks
+SmartTemplateEngine._generate_smart_numeric_validation() # Numeric validations
+SmartTemplateEngine._generate_smart_text_validation() # Text validations
+SmartTemplateEngine._generate_smart_business_rules() # Business rule detection
+```
+
+### 🏷️ **suite_helpers.py** - Suite Management Utilities
+**The organizational backbone** - manages expectation suite naming and organization:
+
+**🔧 Core Features:**
+- **Suite Name Generation**: Creates unique, timestamped suite names
+- **Filename Cleaning**: Sanitizes filenames for safe use in suite names
+- **Timestamp Management**: Handles timestamp formatting for suite identification
+
+**🎯 Key Methods:**
+```python
+generate_suite_name()    # Create unique suite names
+get_clean_filename()     # Sanitize filenames
+```
+
+### 🔄 **How Utils Work Together**
+
+These utilities form a powerful, integrated system:
+
+1. **Data Processing** loads and prepares your data with intelligent cleaning and profiling
+2. **Smart Template Engine** analyzes the data and suggests appropriate validation rules
+3. **GE Helpers** creates and manages the expectation suites with robust error handling
+4. **Report Generator** creates comprehensive reports and visualizations
+5. **Suite Helpers** manages naming and organization for easy tracking
+
+**🛡️ Enterprise-Grade Features:**
+- **Robust Error Handling**: Extensive fallback mechanisms ensure reliability
+- **Version Compatibility**: Works across different Great Expectations versions
+- **Performance Optimization**: Smart sampling and efficient processing
+- **Comprehensive Logging**: Detailed debugging and error reporting
+- **Modular Design**: Clean, maintainable, and extensible architecture
 
 ---
 
@@ -182,6 +309,7 @@ Our comprehensive documentation has been consolidated and organized for easy nav
 | Guide | Description | Use Case |
 |-------|-------------|----------|
 | 📘 [**Tutorials**](docs/TUTORIALS.md) | Hands-on walkthroughs | Learn by example |
+| 🤖 [**OpenAI Integration**](OPENAI_INTEGRATION.md) | AI-powered SQL query generation | Generate queries with GPT-5 |
 | 🔍 [**Custom SQL Guide**](docs/CUSTOM_SQL_GUIDE.md) | Advanced SQL validation patterns | Complex business rules |
 | 🗃️ [**SQL Quick Reference**](docs/SQL_QUICK_REFERENCE.md) | Copy-paste SQL examples | Quick SQL queries |
 | ❓ [**FAQ**](docs/FAQ.md) | Quick answers to common questions | Instant help |

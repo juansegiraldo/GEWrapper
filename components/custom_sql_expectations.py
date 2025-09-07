@@ -243,6 +243,39 @@ FROM (
             # Parse the original query to extract the WHERE condition
             query_upper = original_query.upper().strip()
             
+            # Special handling for GROUP BY queries with HAVING COUNT > 1
+            # These queries find groups with duplicates, so we need to return all rows in those groups
+            if "GROUP BY" in query_upper and "HAVING COUNT" in query_upper and "> 1" in query_upper:
+                import re
+                
+                # Extract the GROUP BY column(s) - handle quoted column names
+                group_by_match = re.search(r'GROUP BY\s+"([^"]+)"', original_query, re.IGNORECASE)
+                if group_by_match:
+                    group_by_column = f'"{group_by_match.group(1)}"'
+                    
+                    # Extract WHERE condition if present - handle quoted column names
+                    where_condition = ""
+                    where_match = re.search(r'WHERE\s+"([^"]+)"\s+IS NOT NULL', original_query, re.IGNORECASE)
+                    if where_match:
+                        where_column = where_match.group(1)
+                        where_condition = f'WHERE "{where_column}" IS NOT NULL'
+                    
+                    # Build a query that returns all rows that are part of groups with duplicates
+                    # We use a subquery to find the groups with duplicates, then join to get all rows in those groups
+                    failing_rows_query = f"""
+                    SELECT t1.*
+                    FROM {{table_name}} t1
+                    {where_condition}
+                    AND {group_by_column} IN (
+                        SELECT {group_by_column}
+                        FROM {{table_name}}
+                        {where_condition}
+                        GROUP BY {group_by_column}
+                        HAVING COUNT({group_by_column}) > 1
+                    )
+                    """
+                    return failing_rows_query.strip()
+            
             # Look for the WHERE clause
             if "WHERE NOT (" in query_upper:
                 # Extract the condition inside WHERE NOT (...)
@@ -368,6 +401,12 @@ FROM (
                 if 'violation_count' in result_df.columns:
                     violation_count = int(result_df['violation_count'].iloc[0])
                     success = violation_count == 0
+                    
+                    # For GROUP BY queries, the violation_count represents the number of groups with duplicates
+                    # But we need to report the actual number of individual records that are part of those groups
+                    if "GROUP BY" in query.upper() and "HAVING COUNT" in query.upper() and "> 1" in query.upper():
+                        if not failing_rows_df.empty:
+                            violation_count = len(failing_rows_df)
                 else:
                     success = len(result_df) == 0
                     violation_count = len(result_df)
