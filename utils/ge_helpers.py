@@ -1,6 +1,16 @@
 import great_expectations as gx
 from great_expectations.core import ExpectationSuite
-from great_expectations.core.expectation_configuration import ExpectationConfiguration
+
+# Try new import path for GE 0.18+, fallback to old path for earlier versions
+try:
+    from great_expectations.expectations.expectation_configuration import ExpectationConfiguration
+except ImportError:
+    try:
+        from great_expectations.core.expectation_configuration import ExpectationConfiguration
+    except ImportError:
+        # For very old versions
+        from great_expectations.core import ExpectationConfiguration
+
 import pandas as pd
 import json
 import tempfile
