@@ -45,7 +45,7 @@ class DataProcessor:
                 
                 # Try UTF-8 first
                 try:
-                    df = pd.read_csv(StringIO(content.decode('utf-8')))
+                    df = pd.read_csv(StringIO(content.decode('utf-8')), sep=None, engine='python')
                     # Convert string booleans to actual booleans
                     df = DataProcessor._convert_string_booleans(df)
                     df = DataProcessor._ensure_row_uuid(df)
@@ -56,7 +56,7 @@ class DataProcessor:
                     # Try other encodings
                     for encoding in ['latin-1', 'iso-8859-1', 'cp1252']:
                         try:
-                            df = pd.read_csv(StringIO(content.decode(encoding)))
+                            df = pd.read_csv(StringIO(content.decode(encoding)), sep=None, engine='python')
                             # Convert string booleans to actual booleans
                             df = DataProcessor._convert_string_booleans(df)
                             df = DataProcessor._ensure_row_uuid(df)
@@ -67,7 +67,7 @@ class DataProcessor:
                             continue
                     
                     # If all encodings fail, try with errors='ignore'
-                    df = pd.read_csv(StringIO(content.decode('utf-8', errors='ignore')))
+                    df = pd.read_csv(StringIO(content.decode('utf-8', errors='ignore')), sep=None, engine='python')
                     # Convert string booleans to actual booleans
                     df = DataProcessor._convert_string_booleans(df)
                     df = DataProcessor._ensure_row_uuid(df)
