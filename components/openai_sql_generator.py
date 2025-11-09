@@ -205,10 +205,8 @@ Return your response in this exact JSON format:
             
             return None
         
-        st.markdown("### 🤖 AI-Powered SQL Generation")
-        
         # Field selection section
-        st.markdown("#### 🎯 Select Fields for Your Query")
+        st.markdown("#### Select Columns")
         
         # Multi-column layout for field selection
         col1, col2 = st.columns(2)
@@ -231,7 +229,7 @@ Return your response in this exact JSON format:
                         st.write(f"  Sample: {', '.join(map(str, sample_values))}")
         
         # Description and model selection
-        st.markdown("#### 📝 Describe Your Rule")
+        st.markdown("#### Describe Validation Rule")
         col3, col4 = st.columns([2, 1])
         with col3:
             description = st.text_area(

@@ -19,9 +19,7 @@ class SQLQueryBuilderComponent:
     
     def render(self, data: pd.DataFrame) -> Optional[Dict[str, Any]]:
         """Render the simplified SQL query builder interface"""
-        st.markdown("### Custom SQL Validation")
-
-        # Simplified query builder - no templates
+        # No title needed - dialog already has one
         query_config = self._render_manual_query_builder(data)
 
         return query_config
@@ -237,13 +235,6 @@ class SQLQueryBuilderComponent:
         # OpenAI generator section - this has columns, text for LLM, model, and Create SQL button
         generated_query = self.openai_generator.render_openai_section(data)
 
-        # Available Columns reference
-        st.markdown("#### Available Columns")
-        col_display = ", ".join([f"`{col}`" for col in data.columns[:10]])
-        if len(data.columns) > 10:
-            col_display += f" ... ({len(data.columns)} total)"
-        st.info(col_display)
-
         # Test Query button - simplified
         st.markdown("---")
         if st.button("🧪 Test SQL", key="test_query_btn", type="secondary", use_container_width=True):
@@ -265,12 +256,11 @@ class SQLQueryBuilderComponent:
                 except Exception as e:
                     st.error(f"Test failed: {str(e)}")
 
-        # Show query configuration if there's a valid query
+        # Show inline configuration if there's a valid query
         current_query = st.session_state.get('sql_query', '')
         if current_query:
             validation_result = self.custom_sql_expectation.validate_sql_query(current_query)
             if validation_result["is_valid"] and not validation_result["security_issues"]:
-                st.markdown("---")
                 return self._render_query_configuration(data, current_query, "empty", "Custom SQL Validation")
 
         return None
@@ -296,8 +286,6 @@ class SQLQueryBuilderComponent:
         default_name: str
     ) -> Optional[Dict[str, Any]]:
         """Render simplified query configuration options"""
-        st.markdown("#### Configuration")
-
         # Fix boolean conditions in the SQL query
         fixed_sql_query = self._fix_boolean_conditions(sql_query, data)
 
@@ -305,8 +293,9 @@ class SQLQueryBuilderComponent:
         default_name_value = st.session_state.get('generated_name', default_name)
         default_description_value = st.session_state.get('generated_description', '')
 
+        st.markdown("---")
         name = st.text_input(
-            "Expectation Name:",
+            "Name:",
             value=default_name_value,
             help="Descriptive name for this validation rule"
         )
@@ -314,8 +303,8 @@ class SQLQueryBuilderComponent:
         description = st.text_area(
             "Description:",
             value=default_description_value,
-            height=80,
-            help="Detailed description of what this validation checks"
+            height=60,
+            help="Optional description"
         )
 
         # Build final configuration
