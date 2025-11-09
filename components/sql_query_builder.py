@@ -18,19 +18,12 @@ class SQLQueryBuilderComponent:
         self.openai_generator = OpenAISQLGenerator()
     
     def render(self, data: pd.DataFrame) -> Optional[Dict[str, Any]]:
-        """Render the SQL query builder interface"""
-        st.markdown("Create complex validations using SQL queries for multi-column business rules.")
-        
-        # Template selection
-        template_config = self._render_template_selection()
-        
-        if template_config:
-            # Build query from template
-            query_config = self._render_template_builder(template_config, data)
-        else:
-            # Manual query builder
-            query_config = self._render_manual_query_builder(data)
-        
+        """Render the simplified SQL query builder interface"""
+        st.markdown("### Custom SQL Validation")
+
+        # Simplified query builder - no templates
+        query_config = self._render_manual_query_builder(data)
+
         return query_config
     
     def _render_template_selection(self) -> Optional[Dict[str, Any]]:
@@ -239,276 +232,47 @@ class SQLQueryBuilderComponent:
             return None
     
     def _render_manual_query_builder(self, data: pd.DataFrame) -> Optional[Dict[str, Any]]:
-        """Render manual SQL builder with AI integration and simplified 2-column layout"""
-        st.markdown("##### SQL Query Builder")
-        
-        # Add OpenAI generator section at the top
+        """Render simplified SQL builder with only AI section"""
+
+        # OpenAI generator section - this has columns, text for LLM, model, and Create SQL button
         generated_query = self.openai_generator.render_openai_section(data)
-        
-        # Manual SQL section - now in an expandable
-        with st.expander("🔧 Manual SQL Editor", expanded=False):
-            st.markdown("**Advanced users can write custom SQL queries here**")
-            
-            # Two-column layout: SQL input (wide) + Available Columns (narrow)
-            col1, col2 = st.columns([2, 1])
-            
-            with col1:
-                # Initialize session state for SQL query
-                if 'sql_query' not in st.session_state:
-                    st.session_state['sql_query'] = ""
-                
-                # Manual SQL input - takes up more space
-                sql_query = st.text_area(
-                    "SQL query:",
-                    value=st.session_state.get('sql_query', ''),
-                    height=200,
-                    help="Write your custom SQL query. Use {table_name} as placeholder for the data table.",
-                    placeholder="""
-Example:
-SELECT COUNT(*) as violation_count
-FROM {table_name}
-WHERE email IS NULL OR email NOT LIKE '%@%.%'
 
-Tip: Use True/False for boolean columns, not 1/0
-The app automatically converts active = 1 to active = True
-"""
-                )
-                
-                # Show both AI and manual options
-                st.markdown("**Additional Resources:**")
-                col_ai, col_gpt = st.columns(2)
-                
-                with col_ai:
-                    # OpenAI availability is handled in the AI section above
-                    pass
-                
-                with col_gpt:
-                    # Fallback to custom GPT for SQL help
-                    gpt_url = "https://chatgpt.com/g/g-68b1ee414c4081919498f880f3ee5993-datawash-custom-sql-generator"
-                    if hasattr(st, "link_button"):
-                        st.link_button("🌐 Open SQL Generator GPT", gpt_url, use_container_width=True)
-                    else:
-                        st.markdown(f"[🚀 Open DataWash SQL Generator GPT]({gpt_url})")
-                
-                # Update session state
-                st.session_state['sql_query'] = sql_query
-                
-                if sql_query:
-                    # Validate SQL
-                    validation_result = self.custom_sql_expectation.validate_sql_query(sql_query)
-                    
-                    if not validation_result["is_valid"]:
-                        for error in validation_result["errors"]:
-                            st.error(f"{error}")
-                    
-                    for warning in validation_result["warnings"]:
-                        st.warning(f"{warning}")
-                    
-                    for security_issue in validation_result["security_issues"]:
-                        st.error(f"🔒 Security Issue: {security_issue}")
-                    
-                    if validation_result["is_valid"] and not validation_result["security_issues"]:
-                        st.success("✅ SQL query is valid! Use the Test Query button below to test it.")
-            
-            with col2:
-                # Available Columns (with filter)
-                st.markdown("**Available Columns**")
-                filter_text = st.text_input("Filter columns", key="available_cols_filter")
-                columns_iter = data.columns
-                if filter_text:
-                    lower_filter = filter_text.lower()
-                    columns_iter = [c for c in data.columns if lower_filter in c.lower()]
-                for col in columns_iter:
-                    col_type = str(data[col].dtype)
-                    st.write(f"• `{col}` ({col_type})")
+        # Available Columns reference
+        st.markdown("#### Available Columns")
+        col_display = ", ".join([f"`{col}`" for col in data.columns[:10]])
+        if len(data.columns) > 10:
+            col_display += f" ... ({len(data.columns)} total)"
+        st.info(col_display)
 
-        # Collapsed helper area
-        with st.expander("Help & Tools", expanded=False):
-            tips_tab, patterns_tab, prompt_tab, examples_tab, data_tab, tools_tab = st.tabs([
-                "Tips", "Patterns", "Prompt", "Examples", "Data", "Tools"
-            ])
-
-            with tips_tab:
-                st.markdown("**General SQL Tips**")
-                st.write("• Use `{table_name}` as table placeholder")
-                st.write("• Return `violation_count` column")
-                st.write("• Use WHERE NOT (condition) pattern")
-                st.write("• Handle NULL values appropriately")
-                st.write("• For boolean columns, prefer `column = True` or `column = False`")
-                st.write("• The app will automatically fix `column = 1` to `column = True`")
-                st.markdown("**Boolean Column Syntax**")
-                st.info(
-                    """
-Recommended: `active = True` / `active = False`, `status = 'active'` / `status = 'inactive'`
-
-Works but discouraged: `active = 1` / `active = 0`, `active = 'true'` / `active = 'false'`
-
-Won't work: `active = '1'` / `active = '0'`
-                    """
-                )
-
-            with patterns_tab:
-                st.markdown("**Common Validation Patterns**")
-                st.markdown(
-                    """
-**Email Validation:**
-```sql
-SELECT COUNT(*) as violation_count
-FROM {table_name}
-WHERE email IS NULL OR email NOT LIKE '%@%.%'
-```
-
-**Date Range Validation:**
-```sql
-SELECT COUNT(*) as violation_count
-FROM {table_name}
-WHERE join_date < '2020-01-01' OR join_date > CURRENT_DATE
-```
-
-**Email Format Validation:**
-```sql
-SELECT COUNT(*) as violation_count
-FROM {table_name}
-WHERE email NOT LIKE '%@%.%' OR email IS NULL
-```
-
-**Age Range Validation:**
-```sql
-SELECT COUNT(*) as violation_count
-FROM {table_name}
-WHERE age < 18 OR age > 65
-```
-
-**Required Field Validation:**
-```sql
-SELECT COUNT(*) as violation_count
-FROM {table_name}
-WHERE name IS NULL OR TRIM(name) = ''
-```
-
-**Cross-Column Validation:**
-```sql
-SELECT COUNT(*) as violation_count
-FROM {table_name}
-WHERE start_date >= end_date AND start_date IS NOT NULL AND end_date IS NOT NULL
-```
-                    """
-                )
-
-            with prompt_tab:
-                st.markdown("**LLM Prompt for SQL Generation**")
-                st.code(
-                    """
-Generate a SQL query to validate data quality. Requirements:
-- Use {table_name} as the table name placeholder
-- Return COUNT(*) as violation_count
-- Use True/False for boolean columns (not 1/0)
-- Example: WHERE email IS NULL OR email NOT LIKE '%@%.%'
-- Focus on finding violations (rows that should NOT exist)
-- Use clear, descriptive conditions
-
-Context: [Describe your validation rule here]
-                    """,
-                    language="text",
-                )
-
-            with examples_tab:
-                st.markdown("**Quick Query Examples**")
-                example_queries = {
-                    "Check for NULL values": "SELECT COUNT(*) as violation_count FROM {table_name} WHERE name IS NULL",
-                    "Salary range check": "SELECT COUNT(*) as violation_count FROM {table_name} WHERE salary < 30000 OR salary > 100000",
-                    "Email format": "SELECT COUNT(*) as violation_count FROM {table_name} WHERE email NOT LIKE '%@%.%'",
-                    "Invalid emails": "SELECT COUNT(*) as violation_count FROM {table_name} WHERE email IS NULL OR email NOT LIKE '%@%.%'",
-                }
-                cols = st.columns(2)
-                for idx, (name, query) in enumerate(example_queries.items()):
-                    with cols[idx % 2]:
-                        if st.button(f"📋 {name}", key=f"example_{name}"):
-                            st.session_state['sql_query'] = query
-                            st.rerun()
-
-            with data_tab:
-                st.write(f"**Shape:** {data.shape[0]} rows × {data.shape[1]} columns")
-                st.write(f"**Memory:** {data.memory_usage(deep=True).sum() / 1024:.1f} KB")
-                with st.expander("Sample Data (first 5 rows)", expanded=False):
-                    st.dataframe(data.head(), use_container_width=True)
-
-            with tools_tab:
-                col_a, col_b, col_c = st.columns(3)
-                with col_a:
-                    if st.button("🗑️ Clear Query", key="clear_query", type="secondary"):
-                        st.session_state['sql_query'] = ""
-                        st.rerun()
-                with col_b:
-                    if st.button("📝 Copy Template", key="copy_template", type="secondary"):
-                        template = """SELECT COUNT(*) as violation_count
-FROM {table_name}
-WHERE [your_condition_here]"""
-                        st.code(template, language="sql")
-                with col_c:
-                    if st.button("✅ Validate Query", key="validate_query", type="secondary"):
-                        if 'sql_query' in st.session_state and st.session_state['sql_query']:
-                            validation_result = self.custom_sql_expectation.validate_sql_query(st.session_state['sql_query'])
-                            if validation_result["is_valid"]:
-                                st.success("Query is valid!")
-                            else:
-                                st.error("Query has issues")
-                                for error in validation_result["errors"]:
-                                    st.write(f"• {error}")
-
-        # Test Query functionality - completely outside all expanders
+        # Test Query button - simplified
         st.markdown("---")
-        st.markdown("#### 🧪 Test Your Query")
-        
-        if st.button("🧪 Test Query", key="test_query_btn", type="secondary", use_container_width=True):
-            # Get the current SQL query from session state
+        if st.button("🧪 Test SQL", key="test_query_btn", type="secondary", use_container_width=True):
             current_query = st.session_state.get('sql_query', '')
             if not current_query:
-                st.warning("No SQL query found. Please generate a query using AI or write one manually.")
+                st.warning("No SQL query found. Please generate a query first.")
             else:
                 try:
                     fixed_sql_query = self._fix_boolean_conditions(current_query, data)
-                    st.markdown("**Testing Query:**")
-                    st.code(fixed_sql_query, language="sql")
-                    st.write("**Data Info:**")
-                    st.write(f"Data shape: {data.shape}")
-                    st.write(f"Data columns: {list(data.columns)}")
-                    st.write(f"Data types: {dict(data.dtypes)}")
-                    
-                    # Show sample data for debugging
-                    st.write("**Sample Data (first 3 rows):**")
-                    sample_data = data.head(3)
-                    for idx, row in sample_data.iterrows():
-                        display_values = [f"{col}={row[col]}" for col in row.index]
-                        st.write(f"  Row {idx}: {', '.join(display_values)}")
-                    
                     result = self.custom_sql_expectation.execute_sql_query(data, fixed_sql_query)
-                    if not result.empty:
-                        st.success("Query executed successfully!")
-                        st.dataframe(result.head(), use_container_width=True)
-                        if 'violation_count' in result.columns:
-                            violation_count = result['violation_count'].iloc[0]
-                            st.info(f"Violation count: {violation_count}")
-                            
-                            # Add more debugging for the specific case
-                            if violation_count == 0:
-                                st.warning("Query returned 0 violations. This means no data quality issues were found.")
-                                st.info("Your data appears to be clean according to this validation rule.")
+                    if not result.empty and 'violation_count' in result.columns:
+                        violation_count = result['violation_count'].iloc[0]
+                        if violation_count == 0:
+                            st.success(f"✅ Query valid - {violation_count} violations found")
+                        else:
+                            st.warning(f"⚠️ Query executed - {violation_count} violations found")
                     else:
-                        st.warning("Query returned no results")
+                        st.info("Query executed successfully")
                 except Exception as e:
-                    st.error(f"Query test failed: {str(e)}")
-        
+                    st.error(f"Test failed: {str(e)}")
+
         # Show query configuration if there's a valid query
         current_query = st.session_state.get('sql_query', '')
         if current_query:
-            # Validate the query first
             validation_result = self.custom_sql_expectation.validate_sql_query(current_query)
             if validation_result["is_valid"] and not validation_result["security_issues"]:
                 st.markdown("---")
-                st.markdown("#### ⚙️ Configure Your Validation Rule")
                 return self._render_query_configuration(data, current_query, "empty", "Custom SQL Validation")
-        
+
         return None
 
     def _fix_boolean_conditions(self, sql_query: str, data: pd.DataFrame) -> str:
@@ -525,137 +289,46 @@ WHERE [your_condition_here]"""
         return sql_query
 
     def _render_query_configuration(
-        self, 
+        self,
         data: pd.DataFrame,
-        sql_query: str, 
+        sql_query: str,
         default_expected: str,
         default_name: str
     ) -> Optional[Dict[str, Any]]:
-        """Render query configuration options"""
-        st.markdown("##### Query Configuration")
-        
+        """Render simplified query configuration options"""
+        st.markdown("#### Configuration")
+
         # Fix boolean conditions in the SQL query
         fixed_sql_query = self._fix_boolean_conditions(sql_query, data)
-        
-        # Keep a consistent 2:1 ratio for configuration as well
-        col1, col2 = st.columns([2, 1])
-        
-        with col1:
-            # Use generated name and description if available
-            default_name_value = st.session_state.get('generated_name', default_name)
-            default_description_value = st.session_state.get('generated_description', '')
-            
-            name = st.text_input(
-                "Expectation Name:",
-                value=default_name_value,
-                help="Descriptive name for this validation rule"
-            )
-            
-            description = st.text_area(
-                "Description:",
-                value=default_description_value,
-                height=80,
-                help="Detailed description of what this validation checks"
-            )
-        
-        with col2:
-            expected_result_options = [
-                ("empty", "No violations (expect query to return 0 rows/violations)"),
-                ("non_empty", "Violations exist (expect query to return rows)"),
-                ("count_equals", "Exact count (specify expected number)"),
-                ("count_between", "Count within range (specify min/max)")
-            ]
-            
-            expected_result_type = st.selectbox(
-                "Expected Result:",
-                options=[opt[0] for opt in expected_result_options],
-                format_func=lambda x: next(opt[1] for opt in expected_result_options if opt[0] == x),
-                index=next(i for i, opt in enumerate(expected_result_options) if opt[0] == default_expected)
-            )
-            
-            # Additional configuration based on expected result type
-            expected_value = None
-            tolerance = 0.0
-            min_value = None
-            max_value = None
-            
-            if expected_result_type == "count_equals":
-                expected_value = st.number_input(
-                    "Expected Count:",
-                    min_value=0,
-                    help="Exact number of violations/rows expected"
-                )
-                tolerance = st.number_input(
-                    "Tolerance:",
-                    min_value=0.0,
-                    value=0.0,
-                    help="Acceptable deviation from expected count"
-                )
-            elif expected_result_type == "count_between":
-                col_min, col_max = st.columns(2)
-                with col_min:
-                    min_value = st.number_input("Min Count:", min_value=0, value=0)
-                with col_max:
-                    max_value = st.number_input("Max Count:", min_value=0, value=10)
-        
-        # Query preview
-        with st.expander("Final SQL Query Preview", expanded=False):
-            st.code(fixed_sql_query, language="sql")
-        
-        # Test query option
-        if st.button("🧪 Test Query", help="Test the query against current data", type="secondary"):
-            try:
-                # Show the query being tested
-                st.markdown("**Testing Query:**")
-                st.code(fixed_sql_query, language="sql")
-                
-                # Add debugging information
-                st.write("**Data Info:**")
-                st.write(f"Data shape: {data.shape}")
-                st.write(f"Data columns: {list(data.columns)}")
-                st.write(f"Data types: {dict(data.dtypes)}")
-                
-                # Show sample data for debugging
-                st.write("**Sample Data (first 3 rows):**")
-                sample_data = data.head(3)
-                for idx, row in sample_data.iterrows():
-                    display_values = [f"{col}={row[col]}" for col in row.index]
-                    st.write(f"  Row {idx}: {', '.join(display_values)}")
-                
-                result = self.custom_sql_expectation.execute_sql_query(data, fixed_sql_query)
-                if not result.empty:
-                    st.success("Query executed successfully!")
-                    st.dataframe(result.head(), use_container_width=True)
-                    
-                    if 'violation_count' in result.columns:
-                        violation_count = result['violation_count'].iloc[0]
-                        st.info(f"Violation count: {violation_count}")
-                        
-                        # Add more debugging for the specific case
-                        if violation_count == 0:
-                            st.warning("Query returned 0 violations. This means no data quality issues were found.")
-                            st.info("Your data appears to be clean according to this validation rule.")
-                else:
-                    st.warning("Query returned no results")
-            except Exception as e:
-                st.error(f"Query test failed: {str(e)}")
-        
+
+        # Use generated name and description if available
+        default_name_value = st.session_state.get('generated_name', default_name)
+        default_description_value = st.session_state.get('generated_description', '')
+
+        name = st.text_input(
+            "Expectation Name:",
+            value=default_name_value,
+            help="Descriptive name for this validation rule"
+        )
+
+        description = st.text_area(
+            "Description:",
+            value=default_description_value,
+            height=80,
+            help="Detailed description of what this validation checks"
+        )
+
         # Build final configuration
         if name and fixed_sql_query:
             config = self.custom_sql_expectation.build_expectation_config(
                 name=name,
                 sql_query=fixed_sql_query,
-                expected_result_type=expected_result_type,
-                expected_value=expected_value,
+                expected_result_type=default_expected,
+                expected_value=None,
                 description=description,
-                tolerance=tolerance
+                tolerance=0.0
             )
-            
-            # Add range values if needed
-            if expected_result_type == "count_between":
-                config['kwargs']['min_value'] = min_value
-                config['kwargs']['max_value'] = max_value
-            
+
             return config
-        
+
         return None
